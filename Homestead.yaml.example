@@ -1,0 +1,23 @@
+ip: "192.168.10.10"
+memory: 2048
+cpus: 1
+provider: virtualbox
+
+authorize: ~/.ssh/id_rsa.pub
+
+keys:
+    - ~/.ssh/id_rsa
+
+folders:
+    - map: ~/projectsCP/api
+      to: /home/vagrant/projectsCP/api
+
+sites:
+    - map: api.local.com
+      to: /home/vagrant/projectsCP/api/public
+
+databases:
+    - homestead
+
+name: api
+hostname: api
