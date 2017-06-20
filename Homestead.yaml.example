@@ -1,0 +1,75 @@
+ip: "192.168.10.10"
+memory: 2048
+cpus: 1
+provider: virtualbox
+
+authorize: ~/.ssh/id_rsa.pub
+
+keys:
+    - ~/.ssh/id_rsa
+
+folders:
+    # PERSONALIZAR: Ruta local a la carpeta del código
+    - map: ~/Code/ClaroPay/api
+      # Ruta en el servidor NO MODIFICAR
+      to: /home/vagrant/claropay/api
+      
+    # OTROS Sitios del ecosistema Claro Pay
+    # PERSONALIZAR: Ruta local a la carpeta del código
+    - map: ~/Code/ClaroPay/clientes
+      # Ruta en el servidor NO MODIFICAR
+      to: /home/vagrant/claropay/clientes
+    # PERSONALIZAR: Ruta local a la carpeta del código
+    - map: ~/Code/ClaroPay/admin
+      # Ruta en el servidor NO MODIFICAR
+      to: /home/vagrant/claropay/admin
+    # PERSONALIZAR: Ruta local a la carpeta del código
+    - map: ~/Code/ClaroPay/boveda
+      # Ruta en el servidor NO MODIFICAR
+      to: /home/vagrant/claropay/boveda
+    # PERSONALIZAR: Ruta local a la carpeta del código
+    - map: ~/Code/ClaroPay/queue
+      # Ruta en el servidor NO MODIFICAR
+      to: /home/vagrant/claropay/queue
+    # PERSONALIZAR: Ruta local a la carpeta del código
+    - map: ~/Code/ClaroPay/monitor
+      # Ruta en el servidor NO MODIFICAR
+      to: /home/vagrant/claropay/monitor
+      
+sites:
+    # API NO MODIFICAR
+    - map: api.claropay.local.com
+      to: /home/vagrant/claropay/api/public
+
+    # OTROS Sitios del ecosistema Claro Pay
+    # Clientes NO MODIFICAR
+    - map: www.claropay.local.com
+      to: /home/vagrant/claropay/clientes/public
+    # Admin NO MODIFICAR
+    - map: admin.claropay.local.com
+      to: /home/vagrant/claropay/admin/public
+    # Bóveda NO MODIFICAR
+    - map: boveda.claropay.local.com
+      to: /home/vagrant/claropay/boveda/public
+    # Queue NO MODIFICAR
+    - map: queue.claropay.local.com
+      to: /home/vagrant/claropay/queue/public
+    # Monitor NO MODIFICAR
+    - map: monitor.claropay.local.com
+      to: /home/vagrant/claropay/monitor/public
+
+databases:
+    - api
+    - clientes
+    - admin
+    - boveda
+    - queue
+    - monitor
+
+name: amx-claropay-api
+hostname: amx-claropay-api
+
+variables:
+    - key: APP_ENV
+      value: local
+
