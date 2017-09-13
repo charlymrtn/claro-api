@@ -15,11 +15,11 @@ class TransaccionSeeder extends Seeder
         //Inserta valores iniciales
         Transaccion::create([
             'uuid' => '7e57d004-2b97-0e7a-b45f-5387367791cd',
-            'comercio' => 'Claro Pagos',
+            'comercio' => 'claropagos',
             'pais_id' => 'MEX',
             'prueba' => true,
-            'operacion' => 'autorizacion',
-            'estatus'=> 'pendiente',
+            'operacion' => 'pago',
+            'estatus'=> 'completada',
             'moneda' => 'MXN',
             'monto' => '250.00',
             'forma_pago' => 'tarjeta',

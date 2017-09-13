@@ -19,7 +19,7 @@ class CreateTransaccionsTable extends Migration
             $table->string('pais_id', 3);
             $table->boolean('prueba');
             $table->enum('operacion', ['pago', 'preautorizacion', 'autorizacion', 'cancelacion']);
-            $table->enum('estatus', ['pendiente', 'completada', 'reembolsada', 'reembolso parcial', 'autorizada',
+            $table->enum('estatus', ['pendiente', 'completada', 'reembolsada', 'reembolso-parcial', 'autorizada',
             'cancelada', 'rechazada-banco', 'rechazada-antifraude', 'contracargo-pendiente', 'contracargo-rechazado', '
             contracargada', 'fallida']);
             $table->string('moneda', 3);
