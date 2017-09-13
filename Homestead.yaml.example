@@ -72,4 +72,3 @@ hostname: amx-claropay-api
 variables:
     - key: APP_ENV
       value: local
-
