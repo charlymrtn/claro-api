@@ -40,6 +40,7 @@
     "jquery.dirtyforms.dialogs.bootstrap": "^2.0.0",
     "material-design-icons-iconfont": "^3.0.3",
     "pnotify": "^3.2.1",
+    "popper.js": "^1.12.9",
     "select2": "^4.0.6-rc.1",
     "titatoggle": "^1.2.15"
   }
