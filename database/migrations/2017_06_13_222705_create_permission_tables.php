@@ -15,21 +15,21 @@ class CreatePermissionTables extends Migration
         $tableNames = config('permission.table_names');
         $foreignKeys = config('permission.foreign_keys');
 
-        Schema::create($tableNames['permissions'], function (Blueprint $table) {
+        Schema::connection('mysql_sa')->create($tableNames['permissions'], function (Blueprint $table) {
             $table->increments('id');
             $table->string('name');
             $table->string('guard_name');
             $table->timestamps();
         });
 
-        Schema::create($tableNames['roles'], function (Blueprint $table) {
+        Schema::connection('mysql_sa')->create($tableNames['roles'], function (Blueprint $table) {
             $table->increments('id');
             $table->string('name');
             $table->string('guard_name');
             $table->timestamps();
         });
 
-        Schema::create($tableNames['model_has_permissions'], function (Blueprint $table) use ($tableNames, $foreignKeys) {
+        Schema::connection('mysql_sa')->create($tableNames['model_has_permissions'], function (Blueprint $table) use ($tableNames, $foreignKeys) {
             $table->integer('permission_id')->unsigned();
             $table->morphs('model');
 
@@ -41,7 +41,7 @@ class CreatePermissionTables extends Migration
             $table->primary(['permission_id', 'model_id', 'model_type']);
         });
 
-        Schema::create($tableNames['model_has_roles'], function (Blueprint $table) use ($tableNames, $foreignKeys) {
+        Schema::connection('mysql_sa')->create($tableNames['model_has_roles'], function (Blueprint $table) use ($tableNames, $foreignKeys) {
             $table->integer('role_id')->unsigned();
             $table->morphs('model');
 
@@ -53,7 +53,7 @@ class CreatePermissionTables extends Migration
             $table->primary(['role_id', 'model_id', 'model_type']);
         });
 
-        Schema::create($tableNames['role_has_permissions'], function (Blueprint $table) use ($tableNames) {
+        Schema::connection('mysql_sa')->create($tableNames['role_has_permissions'], function (Blueprint $table) use ($tableNames) {
             $table->integer('permission_id')->unsigned();
             $table->integer('role_id')->unsigned();
 
@@ -80,10 +80,10 @@ class CreatePermissionTables extends Migration
     {
         $tableNames = config('permission.table_names');
 
-        Schema::drop($tableNames['role_has_permissions']);
-        Schema::drop($tableNames['model_has_roles']);
-        Schema::drop($tableNames['model_has_permissions']);
-        Schema::drop($tableNames['roles']);
-        Schema::drop($tableNames['permissions']);
+        Schema::connection('mysql_sa')->drop($tableNames['role_has_permissions']);
+        Schema::connection('mysql_sa')->drop($tableNames['model_has_roles']);
+        Schema::connection('mysql_sa')->drop($tableNames['model_has_permissions']);
+        Schema::connection('mysql_sa')->drop($tableNames['roles']);
+        Schema::connection('mysql_sa')->drop($tableNames['permissions']);
     }
 }

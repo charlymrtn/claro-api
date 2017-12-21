@@ -13,7 +13,7 @@ class CreateTransaccionsTable extends Migration
      */
     public function up()
     {
-        Schema::create('transaccions', function (Blueprint $table) {
+        Schema::connection('mysql_sa')->create('transaccions', function (Blueprint $table) {
             $table->uuid('uuid');
             $table->string('comercio');
             $table->string('pais_id', 3);
@@ -46,6 +46,6 @@ class CreateTransaccionsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('transaccions');
+        Schema::connection('mysql_sa')->dropIfExists('transaccions');
     }
 }
