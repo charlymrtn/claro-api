@@ -13,6 +13,9 @@ use Illuminate\Http\Request;
 |
 */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
+//Route::middleware('client.credentials')->get('/v1', function (Request $request) {
+//    return $request->user();
+//});
+Route::group(['namespace' => 'v1', 'prefix' => 'v1', 'middleware' => ['client.credentials']], function () {
+    Route::resource('/cargo', 'API\v1\CargoController');
 });

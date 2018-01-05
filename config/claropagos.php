@@ -21,6 +21,14 @@ return [
             'tareas' => env('CP_TAREAS', 'tareas.claropay.local.com'),
         ],
 
+        // Configuración de procesadores de pago
+        'procesadores_pago' => [
+            'amex' => [
+                'api_url' => 'https://qwww318.americanexpress.com/IPPayments/inter/CardAuthorization.do',
+                'origin' => 'AMERICAMOVIL-28705',
+            ],
+        ],
+
     ],
 
     'dev' => [

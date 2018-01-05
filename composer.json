@@ -9,6 +9,7 @@
         "filp/whoops": "^2.1",
         "jenssegers/model": "^1.1",
         "laravel/framework": "5.5.*",
+        "laravel/passport": "^4.0",
         "laravel/tinker": "~1.0",
         "spatie/laravel-permission": "^2.1",
         "venturecraft/revisionable": "^1.28",

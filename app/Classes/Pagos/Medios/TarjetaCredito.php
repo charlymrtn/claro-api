@@ -6,6 +6,7 @@ use Jenssegers\Model\Model;
 use Exception;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
+use App\Classes\Pagos\Parametros\Direccion;
 
 /**
  * Clase de forma de pago de tarjeta de crédito
@@ -23,75 +24,17 @@ class TarjetaCredito extends Model
      * @var array $fillable Atributos asignables
      */
     protected $fillable = [
-
         'pan', // Número de tarjeta sanitizado
-
         'nombre_tarjeta', // Nombre como aparece en la tarjeta
-
+        'cvv', // Código de seguridad de la tarjeta cvv2, cvc
+        'mes_expiracion', // Mes de expiración
+        'anio_expiracion', // Año de expiracion
+        'mes_inicio', // Mes de inicio de la tarjeta
+        'anio_inicio', // Anio de inicio
         'nombres', // Nombres del tarjetabiente
         'apellido_paterno', // Apellido Paterno del tarjetabiente
         'apellido_materno', // Apellido Materno del tarjetabiente
-
-        'cvv', // Código de seguridad de la tarjeta
-        'mes_expiracion', // Mes de expiración
-        'anio_expiracion', // Año de expiracion
-
-        'mes_inicio', // Mes de inicio de la tarjeta
-        'anio_inicio', // Anio de inicio
-
-        /**
-        address	object, Billing address of cardholder.
-        bank_name	string, Name of the issuing bank.
-        bank_code	string, Code of the issuing bank.
-        customer_id	string, Customer identifier to which the card belongs. If the card is at Merchant level this value is null.
-
-        Address
-            line1	string (required), The first line is the card owner address. It’s commonly used to indicate street address and number.
-            line2	string, Second addres line, commonly use to indicate interior number, suite number or county.
-            line3	string, Third address line, commonly use to to indicate the neighborhood.
-            postal_code	string (required), Zip code
-            state	string (required), State
-            city	string (required), City
-            country
-            country_code	string (required), Country code, in the two character format: ISO_3166-1.
-
-        title
-         * * company
-         * * phone
-         * * phoneExtension
-         * * fax
-         * * tracks
-         * * issueNumber
-         * * billingTitle
-         * * billingName
-         * * billingFirstName
-         * * billingLastName
-         * * billingCompany
-         * * billingAddress1
-         * * billingAddress2
-         * * billingCity
-         * * billingPostcode
-         * * billingState
-         * * billingCountry
-         * * billingPhone
-         * * billingFax
-         * * shippingTitle
-         * * shippingName
-         * * shippingFirstName
-         * * shippingLastName
-         * * shippingCompany
-         * * shippingAddress1
-         * * shippingAddress2
-         * * shippingCity
-         * * shippingPostcode
-         * * shippingState
-         * * shippingCountry
-         * * shippingPhone
-         * * shippingFax
-         * * email
-         * * birthday
-         * * gender
-         */
+        'direccion', // Dirección registrada en el medio de pago (objeto Direccion)
     ];
 
     /*
@@ -102,6 +45,7 @@ class TarjetaCredito extends Model
         'marca', // Marca de la tarjeta: visa, mastercard, carnet or american express.
         'pan_hash', // Identificador de la tarjeta
         'created_at', // Fecha de creación del objeto tipo Carbon
+        'updated_at', // Fecha de actualización del objeto tipo Carbon
     ];
 
     /*
@@ -109,6 +53,13 @@ class TarjetaCredito extends Model
      */
     protected $hidden = [
         '_pan', // Número de tarjeta (16-19)
+    ];
+
+    /*
+     * Atributos mutables a fechas
+     */
+    protected $dates = [
+        'created_at', 'updated_at', 'deleted_at'
     ];
 
     // }}}}
@@ -227,6 +178,14 @@ class TarjetaCredito extends Model
         $this->attributes['_pan'] = $iPan;
         // Define marca
         $this->attributes['marca'] = $this->defineMarca($iPan);
+    }
+
+    /*
+     * Atributos de clases
+     */
+    public function setDireccionAttribute(Direccion $oDireccion): void
+    {
+        $this->attributes['direccion'] = $oDireccion;
     }
 
     // }}}
