@@ -253,7 +253,10 @@ class GHDC extends iso8583_1993
     public function generateSystemsTraceAuditNumber(int $iLength = 6): string
     {
         // Define characters
-        $aChars = array_merge(range(65, 90), range(48, 57), range(32, 47), range(58, 64), range(91, 96), range(123, 126));
+        // No permitidos: ( -> 40, [ -> 91, | -> 124
+        $aChars = array_merge(range(32, 39), range(42, 90), range(92, 96), [123, 125, 126]);
+        //return chr(40) . chr(40) . chr(40) . chr(40) . chr(40) . chr(40);
+        //$aChars = array_merge(range(32, 90), range(91, 96), range(123, 126));
         $iCharsLength = count($aChars);
         $sSTAN = '';
         for ($i = 0; $i < $iLength; $i++) {
