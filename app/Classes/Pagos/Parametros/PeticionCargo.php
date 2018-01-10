@@ -5,8 +5,8 @@ namespace App\Classes\Pagos\Parametros;
 use Jenssegers\Model\Model;
 use Exception;
 use Carbon\Carbon;
-use App\Classes\Pagos\Parametros\Contacto;
-use App\Classes\Pagos\Parametros\Direccion;
+use App\Classes\Pagos\Base\Contacto;
+use App\Classes\Pagos\Base\Direccion;
 
 /**
  * Clase para parámetros de entrada para cargos

@@ -6,7 +6,7 @@ use Jenssegers\Model\Model;
 use Exception;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
-use App\Classes\Pagos\Parametros\Direccion;
+use App\Classes\Pagos\Base\Direccion;
 
 /**
  * Clase de forma de pago de tarjeta de crédito

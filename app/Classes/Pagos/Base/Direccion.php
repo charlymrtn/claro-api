@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Classes\Pagos;
+namespace App\Classes\Pagos\Base;
 
 use Jenssegers\Model\Model;
 use Exception;
