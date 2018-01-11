@@ -360,7 +360,7 @@ class InternetDirect
         $ghdc->setData( 2, $aAmexPago['pan']); // PAN
         $ghdc->setData( 4, $aAmexPago['amount']); // Transaction Amount
         $ghdc->setData(12, $aAmexPago['datetime']); // Date & Time, Local Transaction
-        if (in_array($aAmexOverride['mti'], ['1100', '1200'])) {
+        if (in_array($aAmexOverride['mti'], ['1100', '1200']) && !empty($aAmexPago['date_eff'])) {
             $ghdc->setData(13, $aAmexPago['date_eff']); // CARD Date, Effective (since)
         }
         $ghdc->setData(14, $aAmexPago['date_exp']); // CARD Date, Expiration

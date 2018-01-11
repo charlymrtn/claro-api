@@ -525,7 +525,7 @@ class iso8583_1987
     {
         // Revisa si está codificado en hexadecimal
         $bIsEncoded = false;
-        if ($sIso[0] == 'F') {
+        if (isset($sIso[0]) && $sIso[0] == 'F') {
             $bIsEncoded = true;
         }
         if ($bIsEncoded) {
@@ -537,7 +537,7 @@ class iso8583_1987
             $this->_parseIsoData(substr($sIso, 24), $bIsEncoded);
         } else {
             // Obtiene mti del string en ebcdic
-            $this->_mti = $this->substr($sIso, 0, 4);
+            $this->_mti = substr($sIso, 0, 4);
             // Obtiene el bitmap
             $this->_bitmap = substr($sIso, 4, 16);
             // Divide los datos acorde al bitmap
