@@ -5,8 +5,10 @@ namespace app\Http\Controllers\API\v1;
 use Log;
 use Validator;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use App\Http\Controllers\Controller;
-
+use Auth;
+use App\Models\User;
 
 class APIv1Controller extends Controller
 {
@@ -22,7 +24,17 @@ class APIv1Controller extends Controller
      */
     public function index(Request $oRequest)
     {
-        echo '{"result":"success"}';
+        // Prepara resultado
+        $result = [
+            'method' => __METHOD__,
+            'result' => 'success',
+            'user' => $oRequest->user(),
+            'token' => $oRequest->user()->token(),
+            'request_all' => $oRequest->all(),
+        ];
+
+
+        return response()->json($result);
     }
 
 }
