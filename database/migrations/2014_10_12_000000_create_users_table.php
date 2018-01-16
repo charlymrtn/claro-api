@@ -15,13 +15,15 @@ class CreateUsersTable extends Migration
     {
         Schema::connection('mysql_sa')->create('users', function (Blueprint $table) {
             $table->increments('id'); // Usuario id en API únicamente
-            $table->uuid('comercio_uuid')->unique(); // Comercio id
             $table->string('name'); // Nombre del usuario API
             $table->string('descripcion'); // Descripción del uso del usuario API
             $table->string('email')->unique();
             $table->string('password');
-            $table->rememberToken();
+            $table->uuid('comercio_uuid')->unique(); // Comercio id
+            $table->string('comercio_nombre'); // Nombre del usuario API
+            $table->boolean('activo')->default(true);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

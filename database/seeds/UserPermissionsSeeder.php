@@ -84,7 +84,7 @@ class UserPermissionsSeeder extends Seeder
             ['id' => 1, 'user_id' => 1, 'name' => 'API Personal Access Client - Superadmin', 'secret' => 'blGUSQfDGEopbyngcOGzHsADKwOTLy3GYKBezlfp', 'redirect' => '/auth/callback', 'personal_access_client' => 1, 'password_client' => 0, 'revoked' => 0],
         ]);
         DB::table('oauth_access_tokens')->insert([
-            ['id' => '5804291bc7bfef35cd85548c9891502ec9f900844f2aba59fd074752f0585bc3779dd19124f7b826', 'user_id' => 1, 'client_id' => 1, 'name' => 'API Personal Access Token - Superadmin', 'scope' => '["superadmin"]', 'revoked' => 0, 'expires_at' => '2019-01-13 02:10:09'],
+            ['id' => '5804291bc7bfef35cd85548c9891502ec9f900844f2aba59fd074752f0585bc3779dd19124f7b826', 'user_id' => 1, 'client_id' => 1, 'name' => 'API Personal Access Token - Superadmin', 'scopes' => '["superadmin"]', 'revoked' => 0, 'expires_at' => '2019-01-13 02:10:09'],
         ]);
         DB::table('oauth_personal_access_clients')->insert([
             ['id' => 1, 'client_id' => 1]

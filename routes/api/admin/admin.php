@@ -7,4 +7,9 @@ Route::group(['namespace' => 'API\admin', 'prefix' => 'admin', 'middleware' => [
         Route::resource('/usuario', 'UsuarioController');
     });
 
+    // Tokens
+    Route::group(['middleware' => ['scope:superadmin']], function () {
+        Route::resource('/token', 'tokenController');
+    });
+
 });

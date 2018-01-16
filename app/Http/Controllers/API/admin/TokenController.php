@@ -8,21 +8,19 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
 
-class UsuarioController extends Controller
+class TokenController extends Controller
 {
-
-//        $user = User::find(1);
-//        $token = $user->createToken('API Personal Access Token', ['superadmin'])->accessToken;
-
 
     public function __construct()
     {
         //
     }
+
     /**
-     * Display a listing of the resource.
+     * Regresa lista de tokens del usuario.
      *
-     * @return \Illuminate\Http\Response
+     * @param \Illuminate\Http\Request $oRequest
+     * @return \Illuminate\Http\JsonResponse
      */
     public function index(Request $oRequest)
     {
@@ -101,4 +99,5 @@ class UsuarioController extends Controller
         //
         echo '{"method":"' . __METHOD__ . '"}';
     }
+
 }
