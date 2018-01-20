@@ -8,7 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Log;
 
-class UsuarioController extends Controller
+class UsuarioTokenController extends Controller
 {
     protected $mUsuario;
 
@@ -27,6 +27,23 @@ class UsuarioController extends Controller
     {
         // Regresa todos los usuarios paginados
         try {
+            $oValidator = Validator::make(['id' => $id], [
+                'id' => 'required|numeric',
+            ]);
+            if ($oValidator->fails()) {
+                return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
+            }
+            // Busca usuario (borrados y no borrados)
+            $oUsuario = $this->mUsuario->withTrashed()->find($id);
+            if ($oUsuario == null) {
+                Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': Usuario no encontrado');
+                return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Objeto no encontrado.'], 404);
+            } else {
+                // Carga tokens del usuario
+                $oUsuario->load('tokens');
+                // Regresa usuario con tokens
+                return ejsend_success(['usuario' => $oUsuario]);
+            }
             // Verifica las variables para despliegue de datos
             $oValidator = Validator::make($oRequest->all(), [
                 'comercio_uuid' => 'uuid|size:36',
@@ -110,10 +127,11 @@ class UsuarioController extends Controller
             // Valida campos
             $oValidator = Validator::make($oRequest->all(), [
                 'activo' => 'boolean',
-                'name' => 'required|min:2|max:255',
-                'email' => 'required|unique:users,email',
+                'name' => 'min:2|max:255',
+                'email' => 'unique:users,email',
+                'activo' => 'boolean',
                 'descripcion' => 'max:255',
-                'comercio_uuid' => 'required|uuid|size:36',
+                'comercio_uuid' => 'uuid|size:36',
                 'comercio_nombre' => 'max:255',
             ]);
             if ($oValidator->fails()) {
