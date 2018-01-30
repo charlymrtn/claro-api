@@ -2,94 +2,81 @@
 
 namespace App\Http\Controllers\API\Admin;
 
+use Log;
 use Validator;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use Log;
+use Laravel\Passport\Token;
 
 class UsuarioTokenController extends Controller
 {
     protected $mUsuario;
+    protected $mToken;
 
-    public function __construct(User $usuario)
+    public function __construct(User $usuario, Token $token)
     {
         $this->mUsuario = $usuario;
+        $this->mToken = $token;
     }
 
     /**
-     * Regresa lista de usuarios.
+     * Regresa lista de tokens del usuario.
      *
      * @param \Illuminate\Http\Request $oRequest
      * @return \Illuminate\Http\JsonResponse
      */
-    public function index(Request $oRequest)
+    public function index($uid, Request $oRequest): JsonResponse
     {
         // Regresa todos los usuarios paginados
         try {
-            $oValidator = Validator::make(['id' => $id], [
+            // Verifica usuario
+            $oValidator = Validator::make(['id' => $uid], [
                 'id' => 'required|numeric',
             ]);
             if ($oValidator->fails()) {
                 return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
             }
             // Busca usuario (borrados y no borrados)
-            $oUsuario = $this->mUsuario->withTrashed()->find($id);
+            $oUsuario = $this->mUsuario->withTrashed()->find($uid);
             if ($oUsuario == null) {
                 Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': Usuario no encontrado');
                 return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Objeto no encontrado.'], 404);
-            } else {
-                // Carga tokens del usuario
-                $oUsuario->load('tokens');
-                // Regresa usuario con tokens
-                return ejsend_success(['usuario' => $oUsuario]);
             }
             // Verifica las variables para despliegue de datos
             $oValidator = Validator::make($oRequest->all(), [
-                'comercio_uuid' => 'uuid|size:36',
                 // Datos de la paginación y filtros
                 'per_page' => 'numeric|between:5,100',
-                'order' => 'max:30|in:id,name,email,activo,comercio_uuid,comercio_nombre,created_at,updated_at,deleted_at',
+                'order' => 'max:30|in:id,name,created_at,updated_at,revoked',
                 'search' => 'max:100',
-                'deleted' => 'in:no,yes,only',
+                'revoked' => 'in:no,yes,only',
                 'sort' => 'in:asc,desc',
             ]);
             if ($oValidator->fails()) {
-                return response()->json(["status" => "fail", "data" => ["errors" => $oValidator->errors()]]);
+                return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
             }
             // Filtros
             $sFiltro = $oRequest->input('search', false);
-            $sDeleted = $oRequest->input('deleted', 'no');
-            $sComercio = $oRequest->input('comercio_uuid', false);
-            $cUsuarios = $this->mUsuario
-                ->withTrashed()
-                ->where(
-                    function ($q) use ($sComercio) {
-                        if (!empty($sComercio)) {
-                            return $q
-                                ->orWhere('comercio_uuid', '=', $sComercio);
-                        }
-                    }
-                )
+            $sRevoked = $oRequest->input('revoked', 'no');
+            $cTokens = $this->mToken
+                ->where('user_id', $oUsuario->id)
                 ->where(
                     function ($q) use ($sFiltro) {
                         if ($sFiltro !== false) {
                             return $q
-                                ->orWhere('name', 'like', "%$sFiltro%")
-                                ->orWhere('email', 'like', "%$sFiltro%")
-                                ->orWhere('comercio_uuid', 'like', "%$sFiltro%")
-                                ->orWhere('comercio_nombre', 'like', "%$sFiltro%");
+                                ->orWhere('name', 'like', "%$sFiltro%");
                         }
                     }
                 )
                 ->where(
-                    function ($q) use ($sDeleted) {
-                        if ($sDeleted == 'no') {
-                            return $q->whereNull('deleted_at');
-                        } elseif ($sDeleted == 'yes') {
+                    function ($q) use ($sRevoked) {
+                        if ($sRevoked == 'no') {
+                            return $q->where('revoked', false);
+                        } elseif ($sRevoked == 'yes') {
                             return $q;
-                        } elseif ($sDeleted == 'only') {
-                            return $q->whereNotNull('deleted_at');
+                        } elseif ($sRevoked == 'only') {
+                            return $q->where('revoked', true);
                         }
                     }
                 )
@@ -97,10 +84,10 @@ class UsuarioTokenController extends Controller
                 ->paginate((int) $oRequest->input('per_page', 25));
 
             // Envía datos paginados
-            return response()->json(["status" => "success", "data" => ["usuarios" => $cUsuarios]]);
+            return ejsend_success(['tokens' => $cTokens]);
         } catch (\Exception $e) {
             Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ':' . $e->getMessage());
-            return response()->json(["status" => "fail", "data" => ["message" => "Error al obtener el recurso: " . $e->getMessage()]], 500);
+            return ejsend_error(['code' => 500, 'type' => 'Sistema', 'message' => 'Error al obtener el recurso: ' . $e->getMessage()]);
         }
     }
 
@@ -118,31 +105,36 @@ class UsuarioTokenController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $oRequest
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function store(Request $oRequest)
+    public function store($uid, Request $oRequest): JsonResponse
     {
         // Valida datos
         try {
-            // Valida campos
-            $oValidator = Validator::make($oRequest->all(), [
-                'activo' => 'boolean',
-                'name' => 'min:2|max:255',
-                'email' => 'unique:users,email',
-                'activo' => 'boolean',
-                'descripcion' => 'max:255',
-                'comercio_uuid' => 'uuid|size:36',
-                'comercio_nombre' => 'max:255',
+            // Verifica usuario
+            $oValidator = Validator::make(['id' => $uid], [
+                'id' => 'required|numeric',
             ]);
             if ($oValidator->fails()) {
-                Alert::error($oValidator->errors())->flash();
-                return redirect()->back()->withInput();
+                return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
             }
-            // Agrega valores
-            $oRequest->merge(['password' => Hash::make(str_random(24))]);
-            // Crea usuario
-            $oUsuario = User::create($oRequest->all());
-            return ejsend_success(['usuario' => $oUsuario]);
+            // Busca usuario (borrados y no borrados)
+            $oUsuario = $this->mUsuario->withTrashed()->find($uid);
+            if ($oUsuario == null) {
+                Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': Usuario no encontrado');
+                return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Objeto no encontrado.'], 404);
+            }
+            // Valida campos
+            $oValidator = Validator::make($oRequest->all(), [
+                'name' => 'min:2|max:255',
+                'scopes' => 'max:255',
+            ]);
+            if ($oValidator->fails()) {
+                return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
+            }
+            // Crea token
+            $oToken = $oUsuario->createToken($oRequest->input('name', 'Token'), $oRequest->input('scopes', []));
+            return ejsend_success(['token' => $oToken]);
         } catch (\Exception $e) {
             Log::error('Error en ' . __METHOD__ . ' línea ' . __LINE__ . ':' . $e->getMessage());
             return ejsend_error(['code' => 500, 'type' => 'Sistema', 'message' => 'Error al crear el recurso: ' . $e->getMessage()]);
@@ -152,30 +144,42 @@ class UsuarioTokenController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @param  int  $uid
+     * @param  string  $id Identificador de token
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function show($id)
+    public function show($uid, $id): JsonResponse
     {
         // Muestra el recurso solicitado
         try {
-            $oValidator = Validator::make(['id' => $id], [
+            // Verifica usuario
+            $oValidator = Validator::make(['id' => $uid], [
                 'id' => 'required|numeric',
             ]);
             if ($oValidator->fails()) {
                 return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
             }
             // Busca usuario (borrados y no borrados)
-            $oUsuario = $this->mUsuario->withTrashed()->find($id);
+            $oUsuario = $this->mUsuario->withTrashed()->find($uid);
             if ($oUsuario == null) {
                 Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': Usuario no encontrado');
                 return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Objeto no encontrado.'], 404);
-            } else {
-                // Carga tokens del usuario
-                $oUsuario->load('tokens');
-                // Regresa usuario con tokens
-                return ejsend_success(['usuario' => $oUsuario]);
             }
+            // Valida campos
+            $oValidator = Validator::make(['id' => $uid], [
+                'id' => 'required|string',
+            ]);
+            if ($oValidator->fails()) {
+                return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
+            }
+            // Busca usuario (borrados y no borrados)
+            $oTokens = $this->mToken->find($id);
+            if ($oTokens == null) {
+                Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': Token no encontrado');
+                return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Objeto no encontrado.'], 404);
+            }
+            // Regresa usuario con tokens
+            return ejsend_success(['token' => $oTokens]);
         } catch (\Exception $e) {
             // Registra error
             Log::error('Error en ' . __METHOD__ . ' línea ' . __LINE__ . ':' . $e->getMessage());
@@ -186,10 +190,11 @@ class UsuarioTokenController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  int  $id
+     * @param  int  $uid
+     * @param  string  $id Identificador de token
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit($uid, $id)
     {
         // echo '{"method":"' . __METHOD__ . '"}';
     }
@@ -198,92 +203,36 @@ class UsuarioTokenController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $oRequest
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @param  int  $uid
+     * @param  string  $id Identificador de token
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function update(Request $oRequest, $id)
+    public function update($uid, Request $oRequest, $id): JsonResponse
     {
-        // Busca usuario
-        $oUsuario = $this->mUsuario->find($id);
-        if ($oUsuario == null) {
-            Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': Usuario no encontrado');
-            return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Objeto no encontrado.'], 404);
-        }
-        // Actualiza usuario
-        try {
-            $oValidator = Validator::make(array_merge(['id' => $id], $oRequest->all()), [
-                'id' => 'required|numeric',
-                'name' => 'max:255',
-                'email' =>  'unique:users,email,' . $id,
-                'activo' => 'boolean',
-                'descripcion' => 'max:255',
-                'comercio_uuid' => 'uuid|size:36',
-                'comercio_nombre' => 'max:255',
-            ]);
-            if ($oValidator->fails()) {
-                return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
-            }
-            // Actualiza usuario
-            $oUsuario->update($oRequest->all());
-            return ejsend_success(['usuario' => $oUsuario]);
-        } catch (\Exception $e) {
-            Log::error('Error en ' . __METHOD__ . ' línea ' . __LINE__ . ':' . $e->getMessage());
-            return ejsend_error(['code' => 500, 'type' => 'Sistema', 'message' => 'Error al actualizar el recurso: ' . $e->getMessage()]);
-        }
+        // No se deben actualizar los tokens
     }
 
     /**
      * Borra el modelo.
      *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @param  int  $uid
+     * @param  string  $id Identificador de token
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function delete($id)
+    public function delete($uid, $id): JsonResponse
     {
-        // Busca usuario
-        $oUsuario = $this->oUsuario->find($id);
-        if ($oUsuario == null) {
-            Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': Usuario no encontrado');
-            return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Objeto no encontrado.'], 404);
-        }
-        // Borra usuario
-        try {
-            // Primero se actualiza en campo activo a 0
-            $oUsuario->update(['activo' => 0]);
-            $oUsuario->delete();
-            // @todo: Inhabilita tokens del usuario
-            // Regresa resultado
-            return ejsend_success(['usuario' => $oUsuario]);
-        } catch (\Exception $e) {
-            Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ':' . $e->getMessage());
-            return ejsend_error(['code' => 500, 'type' => 'Sistema', 'message' => 'Error al borrar el recurso: ' . $e->getMessage()]);
-        }
+        // @todo: Se debe revocar el token
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @param  int  $uid
+     * @param  string  $id Identificador de token
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function destroy($id)
+    public function destroy($uid): JsonResponse
     {
-        // Busca usuario
-        $oUsuario = $this->oUsuario->find($id);
-        if ($oUsuario == null) {
-            Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': Usuario no encontrado');
-            return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Objeto no encontrado.'], 404);
-        }
-        // Borra usuario
-        try {
-            // Primero se actualiza en campo activo a 0
-            $oUsuario->forceDelete();
-            // @todo: Elimina tokens del usuario
-            // Regresa resultado
-            return ejsend_success();
-        } catch (\Exception $e) {
-            Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ':' . $e->getMessage());
-            return ejsend_error(['code' => 500, 'type' => 'Sistema', 'message' => 'Error al destruir el recurso: ' . $e->getMessage()]);
-        }
+        // @todo: Se debe eliminar el token
     }
 }

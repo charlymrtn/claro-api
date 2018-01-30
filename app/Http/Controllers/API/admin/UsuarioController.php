@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers\API\Admin;
 
+use Log;
 use Validator;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use Log;
 
 class UsuarioController extends Controller
 {
@@ -23,7 +24,7 @@ class UsuarioController extends Controller
      * @param \Illuminate\Http\Request $oRequest
      * @return \Illuminate\Http\JsonResponse
      */
-    public function index(Request $oRequest)
+    public function index(Request $oRequest): JsonResponse
     {
         // Regresa todos los usuarios paginados
         try {
@@ -38,7 +39,7 @@ class UsuarioController extends Controller
                 'sort' => 'in:asc,desc',
             ]);
             if ($oValidator->fails()) {
-                return response()->json(["status" => "fail", "data" => ["errors" => $oValidator->errors()]]);
+                return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
             }
             // Filtros
             $sFiltro = $oRequest->input('search', false);
@@ -80,10 +81,10 @@ class UsuarioController extends Controller
                 ->paginate((int) $oRequest->input('per_page', 25));
 
             // Envía datos paginados
-            return response()->json(["status" => "success", "data" => ["usuarios" => $cUsuarios]]);
+            return ejsend_success(['usuarios' => $cUsuarios]);
         } catch (\Exception $e) {
             Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ':' . $e->getMessage());
-            return response()->json(["status" => "fail", "data" => ["message" => "Error al obtener el recurso: " . $e->getMessage()]], 500);
+            return ejsend_error(['code' => 500, 'type' => 'Sistema', 'message' => 'Error al obtener el recurso: ' . $e->getMessage()]);
         }
     }
 
@@ -101,9 +102,9 @@ class UsuarioController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $oRequest
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function store(Request $oRequest)
+    public function store(Request $oRequest): JsonResponse
     {
         // Valida datos
         try {
@@ -117,8 +118,7 @@ class UsuarioController extends Controller
                 'comercio_nombre' => 'max:255',
             ]);
             if ($oValidator->fails()) {
-                Alert::error($oValidator->errors())->flash();
-                return redirect()->back()->withInput();
+                return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
             }
             // Agrega valores
             $oRequest->merge(['password' => Hash::make(str_random(24))]);
@@ -135,9 +135,9 @@ class UsuarioController extends Controller
      * Display the specified resource.
      *
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function show($id)
+    public function show($id): JsonResponse
     {
         // Muestra el recurso solicitado
         try {
@@ -181,9 +181,9 @@ class UsuarioController extends Controller
      *
      * @param  \Illuminate\Http\Request  $oRequest
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function update(Request $oRequest, $id)
+    public function update(Request $oRequest, $id): JsonResponse
     {
         // Busca usuario
         $oUsuario = $this->mUsuario->find($id);
@@ -218,9 +218,9 @@ class UsuarioController extends Controller
      * Borra el modelo.
      *
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function delete($id)
+    public function delete($id): JsonResponse
     {
         // Busca usuario
         $oUsuario = $this->oUsuario->find($id);
@@ -246,9 +246,9 @@ class UsuarioController extends Controller
      * Remove the specified resource from storage.
      *
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function destroy($id)
+    public function destroy($id): JsonResponse
     {
         // Busca usuario
         $oUsuario = $this->oUsuario->find($id);
