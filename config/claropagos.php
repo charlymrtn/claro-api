@@ -127,7 +127,7 @@ return [
                 'url' => env('CP_API', 'ciclope.rel.mavericksgateway.net'),
             ],
             'boveda' => [
-                'url' => env('CP_BOVEDA', 'busirisrelqa.mavericksgateway.net'),
+                'url' => env('CP_BOVEDA', 'busiris.rel.mavericksgateway.net'),
             ],
             'clientes' => [
                 'url' => env('CP_CLIENTE', 'apolo.rel.mavericksgateway.net'),
@@ -142,30 +142,59 @@ return [
 
     ],
 
+    'sandbox' => [
+
+        // Servidores del ecosistema Claro Pagos
+        'server' => [
+            'admin' => [
+                'url' => env('CP_ADMIN', 'admin.sandbox.claropagos.com'),
+            ],
+            'antifraude' => [
+                'url' => env('CP_ANTIFRAUDE', 'antifraude.sandbox.claropagos.com'),
+            ],
+            'api' => [
+                'url' => env('CP_API', 'api.sandbox.claropagos.com'),
+            ],
+            'boveda' => [
+                'url' => env('CP_BOVEDA', 'boveda.sandbox.claropagos.com'),
+            ],
+            'clientes' => [
+                'url' => env('CP_CLIENTE', 'clientes.sandbox.claropagos.com'),
+            ],
+            'monitor' => [
+                'url' => env('CP_MONITOR', 'monitor.sandbox.claropagos.com'),
+            ],
+            'tareas' => [
+                'url' => env('CP_TAREAS', 'tareas.sandbox.claropagos.com'),
+            ],
+        ],
+
+    ],
+
     'production' => [
 
         // Servidores del ecosistema Claro Pagos
         'server' => [
             'admin' => [
-                'url' => env('CP_ADMIN', 'atenea.prod.mavericksgateway.net'),
+                'url' => env('CP_ADMIN', 'admin.claropagos.com'),
             ],
             'antifraude' => [
-                'url' => env('CP_ANTIFRAUDE', 'ares.prod.mavericksgateway.net'),
+                'url' => env('CP_ANTIFRAUDE', 'antifraude.claropagos.com'),
             ],
             'api' => [
-                'url' => env('CP_API', 'ciclope.prod.mavericksgateway.net'),
+                'url' => env('CP_API', 'api.claropagos.com'),
             ],
             'boveda' => [
-                'url' => env('CP_BOVEDA', 'busirisrel.prod.mavericksgateway.net'),
+                'url' => env('CP_BOVEDA', 'boveda.claropagos.com'),
             ],
             'clientes' => [
-                'url' => env('CP_CLIENTE', 'apolo.prod.mavericksgateway.net'),
+                'url' => env('CP_CLIENTE', 'clientes.claropagos.com'),
             ],
             'monitor' => [
-                'url' => env('CP_MONITOR', 'medusa.prod.mavericksgateway.net'),
+                'url' => env('CP_MONITOR', 'monitor.claropagos.com'),
             ],
             'tareas' => [
-                'url' => env('CP_TAREAS', 'triton.prod.mavericksgateway.net'),
+                'url' => env('CP_TAREAS', 'tareas.claropagos.com'),
             ],
         ],
 

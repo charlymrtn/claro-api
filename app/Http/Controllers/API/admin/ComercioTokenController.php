@@ -45,7 +45,7 @@ class ComercioTokenController extends UsuarioTokenController
      * @param  uuid  $uuid
      * @return \Illuminate\Http\JsonResponse
      */
-    public function show($uuid): JsonResponse
+    public function show($uuid, $id): JsonResponse
     {
         // Muestra el recurso solicitado
         try {
@@ -74,7 +74,7 @@ class ComercioTokenController extends UsuarioTokenController
      * @param  int  $id
      * @return \Illuminate\Http\JsonResponse
      */
-    public function update(Request $oRequest, $uuid): JsonResponse
+    public function update($uuid, Request $oRequest, $id): JsonResponse
     {
         $oValidator = Validator::make(['uuid' => $uuid], [
             'uuid' => 'required|uuid|size:36',
@@ -90,7 +90,7 @@ class ComercioTokenController extends UsuarioTokenController
         }
         // Llama al método padre con el id del usuario
         // @todo: cambiar llamada por método protegido en UsuarioController para evitar doble búsqueda aunque exista en cache
-        return parent::update($oRequest, $oUsuario->id);
+        return parent::update($oUsuario->id, $oRequest, $id);
     }
 
     /**
@@ -99,7 +99,7 @@ class ComercioTokenController extends UsuarioTokenController
      * @param  int  $id
      * @return \Illuminate\Http\JsonResponse
      */
-    public function delete($uuid): JsonResponse
+    public function delete($uuid, $id): JsonResponse
     {
         $oValidator = Validator::make(['uuid' => $uuid], [
             'uuid' => 'required|uuid|size:36',
@@ -115,7 +115,7 @@ class ComercioTokenController extends UsuarioTokenController
         }
         // Llama al método padre con el id del usuario
         // @todo: cambiar llamada por método protegido en UsuarioController para evitar doble búsqueda aunque exista en cache
-        return parent::delete($oUsuario->id);
+        return parent::delete($oUsuario->id, $id);
     }
 
     /**

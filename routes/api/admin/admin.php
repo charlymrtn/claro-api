@@ -4,11 +4,12 @@ Route::group(['namespace' => 'API\admin', 'prefix' => 'admin', 'middleware' => [
 
     // Usuarios
     Route::group(['middleware' => ['scope:superadmin']], function () {
-        Route::resource('/usuario', 'UsuarioController');
-        Route::resource('/comercio', 'ComercioController');
+        Route::apiResource('/usuario', 'UsuarioController');
+        Route::apiResource('/comercio', 'ComercioController');
         // Tokens
-        Route::resource('/usuario/{uid}/token', 'UsuarioTokenController');
-        Route::resource('/comercio/{uuid}/token', 'ComercioTokenController');
+        Route::apiResource('/usuario/{uid}/token', 'UsuarioTokenController');
+        Route::delete('/comercio/{uuid}/token/{token}/revoke', 'ComercioTokenController@revoke')->name('token.revoke');
+        Route::apiResource('/comercio/{uuid}/token', 'ComercioTokenController');
     });
 
 });

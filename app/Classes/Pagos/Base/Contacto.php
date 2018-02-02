@@ -5,7 +5,8 @@ namespace App\Classes\Pagos\Base;
 use Jenssegers\Model\Model;
 use Exception;
 use Carbon\Carbon;
-use App\Classes\Pagos\Parametros\Direccion;
+use App\Classes\Pagos\Base\Direccion;
+use App\Classes\Pagos\Base\Telefono;
 
 /**
  * Clase para direcciones
@@ -59,11 +60,32 @@ class Contacto extends Model
         'created_at', 'updated_at', 'deleted_at',
     ];
 
+    // }}}
+
     /*
-     * Atributos de clases
+     * Accessor & Mutators
+     */
+
+    /*
+     * Mutator direccion
+     *
+     * @param Direccion $oDireccion Objeto Direccion
+     * @return void
      */
     public function setDireccionAttribute(Direccion $oDireccion): void
     {
         $this->attributes['direccion'] = $oDireccion;
     }
+
+    /*
+     * Mutator telefono
+     *
+     * @param Direccion $oDireccion Objeto Direccion
+     * @return void
+     */
+    public function setTelefonoAttribute(Telefono $oTelefono): void
+    {
+        $this->attributes['telefono'] = $oTelefono;
+    }
+
 }
