@@ -14,7 +14,9 @@ class ComercioTokenController extends UsuarioTokenController
     /**
      * Obtiene los tokens del comercio con su uuid.
      *
-     * @param  uuid  $uuid
+     * @param uuid $uuid Comercio uuid
+     * @param Request $oRequest
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function index($uuid, Request $oRequest): JsonResponse
@@ -42,15 +44,18 @@ class ComercioTokenController extends UsuarioTokenController
     /**
      * Obtiene el token del comercio.
      *
-     * @param  uuid  $uuid
+     * @param uuid $uuid Comercio uuid
+     * @param string $token Identificador de token
+     *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function show($uuid, $id): JsonResponse
+    public function show($uuid, $token): JsonResponse
     {
         // Muestra el recurso solicitado
         try {
-            $oValidator = Validator::make(['uuid' => $uuid], [
+            $oValidator = Validator::make(['uuid' => $uuid, 'token' => $token], [
                 'uuid' => 'required|uuid|size:36',
+                'token' => 'required',
             ]);
             if ($oValidator->fails()) {
                 return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
@@ -70,14 +75,17 @@ class ComercioTokenController extends UsuarioTokenController
     /**
      * Update the specified resource in storage.
      *
+     * @param uuid $uuid Comercio uuid
      * @param  \Illuminate\Http\Request  $oRequest
-     * @param  int  $id
+     * @param string $token Identificador de token
+     *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function update($uuid, Request $oRequest, $id): JsonResponse
+    public function update($uuid, Request $oRequest, $token): JsonResponse
     {
-        $oValidator = Validator::make(['uuid' => $uuid], [
+        $oValidator = Validator::make(['uuid' => $uuid, 'token' => $token], [
             'uuid' => 'required|uuid|size:36',
+            'token' => 'required',
         ]);
         if ($oValidator->fails()) {
             return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
@@ -90,19 +98,22 @@ class ComercioTokenController extends UsuarioTokenController
         }
         // Llama al método padre con el id del usuario
         // @todo: cambiar llamada por método protegido en UsuarioController para evitar doble búsqueda aunque exista en cache
-        return parent::update($oUsuario->id, $oRequest, $id);
+        return parent::update($oUsuario->id, $oRequest, $token);
     }
 
     /**
      * Borra el modelo.
      *
-     * @param  int  $id
+     * @param uuid $uuid Comercio uuid
+     * @param string $token Identificador de token
+     *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function delete($uuid, $id): JsonResponse
+    public function delete($uuid, $token): JsonResponse
     {
-        $oValidator = Validator::make(['uuid' => $uuid], [
+        $oValidator = Validator::make(['uuid' => $uuid, 'token' => $token], [
             'uuid' => 'required|uuid|size:36',
+            'token' => 'required',
         ]);
         if ($oValidator->fails()) {
             return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
@@ -115,19 +126,22 @@ class ComercioTokenController extends UsuarioTokenController
         }
         // Llama al método padre con el id del usuario
         // @todo: cambiar llamada por método protegido en UsuarioController para evitar doble búsqueda aunque exista en cache
-        return parent::delete($oUsuario->id, $id);
+        return parent::delete($oUsuario->id, $token);
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param uuid $uuid Comercio uuid
+     * @param string $token Identificador de token
+     *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function destroy($uuid): JsonResponse
+    public function destroy($uuid, $token): JsonResponse
     {
-        $oValidator = Validator::make(['uuid' => $uuid], [
+        $oValidator = Validator::make(['uuid' => $uuid, 'token' => $token], [
             'uuid' => 'required|uuid|size:36',
+            'token' => 'required',
         ]);
         if ($oValidator->fails()) {
             return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
@@ -140,6 +154,6 @@ class ComercioTokenController extends UsuarioTokenController
         }
         // Llama al método padre con el id del usuario
         // @todo: cambiar llamada por método protegido en UsuarioController para evitar doble búsqueda aunque exista en cache
-        return parent::destroy($oUsuario->id);
+        return parent::destroy($oUsuario->id, $token);
     }
 }

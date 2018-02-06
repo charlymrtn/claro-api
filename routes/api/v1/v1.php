@@ -1,9 +1,9 @@
 <?php
 
-Route::group(['namespace' => 'API\v1', 'prefix' => 'v1', 'middleware' => ['client.credentials']], function () {
+Route::group(['namespace' => 'API\v1', 'prefix' => 'v1', 'as' => 'api.v1.', 'middleware' => ['client.credentials']], function () {
 
     // API v1 Principal
-    Route::any('/', 'APIv1Controller@index')->name('api.v1');
+    Route::any('/', 'APIv1Controller@index')->name('default');
 
     // Tarjetas
     Route::group(['middleware' => ['scope:superadmin,cliente-tarjetas']], function () {

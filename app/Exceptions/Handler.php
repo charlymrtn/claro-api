@@ -3,8 +3,12 @@
 namespace App\Exceptions;
 
 use Exception;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Auth\Access\AuthorizationException;
+use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class Handler extends ExceptionHandler
 {
@@ -44,7 +48,15 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Exception $exception)
     {
-        return parent::render($request, $exception);
+        if ($exception instanceof AuthorizationException) {
+            return $this->forbidden($request, $exception);
+        } else if ($exception instanceof MethodNotAllowedHttpException) {
+            return $this->methodnotallowed($request, $exception);
+        } else if ($exception instanceof NotFoundHttpException) {
+            return $this->notfound($request, $exception);
+        } else {
+            return parent::render($request, $exception);
+        }
     }
 
     /**
@@ -52,11 +64,37 @@ class Handler extends ExceptionHandler
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \Illuminate\Auth\AuthenticationException  $exception
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
-    protected function unauthenticated($request, AuthenticationException $exception)
+    protected function unauthenticated($request, AuthenticationException $exception): JsonResponse
     {
         // API sólo responde con JSONs
-        return response()->json(['error' => 'Unauthenticated:' . $exception->getMessage()], 401);
+        return ejsend_error(['code' => 401, 'type' => 'Autenticación', 'message' => 'No autenticado: ' . $exception->getMessage()], 401);
+    }
+
+    /**
+     * Convert an authentication exception into an unauthenticated response.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Auth\AuthenticationException  $exception
+     * @return \Illuminate\Http\JsonResponse
+     */
+    protected function forbidden($request, AuthorizationException $exception): JsonResponse
+    {
+        // API sólo responde con JSONs
+        return ejsend_error(['code' => 403, 'type' => 'Autenticación', 'message' => 'Prohibido: ' . $exception->getMessage()], 403);
+    }
+
+    /**
+     * Convert an authentication exception into an unauthenticated response.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Auth\MethodNotAllowedHttpException  $exception
+     * @return \Illuminate\Http\JsonResponse
+     */
+    protected function notfound($request, NotFoundHttpException $exception): JsonResponse
+    {
+        // API sólo responde con JSONs
+        return ejsend_error(['code' => 404, 'type' => 'Sistema', 'message' => 'Contexto no encontrado: ' . $exception->getMessage()], 404);
     }
 }

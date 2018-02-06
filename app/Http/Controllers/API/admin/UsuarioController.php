@@ -262,7 +262,7 @@ class UsuarioController extends Controller
             $oUsuario->forceDelete();
             // @todo: Elimina tokens del usuario
             // Regresa resultado
-            return ejsend_success();
+            return ejsend_success([], 204);
         } catch (\Exception $e) {
             Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ':' . $e->getMessage());
             return ejsend_error(['code' => 500, 'type' => 'Sistema', 'message' => 'Error al destruir el recurso: ' . $e->getMessage()]);
