@@ -13,7 +13,10 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        //
+        // Comando de pruebas unitarias
+        Commands\TestappCommand::class,
+        // Comando de pruebas de sistema
+        Commands\HealthcheckCommand::class,
     ];
 
     /**
