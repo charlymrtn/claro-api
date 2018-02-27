@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API\Admin;
 
 use Log;
+use Hash;
 use Validator;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -148,14 +149,13 @@ class UsuarioController extends Controller
                 return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
             }
             // Busca usuario (borrados y no borrados)
-            $oUsuario = $this->mUsuario->withTrashed()->find($id);
+            $oUsuario = $this->mUsuario->withTrashed()->with('clients', 'tokens')->find($id);
             if ($oUsuario == null) {
                 Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': Usuario no encontrado');
                 return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Objeto no encontrado.'], 404);
             } else {
-                // Carga tokens del usuario
-                $oUsuario->load('tokens');
-                // Regresa usuario con tokens
+                // Regresa usuario con clientes y tokens
+                $oUsuario->clients->makeVisible('secret');
                 return ejsend_success(['usuario' => $oUsuario]);
             }
         } catch (\Exception $e) {

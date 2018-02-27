@@ -12,7 +12,7 @@ use App\Classes\Pagos\Base\Direccion;
  * Clase para parámetros de entrada para cargos
  *
  */
-class PeticionCargo extends Model
+class RespuestaCargo extends Model
 {
 
     // {{{ properties

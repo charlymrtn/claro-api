@@ -38,6 +38,7 @@
     "jquery": "^3.2.1",
     "jquery.dirtyforms": "^2.0.0",
     "jquery.dirtyforms.dialogs.bootstrap": "^2.0.0",
+    "jsrsasign": "^8.0.6",
     "material-design-icons-iconfont": "^3.0.3",
     "pnotify": "^3.2.1",
     "popper.js": "^1.12.9",

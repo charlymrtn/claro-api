@@ -28,6 +28,10 @@ class ComercioController extends UsuarioController
             }
             // Busca usuario (borrados y no borrados)
             $oUsuario = $this->mUsuario->where('comercio_uuid', $id)->first();
+            if ($oUsuario == null) {
+                Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': Usuario no encontrado');
+                return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Objeto no encontrado.'], 404);
+            }
             // Llama al método padre con el id del usuario
             // @todo: cambiar llamada por método protegido en UsuarioController para evitar doble búsqueda aunque exista en cache
             return parent::show($oUsuario->id);
