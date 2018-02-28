@@ -9,14 +9,35 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Laravel\Passport\ClientRepository;
 
 class UsuarioController extends Controller
 {
+    /**
+     * User instance.
+     *
+     * @var \App\Models\User
+     */
     protected $mUsuario;
 
-    public function __construct(User $usuario)
+    /**
+     * ClientRepository instance.
+     *
+     * @var \Laravel\Passport\ClientRepository
+     */
+    protected $oClientRepository;
+
+    /**
+     * Create a client controller instance.
+     *
+     * @param App\Models\User $usuario
+     * @param \Laravel\Passport\ClientRepository $client
+     * @return void
+     */
+    public function __construct(User $usuario, ClientRepository $client)
     {
         $this->mUsuario = $usuario;
+        $this->oClientRepository = $client;
     }
 
     /**
@@ -117,6 +138,7 @@ class UsuarioController extends Controller
                 'descripcion' => 'max:255',
                 'comercio_uuid' => 'required|uuid|size:36',
                 'comercio_nombre' => 'max:255',
+                'api_client_nombre' => 'max:255',
             ]);
             if ($oValidator->fails()) {
                 return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
@@ -125,6 +147,9 @@ class UsuarioController extends Controller
             $oRequest->merge(['password' => Hash::make(str_random(24))]);
             // Crea usuario
             $oUsuario = User::create($oRequest->all());
+            // Crea cliente API
+            $this->oClientRepository->create($oUsuario->id, $oRequest->input('api_client_nombre', 'API Personal Access Client'), '/auth/callback', 1);
+            // Regresa resultados
             return ejsend_success(['usuario' => $oUsuario]);
         } catch (\Exception $e) {
             Log::error('Error en ' . __METHOD__ . ' línea ' . __LINE__ . ':' . $e->getMessage());
