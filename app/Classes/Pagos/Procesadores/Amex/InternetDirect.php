@@ -2,10 +2,11 @@
 
 namespace App\Classes\Pagos\Procesadores\Amex;
 
-use GuzzleHttp\Client as GuzzleClient;
-use Exception;
+use App;
 use Log;
 use App\Classes\Pagos\Procesadores\Amex\GHDC;
+use GuzzleHttp\Client as GuzzleClient;
+use Exception;
 
 class InternetDirect
 {
@@ -21,6 +22,16 @@ class InternetDirect
      * @var Amex\GHDC $this->oHttpClient Cliente Guzzle para transmisión de datos HTTP.
      */
     protected $oGHDC;
+
+    /*
+     * @var array $aConfig Configuración de servicio
+     */
+    protected $aConfig;
+
+    /*
+     * @var string $sEnv Ambiente de la aplicación.
+     */
+    protected $sEnv;
 
     // }}}
 
@@ -63,11 +74,11 @@ class InternetDirect
     private function sendData(int $nMerchantNumber, string $sMessageType, string $hEbcdicMessage)
     {
         // Config
-        $sUrl = "https://qwww318.americanexpress.com/IPPayments/inter/CardAuthorization.do";
-        $sOrigin = "AMERICAMOVIL-28705";
-        $sCountry = "484";
-        $sRegion = "LAC";
-        $sRtInd = "050";
+        $sUrl = $this->aConfig['api_url']; // "https://qwww318.americanexpress.com/IPPayments/inter/CardAuthorization.do";
+        $sOrigin = $this->aConfig['origin']; // "AMERICAMOVIL-28705";
+        $sCountry = $this->aConfig['country']; // "484";
+        $sRegion = $this->aConfig['region']; // "LAC";
+        $sRtInd = $this->aConfig['rtind']; // "050";
 
         // Prepare content
         $sRequestMessage = "AuthorizationRequestParam=" . $hEbcdicMessage;
@@ -104,7 +115,7 @@ class InternetDirect
         } catch (\GuzzleHttp\Exception\ConnectException $e) {
             $sErrorMessage = $e->getMessage();
             Log::error('Error on '.__METHOD__.' line '.__LINE__.':' . $sErrorMessage);
-            echo "\n<br>Error on " . __METHOD__ . ' line ' . __LINE__ . ':' . $sErrorMessage;
+            //echo "\n<br>Error on " . __METHOD__ . ' line ' . __LINE__ . ':' . $sErrorMessage;
             if (strpos($sErrorMessage, 'cURL error 28') !== false) {
                 $aResponseResult = [
                     'status' => 'fail',
@@ -123,8 +134,8 @@ class InternetDirect
         } catch (Exception $e) {
             $sErrorMessage = $e->getMessage();
             Log::error('Error on '.__METHOD__.' line '.__LINE__.':' . $sErrorMessage);
-            echo "\n<br>Error on " . __METHOD__ . ' line ' . __LINE__ . ':' . $sErrorMessage;
-            echo "\n<br>Exception: " .  get_class($e) . "";
+            //echo "\n<br>Error on " . __METHOD__ . ' line ' . __LINE__ . ':' . $sErrorMessage;
+            //echo "\n<br>Exception: " .  get_class($e) . "";
             $aResponseResult = [
                 'status' => 'fail',
                 'status_message' => 'Unknown error: ' . $sErrorMessage,
@@ -156,6 +167,10 @@ class InternetDirect
     {
         $this->oGHDC = $oGhdc ?? $this->getDefaultGhdcMessage();
         $this->oHttpClient = $oGuzzleClient ?? $this->getDefaultHttpClient();
+        // Define variables comunes
+        $this->sEnv = App::environment();
+        // Carga configuración de servidores dependiendo del ambiente
+        $this->aConfig = config('claropagos.' . $this->sEnv . '.procesadores_pago.amex');
     }
 
     /**
@@ -419,7 +434,7 @@ class InternetDirect
         }
 
 
-echo "\n<br>ISO Message: '" . $ghdc->getISO(true) . "'";
+//echo "\n<br>ISO Message: '" . $ghdc->getISO(true) . "'";
 
 
         // Envía mensaje

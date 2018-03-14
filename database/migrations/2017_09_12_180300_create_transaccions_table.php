@@ -13,22 +13,23 @@ class CreateTransaccionsTable extends Migration
      */
     public function up()
     {
-        Schema::connection('mysql_sa')->create('transaccions', function (Blueprint $table) {
+        Schema::connection('mysql_sa')->create('transaccion', function (Blueprint $table) {
             $table->uuid('uuid');
             $table->string('comercio');
-            $table->string('pais_id', 3);
+            $table->string('pais', 3);
             $table->boolean('prueba');
             $table->enum('operacion', ['pago', 'preautorizacion', 'autorizacion', 'cancelacion']);
-            $table->enum('estatus', ['pendiente', 'completada', 'reembolsada', 'reembolso-parcial', 'autorizada',
-            'cancelada', 'rechazada-banco', 'rechazada-antifraude', 'contracargo-pendiente', 'contracargo-rechazado', '
-            contracargada', 'fallida']);
+            $table->enum('estatus', [
+                'pendiente', 'completada', 'reembolsada', 'reembolso-parcial', 'autorizada',
+                'cancelada', 'rechazada-banco', 'rechazada-antifraude', 'contracargo-pendiente', 'contracargo-rechazado',
+                'contracargada', 'fallida', 'declinada'
+            ]);
             $table->string('moneda', 3);
             $table->decimal('monto',19, 4);
-            $table->enum('forma_pago', ['tarjeta', 'telmex-recibo', 'telcel-recibo', 'paypal', 'applepay',
-                'androidpay', 'visa-checkout', 'masterpass']);
+            $table->enum('forma_pago', ['tarjeta', 'telmex-recibo', 'telcel-recibo', 'paypal', 'applepay', 'androidpay', 'visa-checkout', 'masterpass']);
             $table->json('datos_pago');
             $table->json('datos_antifraude');
-            $table->integer('comercio_orden_id');
+            $table->string('comercio_orden_id');
             $table->json('datos_comercio');
             $table->json('datos_claropagos');
             $table->json('datos_procesador');
@@ -46,6 +47,6 @@ class CreateTransaccionsTable extends Migration
      */
     public function down()
     {
-        Schema::connection('mysql_sa')->dropIfExists('transaccions');
+        Schema::connection('mysql_sa')->dropIfExists('transaccion');
     }
 }

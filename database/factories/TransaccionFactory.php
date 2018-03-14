@@ -5,7 +5,7 @@ $factory->define(App\Models\Transaccion::class, function (Faker\Generator $faker
     return [
         'uuid' => $faker->uuid,
         'comercio' => $faker->company,
-        'pais_id' => $faker->randomElement(['MEX']),
+        'pais' => $faker->randomElement(['MEX']),
         'prueba' => $faker->boolean,
         'operacion' => $faker->randomElement([
             'pago', 'pago', 'pago', 'pago',

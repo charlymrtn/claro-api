@@ -25,12 +25,12 @@ class TarjetaCredito extends Model
      */
     protected $fillable = [
         'pan', // Número de tarjeta sanitizado
-        'nombre_tarjeta', // Nombre como aparece en la tarjeta
-        'cvv', // Código de seguridad de la tarjeta cvv2, cvc
-        'mes_expiracion', // Mes de expiración
-        'anio_expiracion', // Año de expiracion
-        'mes_inicio', // Mes de inicio de la tarjeta
-        'anio_inicio', // Anio de inicio
+        'nombre', // Nombre como aparece en la tarjeta
+        'cvv2', // Código de seguridad de la tarjeta cvv2, cvc
+        'expiracion_mes', // Mes de expiración
+        'expiracion_anio', // Año de expiracion
+        'inicio_mes', // Mes de inicio de la tarjeta
+        'inicio_anio', // Anio de inicio
         'nombres', // Nombres del tarjetabiente
         'apellido_paterno', // Apellido Paterno del tarjetabiente
         'apellido_materno', // Apellido Materno del tarjetabiente
@@ -53,6 +53,7 @@ class TarjetaCredito extends Model
      */
     protected $hidden = [
         '_pan', // Número de tarjeta (16-19)
+        'cvv2', // CVV2 (3-4)
     ];
 
     /*
@@ -157,7 +158,7 @@ class TarjetaCredito extends Model
      *
      * @return void
      */
-    public function setPanAttribute($sPan) {
+    public function setPanAttribute(string $sPan) {
         // Prepara PAN
         $iPan = preg_replace('/\D/', '', $sPan);
         // Valida tarjeta
@@ -178,6 +179,22 @@ class TarjetaCredito extends Model
         $this->attributes['_pan'] = $iPan;
         // Define marca
         $this->attributes['marca'] = $this->defineMarca($iPan);
+    }
+
+
+    /**
+     * Define el año de expiración
+     *
+     * @param string $sAnio
+     *
+     * @return void
+     */
+    public function setExpiracion_anioAttribute(string $sAnio) {
+        if (strlen($sAnio) > 2 ) {
+            $this->attributes['expiracion_anio'] = substr($sAnio, -2);
+        } else {
+            $this->attributes['expiracion_anio'] = str_pad($sAnio, 2, "0");
+        }
     }
 
     /*

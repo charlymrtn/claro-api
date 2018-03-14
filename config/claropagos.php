@@ -9,40 +9,52 @@ return [
     */
 
     'local' => [
-
+        // El ambiente cuenta con sandbox
+        'sandbox' => false,
         // Servidores del ecosistema Claro Pagos
         'server' => [
             'admin' => [
-                'url' => env('CP_ADMIN', 'admin.claropay.local.com'),
+                'url' => env('CP_ADMIN', 'http://admin.claropay.local.com'),
+                'token' => 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6ImZlMjg1M2Y5Y2UxOTgxY2Y0NWM4MGY0ODQ0MDU5M2EyMzJjYzg4ZmI'
+                         . '3ZWIzYmViY2U2ODM2NjNiMWEyN2IyMzI3ZWI1YjVmOTBiYTBhYjdmIn0.eyJhdWQiOiIxIiwianRpIjoiZmUyODUzZjljZTE5OD'
+                         . 'FjZjQ1YzgwZjQ4NDQwNTkzYTIzMmNjODhmYjdlYjNiZWJjZTY4MzY2M2IxYTI3YjIzMjdlYjViNWY5MGJhMGFiN2YiLCJpYXQiO'
+                         . 'jE1MjA3NTE0ODcsIm5iZiI6MTUyMDc1MTQ4NywiZXhwIjoxNTUyMjg3NDg3LCJzdWIiOiIiLCJzY29wZXMiOlsic3VwZXJhZG1p'
+                         . 'biJdfQ.bZ7RtLMT2WX9bPyGNM9GKgJE4Stwza1cYS1IjQGMN6K4cXZjyq1Rht0dOEcXlmUOne3anYxDziGvc81FY1ENf0M9nzpa'
+                         . '6xS5B8t8YlZNawezAG6Ll7DkGW6GYXqe1_WC8Y1zAdp28-laTfJAiX5I8cm-oVXo4FhVhcex1u9OmUBvRor_chWlbdQE90GItbm'
+                         . 'UHUOYAh0hajmG-tLQ_oMUBh0tiiDVH9CFylYNx3lSPZKnFNGdtUqoky1jTaiFwUvf4ZVsZ3Bww6ZoVsFR67LdCIUIzlxJ7TvWnW'
+                         . 'sj8yDzwcbp2wF8guOeaE9QiwfoE8roWlVsigcL_3x3quilAtudLMiKSk9BW49T9qfZBGmHUXyBZTQUf2cUP2Fz2csMol62FhHYr'
+                         . '0PjtMnphUqhpmqHm1Ay7q5W4LPrfrID9SA8BSyrnZH8AWVOv-QSMiKyKyCVTmIZOSP9VrogngdsAu9RQi9U3ilyNo8GZUF1_k6G'
+                         . 'rYANYXnsljBalHGx1XN9vm6H3tRviXcVWuFvnyGUqIhIGofH6II-vN8eGKFC72pTg4zffiWD-jppjSGTPUYYqaqV53pmA5V9dFG'
+                         . '_bpfj1gMHrd4V3DTKgx46WWxvNslAbQrQelSt5Ut107YUY7Wazhc31j9tc6iwc_dPhjuCQ5F19whLINb6hQBjtBCEYtjFsS4',
             ],
             'antifraude' => [
-                'url' => env('CP_ANTIFRAUDE', 'antifraude.claropay.local.com'),
+                'url' => env('CP_ANTIFRAUDE', 'http://antifraude.claropay.local.com'),
             ],
             'api' => [
-                'url' => env('CP_API', 'api.claropay.local.com'),
-                'token' => 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6IjU4MDQyOTFiYzdiZmVmMzVjZDg1NTQ4Yzk4OTE1MDJlYzlmOTAwODQ'
-                         . '0ZjJhYmE1OWZkMDc0NzUyZjA1ODViYzM3NzlkZDE5MTI0ZjdiODI2In0.eyJhdWQiOiIxIiwianRpIjoiNTgwNDI5MWJjN2JmZW'
-                         . 'YzNWNkODU1NDhjOTg5MTUwMmVjOWY5MDA4NDRmMmFiYTU5ZmQwNzQ3NTJmMDU4NWJjMzc3OWRkMTkxMjRmN2I4MjYiLCJpYXQiO'
-                         . 'jE1MTU4MDk0MDksIm5iZiI6MTUxNTgwOTQwOSwiZXhwIjoxNTQ3MzQ1NDA5LCJzdWIiOiIxIiwic2NvcGVzIjpbInN1cGVyYWRt'
-                         . 'aW4iXX0.FnDV4lZcnJcmZ4-t9JbqOcLewuzWlfw9FMEgiXIaOS1BjG8xJubU9woBsWPxz-cv0egmpXUsHBnM394RPWyEpVni5R3'
-                         . 'AeOdSuuYVb0IcLojk9-Gz40M9UcrVSkBhCIHtUxxJo6pE4K4zF1FNSQpqcvw3rM9Ok1s0nCiVHtok4H3V7gA58vE9ihYYRpKks0 '
-                         . 'CCMYjoQ9H_RlT46sujCK8zq-aSlj4bfbCYMFdZo0ptGU3kXWF3xYOe9l1-Ls3odxq40VJAj0Y97wk40-Ff2bTFmTO99Os3SAJyA'
-                         . 'LyIFVAIKpQVUA3yumh6EGdZncs3lUO5kURnEuRtjaTtqcYwUkGvgGv9hP4xAfskAUmc_LMPjwmR93tmmYhCT9v6E-Tz8ZGdHzNW'
-                         . '6Vu_fqRrSsFF7kUDPdKKbDHGHy6QdtFj5oma1Q2sKTbDd_sYyFquQ8ZxuR8NdoJRuiHT1DhohA-l2-exBRfMATScGU3ZXuyqcLR'
-                         . 'Yk69fDwW5UtCSrMcQIkBwEo6qWnahPMO-_ojxvNZrNfM7PPvQ1fCIE2d8V9uMIA1jNFCKpVpekoXStxcC_hrD3MeyIMdU06lH_8'
-                         . '0XTv-n7Sj4NZw2uUtSRm4v2YKfScsfZ5fGkNmGJHdDZC00qFd4j4c38U_aGo4xX0kK1jjOO6xqu-WYpXJ_UTMo904AX43W6Kc',
+                'url' => env('CP_API', 'http://api.claropay.local.com'),
             ],
             'boveda' => [
-                'url' => env('CP_BOVEDA', 'boveda.claropay.local.com'),
+                'url' => env('CP_BOVEDA', 'http://boveda.claropay.local.com'),
             ],
             'clientes' => [
-                'url' => env('CP_CLIENTE', 'clientes.claropay.local.com'),
+                'url' => env('CP_CLIENTE', 'http://clientes.claropay.local.com'),
+                'token' => 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6ImZlMjg1M2Y5Y2UxOTgxY2Y0NWM4MGY0ODQ0MDU5M2EyMzJjYzg4ZmI'
+                         . '3ZWIzYmViY2U2ODM2NjNiMWEyN2IyMzI3ZWI1YjVmOTBiYTBhYjdmIn0.eyJhdWQiOiIxIiwianRpIjoiZmUyODUzZjljZTE5OD'
+                         . 'FjZjQ1YzgwZjQ4NDQwNTkzYTIzMmNjODhmYjdlYjNiZWJjZTY4MzY2M2IxYTI3YjIzMjdlYjViNWY5MGJhMGFiN2YiLCJpYXQiO'
+                         . 'jE1MjA3NTE0ODcsIm5iZiI6MTUyMDc1MTQ4NywiZXhwIjoxNTUyMjg3NDg3LCJzdWIiOiIiLCJzY29wZXMiOlsic3VwZXJhZG1p'
+                         . 'biJdfQ.bZ7RtLMT2WX9bPyGNM9GKgJE4Stwza1cYS1IjQGMN6K4cXZjyq1Rht0dOEcXlmUOne3anYxDziGvc81FY1ENf0M9nzpa'
+                         . '6xS5B8t8YlZNawezAG6Ll7DkGW6GYXqe1_WC8Y1zAdp28-laTfJAiX5I8cm-oVXo4FhVhcex1u9OmUBvRor_chWlbdQE90GItbm'
+                         . 'UHUOYAh0hajmG-tLQ_oMUBh0tiiDVH9CFylYNx3lSPZKnFNGdtUqoky1jTaiFwUvf4ZVsZ3Bww6ZoVsFR67LdCIUIzlxJ7TvWnW'
+                         . 'sj8yDzwcbp2wF8guOeaE9QiwfoE8roWlVsigcL_3x3quilAtudLMiKSk9BW49T9qfZBGmHUXyBZTQUf2cUP2Fz2csMol62FhHYr'
+                         . '0PjtMnphUqhpmqHm1Ay7q5W4LPrfrID9SA8BSyrnZH8AWVOv-QSMiKyKyCVTmIZOSP9VrogngdsAu9RQi9U3ilyNo8GZUF1_k6G'
+                         . 'rYANYXnsljBalHGx1XN9vm6H3tRviXcVWuFvnyGUqIhIGofH6II-vN8eGKFC72pTg4zffiWD-jppjSGTPUYYqaqV53pmA5V9dFG'
+                         . '_bpfj1gMHrd4V3DTKgx46WWxvNslAbQrQelSt5Ut107YUY7Wazhc31j9tc6iwc_dPhjuCQ5F19whLINb6hQBjtBCEYtjFsS4',
             ],
             'monitor' => [
-                'url' => env('CP_MONITOR', 'monitor.claropay.local.com'),
+                'url' => env('CP_MONITOR', 'http://monitor.claropay.local.com'),
             ],
             'tareas' => [
-                'url' => env('CP_TAREAS', 'tareas.claropay.local.com'),
+                'url' => env('CP_TAREAS', 'http://tareas.claropay.local.com'),
             ],
         ],
 
@@ -51,6 +63,9 @@ return [
             'amex' => [
                 'api_url' => 'https://qwww318.americanexpress.com/IPPayments/inter/CardAuthorization.do',
                 'origin' => 'AMERICAMOVIL-28705',
+                'country' => '484',
+                'region' => 'LAC',
+                'rtind' => '050',
             ],
         ],
 
@@ -58,30 +73,54 @@ return [
 
     'dev' => [
 
+        // El ambiente cuenta con sandbox
+        'sandbox' => false,
         // Servidores del ecosistema Claro Pagos
         'server' => [
             'admin' => [
-                'url' => env('CP_ADMIN', 'atenea.dev.mavericksgateway.net'),
+                'url' => env('CP_ADMIN', 'http://atenea.dev.mavericksgateway.net'),
             ],
             'antifraude' => [
-                'url' => env('CP_ANTIFRAUDE', 'ares.dev.mavericksgateway.net'),
+                'url' => env('CP_ANTIFRAUDE', 'http://ares.dev.mavericksgateway.net'),
             ],
             'api' => [
                 'url' => env('CP_API', 'ciclope.dev.mavericksgateway.net'),
             ],
             'boveda' => [
-                'url' => env('CP_BOVEDA', 'busiris.dev.mavericksgateway.net'),
+                'url' => env('CP_BOVEDA', 'http://busiris.dev.mavericksgateway.net'),
             ],
             'clientes' => [
-                'url' => env('CP_CLIENTE', 'apolo.dev.mavericksgateway.net'),
+                'url' => env('CP_CLIENTE', 'http://apolo.dev.mavericksgateway.net'),
+                'token' => 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6ImZlMjg1M2Y5Y2UxOTgxY2Y0NWM4MGY0ODQ0MDU5M2EyMzJjYzg4ZmI'
+                         . '3ZWIzYmViY2U2ODM2NjNiMWEyN2IyMzI3ZWI1YjVmOTBiYTBhYjdmIn0.eyJhdWQiOiIxIiwianRpIjoiZmUyODUzZjljZTE5OD'
+                         . 'FjZjQ1YzgwZjQ4NDQwNTkzYTIzMmNjODhmYjdlYjNiZWJjZTY4MzY2M2IxYTI3YjIzMjdlYjViNWY5MGJhMGFiN2YiLCJpYXQiO'
+                         . 'jE1MjA3NTE0ODcsIm5iZiI6MTUyMDc1MTQ4NywiZXhwIjoxNTUyMjg3NDg3LCJzdWIiOiIiLCJzY29wZXMiOlsic3VwZXJhZG1p'
+                         . 'biJdfQ.bZ7RtLMT2WX9bPyGNM9GKgJE4Stwza1cYS1IjQGMN6K4cXZjyq1Rht0dOEcXlmUOne3anYxDziGvc81FY1ENf0M9nzpa'
+                         . '6xS5B8t8YlZNawezAG6Ll7DkGW6GYXqe1_WC8Y1zAdp28-laTfJAiX5I8cm-oVXo4FhVhcex1u9OmUBvRor_chWlbdQE90GItbm'
+                         . 'UHUOYAh0hajmG-tLQ_oMUBh0tiiDVH9CFylYNx3lSPZKnFNGdtUqoky1jTaiFwUvf4ZVsZ3Bww6ZoVsFR67LdCIUIzlxJ7TvWnW'
+                         . 'sj8yDzwcbp2wF8guOeaE9QiwfoE8roWlVsigcL_3x3quilAtudLMiKSk9BW49T9qfZBGmHUXyBZTQUf2cUP2Fz2csMol62FhHYr'
+                         . '0PjtMnphUqhpmqHm1Ay7q5W4LPrfrID9SA8BSyrnZH8AWVOv-QSMiKyKyCVTmIZOSP9VrogngdsAu9RQi9U3ilyNo8GZUF1_k6G'
+                         . 'rYANYXnsljBalHGx1XN9vm6H3tRviXcVWuFvnyGUqIhIGofH6II-vN8eGKFC72pTg4zffiWD-jppjSGTPUYYqaqV53pmA5V9dFG'
+                         . '_bpfj1gMHrd4V3DTKgx46WWxvNslAbQrQelSt5Ut107YUY7Wazhc31j9tc6iwc_dPhjuCQ5F19whLINb6hQBjtBCEYtjFsS4',
             ],
             'monitor' => [
-                'url' => env('CP_MONITOR', 'medusa.dev.mavericksgateway.net'),
+                'url' => env('CP_MONITOR', 'http://medusa.dev.mavericksgateway.net'),
             ],
             'tareas' => [
-                'url' => env('CP_TAREAS', 'triton.dev.mavericksgateway.net'),
+                'url' => env('CP_TAREAS', 'http://triton.dev.mavericksgateway.net'),
             ],
         ],
+        // Configuración de procesadores de pago
+        'procesadores_pago' => [
+            'amex' => [
+                'api_url' => 'https://qwww318.americanexpress.com/IPPayments/inter/CardAuthorization.do',
+                'origin' => 'AMERICAMOVIL-28705',
+                'country' => '484',
+                'region' => 'LAC',
+                'rtind' => '050',
+            ],
+        ],
+
     ],
 
     'qa' => [
@@ -108,6 +147,17 @@ return [
             ],
             'tareas' => [
                 'url' => env('CP_TAREAS', 'triton.qa.mavericksgateway.net'),
+            ],
+        ],
+
+        // Configuración de procesadores de pago
+        'procesadores_pago' => [
+            'amex' => [
+                'api_url' => 'https://qwww318.americanexpress.com/IPPayments/inter/CardAuthorization.do',
+                'origin' => 'AMERICAMOVIL-28705',
+                'country' => '484',
+                'region' => 'LAC',
+                'rtind' => '050',
             ],
         ],
 
@@ -140,6 +190,17 @@ return [
             ],
         ],
 
+        // Configuración de procesadores de pago
+        'procesadores_pago' => [
+            'amex' => [
+                'api_url' => 'https://qwww318.americanexpress.com/IPPayments/inter/CardAuthorization.do',
+                'origin' => 'AMERICAMOVIL-28705',
+                'country' => '484',
+                'region' => 'LAC',
+                'rtind' => '050',
+            ],
+        ],
+
     ],
 
     'sandbox' => [
@@ -169,6 +230,17 @@ return [
             ],
         ],
 
+        // Configuración de procesadores de pago
+        'procesadores_pago' => [
+            'amex' => [
+                'api_url' => 'https://qwww318.americanexpress.com/IPPayments/inter/CardAuthorization.do',
+                'origin' => 'AMERICAMOVIL-28705',
+                'country' => '484',
+                'region' => 'LAC',
+                'rtind' => '050',
+            ],
+        ],
+
     ],
 
     'production' => [
@@ -195,6 +267,17 @@ return [
             ],
             'tareas' => [
                 'url' => env('CP_TAREAS', 'tareas.claropagos.com'),
+            ],
+        ],
+
+        // Configuración de procesadores de pago
+        'procesadores_pago' => [
+            'amex' => [
+                'api_url' => 'https://www206.americanexpress.com/IPPayments/inter/CardAuthorization.do',
+                'origin' => 'AMERICAMOVIL-28705',
+                'country' => '484',
+                'region' => 'LAC',
+                'rtind' => '035',
             ],
         ],
 
