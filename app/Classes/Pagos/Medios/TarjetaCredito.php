@@ -131,6 +131,49 @@ class TarjetaCredito extends Model
         return array_sum(str_split($sChecksum)) % 10 === 0;
     }
 
+    /**
+     * Valida y formatea año a dos dígitos
+     *
+     * @param string $sAnio
+     *
+     * @return void
+     */
+    public function formateaAnio(string $sAnio) {
+        // Valida año
+        $iAnioLength = strlen($sAnio);
+        if ($iAnioLength < 2 || $iAnioLength > 4) {
+            throw new Exception('Año inválido: ' . $sAnio);
+        }
+        // Formatea año
+        if (strlen($sAnio) > 2 ) {
+            // Valida rango
+            if ($sAnio < 1920 || $sAnio > 2180) {
+                throw new Exception('Año inválido: ' . $sAnio);
+            }
+            return substr($sAnio, -2);
+        } else {
+            return str_pad($sAnio, 2, "0", STR_PAD_LEFT);
+        }
+    }
+
+    /**
+     * Valida y formatea mes a dos dígitos
+     *
+     * @param string $sMes
+     *
+     * @return void
+     */
+    public function formateaMes(string $sMes) {
+        // Valida mes
+        $iMesLength = strlen($sMes);
+        if ($iMesLength < 1 || $iMesLength > 2 || $sMes < 1 || $sMes > 12) {
+            throw new Exception('Mes inválido.');
+        }
+        // Formatea mes
+        return str_pad($sMes, 2, "0", STR_PAD_LEFT);
+    }
+
+
     // }}}
 
     /**
@@ -174,13 +217,24 @@ class TarjetaCredito extends Model
         // Asigna versión sanitizada
         $this->attributes['pan'] = $this->attributes['iin'] . str_repeat('*', ($iPanLength - 10)) . substr($iPan, -4);
         // Asigna hash/fingerprint
-        $this->attributes['pan_hash'] = hash('sha256', $iPan);
+        $this->attributes['pan_hash'] = Hash::make($iPan);
         // Asigna pan
         $this->attributes['_pan'] = $iPan;
         // Define marca
         $this->attributes['marca'] = $this->defineMarca($iPan);
     }
 
+    /**
+     * Define el año de inicio
+     *
+     * @param string $sAnio
+     *
+     * @return void
+     */
+    public function setInicioAnioAttribute(string $sAnio) {
+        // Valida y formatea
+        $this->attributes['inicio_anio'] = $this->formateaAnio($sAnio);
+    }
 
     /**
      * Define el año de expiración
@@ -189,12 +243,33 @@ class TarjetaCredito extends Model
      *
      * @return void
      */
-    public function setExpiracion_anioAttribute(string $sAnio) {
-        if (strlen($sAnio) > 2 ) {
-            $this->attributes['expiracion_anio'] = substr($sAnio, -2);
-        } else {
-            $this->attributes['expiracion_anio'] = str_pad($sAnio, 2, "0");
-        }
+    public function setExpiracionAnioAttribute(string $sAnio) {
+        // Valida y formatea
+        $this->attributes['expiracion_anio'] = $this->formateaAnio($sAnio);
+    }
+
+    /**
+     * Define el mes de inicio
+     *
+     * @param string $sMes
+     *
+     * @return void
+     */
+    public function setInicioMesAttribute(string $sMes) {
+        // Valida y formatea
+        $this->attributes['inicio_mes'] = $this->formateaMes($sMes);
+    }
+
+    /**
+     * Define el mes de expiración
+     *
+     * @param string $sMes
+     *
+     * @return void
+     */
+    public function setExpiracionMesAttribute(string $sMes) {
+        // Valida y formatea
+        $this->attributes['expiracion_mes'] = $this->formateaMes($sMes);
     }
 
     /*

@@ -37,7 +37,6 @@ class Contacto extends Model
      * Atributos no asignables en masa
      */
     protected $guarded = [
-        'uuid', // Identificador único
         'created_at', // Fecha de creación del objeto tipo Carbon
         'updated_at', // Fecha de actualización del objeto tipo Carbon
     ];
