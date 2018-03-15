@@ -61,7 +61,6 @@ class CargoController extends Controller
          * @todo: IMPORTANTE: Versión para demo, cambiar pasando el demo!
          */
 
-
         // Valida datos de entrada
         $oValidator = Validator::make($oRequest->all(), [
             'tarjeta' => 'required|required|array',
@@ -249,9 +248,9 @@ class CargoController extends Controller
         $oTrx = $this->mTransaccion->create($aTrx);
 
         // Envía transacción a Admin y Clientes
-        $oResultado = $this->oMensaje->envia('clientes', '/api/admin/transaccion', 'POST', $oTrx->toJson());
-        #dump($oResultado);
-        #$this->oMensaje->envia('admin', '/apip/admin/transaccion', 'POST', $oTrx->toJson());
+        // @todo: Cambiar envío a tareas y mensajes únicamente para que ese sistema envíe estos mensajes a los otros sistemas.
+        $oMensajeResultado = $this->oMensaje->envia('clientes', '/api/admin/transaccion', 'POST', $oTrx->toJson());
+        $oMensajeResultado = $this->oMensaje->envia('admin', '/api/admin/transaccion', 'POST', $oTrx->toJson());
 
         // Regresa resultado
 print $oTrx->toJson();
