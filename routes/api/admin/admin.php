@@ -14,5 +14,7 @@ Route::group(['namespace' => 'API\admin', 'prefix' => 'admin', 'as' => 'admin.',
         Route::delete('/comercio/{uuid}/token/{token}/revoke', 'ComercioTokenController@revoke')->name('token.revoke');
         Route::apiResource('/comercio/{uuid}/token', 'ComercioTokenController');
     });
+    //Ping
+    Route::get('/ping', 'PingController@index');
 
 });
