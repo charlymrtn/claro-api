@@ -5,9 +5,10 @@ namespace App\Classes\Pagos\Procesadores;
 use App;
 use Config;
 use Exception;
-use App\Classes\Pagos\Procesadores\AbstractProcesador;
 use Carbon\Carbon;
 
+use App\Classes\Pagos\Parametros\PeticionCargo;
+use App\Classes\Pagos\Procesadores\AbstractProcesador;
 use App\Classes\Pagos\Procesadores\Amex\InternetDirect;
 
 /**
@@ -16,6 +17,19 @@ use App\Classes\Pagos\Procesadores\Amex\InternetDirect;
 class ProcesadorAmex extends AbstractProcesador
 {
     // {{{ properties
+
+    /**
+     * Dependency injection
+     *
+     * @var InternetDirect Objeto InternetDirects
+     */
+    protected $oInternetDirect;
+
+
+    /**
+     * @var PeticionCargo Objeto PeticionCargo
+     */
+    protected $oPeticionCargo;
 
     /**
      * @var array Parámetros
@@ -67,12 +81,15 @@ class ProcesadorAmex extends AbstractProcesador
     // {{{ public functions
 
     /**
-     * Constructor
+     * Envía petición de cargo
+     *
+     * @param  string  $sPais
+     * @return void
      */
-    public function __construct()
+    public function carga(PeticionCargo $oPeticionCargo)
     {
-        // Ejecuta constructor padre
-        parent::__construct();
+        //
+        dump($this->aParametros);
     }
 
     // }}}

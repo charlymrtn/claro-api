@@ -2,22 +2,12 @@
 
 namespace App\Classes\Pagos\Procesadores;
 
-use Illuminate\Support\Collection;
-
 /**
  * Interfaz de procesador de pagos.
  * Definición de funciones mínimas que deben ser definidas en los procesadores de pago.
  */
 interface InterfaceProcesador
 {
-    /**
-     * Inicializa parámetros por default del procesador de pagos
-     *
-     * @param array $aParametros Arreglo de parámetros.
-     */
-    private function inicializa(array $aParametros = []);
-
-    
     /**
      * Obtiene parámetros del procesador de pagos.
      *
@@ -70,7 +60,7 @@ interface InterfaceProcesador
     /**
      * Regresa si el procesador de pagos puede realizar autorizaciones sin cargo directo.
      *
-     * @return bool Puede autorizar cargos?
+     * @return bool Puede confirmar un cargo preautorizado?
      */
     public function puedeConfirmar(): bool;
 

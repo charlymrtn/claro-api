@@ -8,6 +8,7 @@ use Validator;
 use Carbon\Carbon;
 use App\Classes\Pagos\Base\Contacto;
 use App\Classes\Pagos\Base\Direccion;
+use App\Classes\Pagos\Base\Telefono;
 use App\Classes\Pagos\Medios\TarjetaCredito;
 
 /**
@@ -123,6 +124,8 @@ class PeticionCargo extends Model
         $this->attributes['pedido']['direccion_envio'] = new Direccion($this->attributes['pedido']['direccion_envio']);
         $this->attributes['pedido']['direccion_cargo'] = new Direccion($this->attributes['pedido']['direccion_cargo']);
         $this->attributes['cliente']['direccion'] = new Direccion($this->attributes['cliente']['direccion']);
+        $this->attributes['cliente']['telefono'] = new Telefono(['numero' => $this->attributes['cliente']['telefono']]);
+        $this->attributes['cliente'] = new Contacto($this->attributes['cliente']);
     }
 
     // }}}
