@@ -59,28 +59,31 @@ class BbvaController extends Controller
             'message' => $oRequest->input('message', 'echo'),
         ];
 
+        // Prepara log
+        $aLog = [];
+
         // Crea socket cliente
-        echo "\nConectando socket...";
+        $sEtapa = "Conectando socket: ";
         $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
         if ($socket === false) {
             # return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error al crear socket.'], 400, ['errors' => socket_strerror(socket_last_error())]);
-            echo "\nsocket_create() failed: reason: " . socket_strerror(socket_last_error()) . "\n";
+            $sEtapa .= "socket_create() failed: reason: " . socket_strerror(socket_last_error());
         } else {
-            echo "OK.\n";
+            $sEtapa .= "OK";
         }
-        flush();
+        $aLog[] = $sEtapa;
 
-        echo "\nConectando a '" . $aConfig['ip'] . "' on port '" . $aConfig['port'] . "'...";
+        $sEtapa = "Conectando a '" . $aConfig['ip'] . "' on port '" . $aConfig['port'] . "': ";
         $result = socket_connect($socket, $aConfig['ip'], $aConfig['port']);
         if ($result === false) {
-            echo "\nsocket_connect() failed.\nReason: ($result) " . socket_strerror(socket_last_error($socket)) . "\n";
+            $sEtapa .= "socket_connect() failed.\nReason: ($result) " . socket_strerror(socket_last_error($socket));
         } else {
-            echo "\nOK.\n";
+            $sEtapa .= "OK";
         }
+        $aLog[] = $sEtapa;
 
         // Prepara mensaje echo
         $oMensaje = new Mensaje();
-
 
         // Variables
         $sSystemsTraceAuditNumber = $this->oMensaje->generateSystemsTraceAuditNumber();
@@ -90,26 +93,36 @@ class BbvaController extends Controller
         $oMensaje->setData(15, date('md')); // Date & time
         $oMensaje->setData(70, 301); // Network Management Information Code
 
-        echo "\nPreparing message...";
+        // Prepara mensaje
+        $sEtapa = "Preparando mensaje: ";
         $in = $this->oMensaje->getISO(true);
         $out = '';
-        echo "\n  Message..." . $in;
+        $sEtapa .= $in;
+        $aLog[] = $sEtapa;
 
-        echo "\nSending message...";
+        // Envía mensaje
+        $sEtapa = "Enviando mensaje: ";
         socket_write($socket, $in, strlen($in));
-        echo "\nOK.\n";
+        $sEtapa .= "OK";
+        $aLog[] = $sEtapa;
 
-        echo "\nReading response:\n\n";
+        // Recibe respuesta
+        $sEtapa = "Reading response: ";
         $buf = 'This is my buffer.';
         if (false !== ($bytes = socket_recv($socket, $buf, 2048, MSG_DONTWAITs))) {
-            echo "\nRead $bytes bytes from socket_recv()....";
+            $sEtapa .= "Read $bytes bytes from socket_recv(): " $buf;
         } else {
-            echo "\nsocket_recv() failed; reason: " . socket_strerror(socket_last_error($socket)) . "\n";
+            $sEtapa .= "socket_recv() failed; reason: " . socket_strerror(socket_last_error($socket));
         }
-        echo "\nClosing socket...";
-        socket_close($socket);
-        echo "\nOK.\n\n";
+        $aLog[] = $sEtapa;
 
+        // Cierra conexion
+        $sEtapa = "Closing socket: ";
+        socket_close($socket);
+        $sEtapa .= "OK";
+        $aLog[] = $sEtapa;
+
+        return json_encode(['log' => $aLog]);
     }
 
     /**

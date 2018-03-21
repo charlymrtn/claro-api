@@ -26,8 +26,7 @@ class Mensaje extends iso8583_1993
      * @var array Elementos de datos diferentes al iso8583_1993
      */
     private $CUSTOM_DATA_ELEMENT = [
-        //1 =>   ['usage' => 'Bit Map Secondary', 'mandatory' => true],
-        2 =>   ['type' => 'n',   'size' => 21,  'fixed' => false, 'usage' => 'Primary account number (PAN)', 'encoding' => 'hex', 'charset' => 'EBCDIC'],
+        1 =>   ['size' => 16, 'usage' => 'Secondary Bit Map'],
         3 =>   ['encoding' => 'hex', 'charset' => 'EBCDIC'],
         11 =>  ['type' => 'ans', 'size' => 6,   'fixed' => true,  'usage' => 'Systems trace audit number', 'text' => 'uppercase'],
         22 =>  ['text' => 'uppercase'],
