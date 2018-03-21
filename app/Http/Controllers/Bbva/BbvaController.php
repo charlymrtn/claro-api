@@ -60,21 +60,22 @@ class BbvaController extends Controller
         ];
 
         // Crea socket cliente
+        echo "\nConectando socket...";
         $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
         if ($socket === false) {
             # return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error al crear socket.'], 400, ['errors' => socket_strerror(socket_last_error())]);
-            echo "socket_create() failed: reason: " . socket_strerror(socket_last_error()) . "\n";
+            echo "\nsocket_create() failed: reason: " . socket_strerror(socket_last_error()) . "\n";
         } else {
             echo "OK.\n";
         }
         flush();
 
-        echo "Conectando a '" . $aConfig['ip'] . "' on port '" . $aConfig['port'] . "'...";
+        echo "\nConectando a '" . $aConfig['ip'] . "' on port '" . $aConfig['port'] . "'...";
         $result = socket_connect($socket, $aConfig['ip'], $aConfig['port']);
         if ($result === false) {
-            echo "socket_connect() failed.\nReason: ($result) " . socket_strerror(socket_last_error($socket)) . "\n";
+            echo "\nsocket_connect() failed.\nReason: ($result) " . socket_strerror(socket_last_error($socket)) . "\n";
         } else {
-            echo "OK.\n";
+            echo "\nOK.\n";
         }
 
         // Prepara mensaje echo
@@ -89,21 +90,25 @@ class BbvaController extends Controller
         $oMensaje->setData(15, date('md')); // Date & time
         $oMensaje->setData(70, 301); // Network Management Information Code
 
+        echo "\nPreparing message...";
         $in = $this->oMensaje->getISO(true);
         $out = '';
+        echo "\n  Message..." . $in;
 
-        echo "Sending HTTP HEAD request...";
+        echo "\nSending message...";
         socket_write($socket, $in, strlen($in));
-        echo "OK.\n";
+        echo "\nOK.\n";
 
-        echo "Reading response:\n\n";
-        while ($out = socket_read($socket, 2048)) {
-            echo $out;
+        echo "\nReading response:\n\n";
+        $buf = 'This is my buffer.';
+        if (false !== ($bytes = socket_recv($socket, $buf, 2048, MSG_DONTWAITs))) {
+            echo "\nRead $bytes bytes from socket_recv()....";
+        } else {
+            echo "\nsocket_recv() failed; reason: " . socket_strerror(socket_last_error($socket)) . "\n";
         }
-
-        echo "Closing socket...";
+        echo "\nClosing socket...";
         socket_close($socket);
-        echo "OK.\n\n";
+        echo "\nOK.\n\n";
 
     }
 
