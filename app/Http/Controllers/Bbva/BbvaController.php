@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Transaccion;
 use App\Classes\Pagos\Parametros\PeticionCargo;
-use App\Classes\Sistema\Mensaje;
+//use App\Classes\Sistema\Mensaje;
 use Webpatser\Uuid\Uuid;
 use App\Classes\Pagos\Procesadores\Bbva\Mensaje;
 
