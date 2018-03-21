@@ -101,10 +101,10 @@ class CargoController extends Controller
 //dump($aTrx);
 //die;
 
-$oProcesador = new \App\Classes\Pagos\Procesadores\ProcesadorAmex();
-$oResultado = $oProcesador->carga($oPeticionCargo);
-dump($oResultado);
-die;
+//$oProcesador = new \App\Classes\Pagos\Procesadores\ProcesadorAmex();
+//$oResultado = $oProcesador->carga($oPeticionCargo);
+//dump($oResultado);
+//die;
 
 
         // Evalúa en Antifraude

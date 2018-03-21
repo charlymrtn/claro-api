@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Classes\Pagos\Procesadores\Amex;
+namespace App\Classes\Pagos\Procesadores\Bbva;
 
 use App\Classes\Pagos\Procesadores\Iso\iso8583_1993;
 
-class GHDC extends iso8583_1993
+class Mensaje extends iso8583_1993
 {
 
     // {{{ properties
