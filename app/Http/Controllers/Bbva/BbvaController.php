@@ -86,7 +86,7 @@ class BbvaController extends Controller
         $oMensaje = new Mensaje();
 
         // Variables
-        $sSystemsTraceAuditNumber = $this->oMensaje->generateSystemsTraceAuditNumber();
+        $sSystemsTraceAuditNumber = $oMensaje->generateSystemsTraceAuditNumber();
         // Define campos
         $oMensaje->setData(7, date('mdhis')); // Date & time
         $oMensaje->setData(11, $sSystemsTraceAuditNumber); // Systems Trace Audit Number
@@ -95,7 +95,7 @@ class BbvaController extends Controller
 
         // Prepara mensaje
         $sEtapa = "Preparando mensaje: ";
-        $in = $this->oMensaje->getISO(true);
+        $in = $oMensaje->getISO(true);
         $out = '';
         $sEtapa .= $in;
         $aLog[] = $sEtapa;
@@ -110,7 +110,7 @@ class BbvaController extends Controller
         $sEtapa = "Reading response: ";
         $buf = 'This is my buffer.';
         if (false !== ($bytes = socket_recv($socket, $buf, 2048, MSG_DONTWAITs))) {
-            $sEtapa .= "Read $bytes bytes from socket_recv(): " $buf;
+            $sEtapa .= "Read $bytes bytes from socket_recv(): " . $buf;
         } else {
             $sEtapa .= "socket_recv() failed; reason: " . socket_strerror(socket_last_error($socket));
         }
