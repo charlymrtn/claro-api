@@ -41,6 +41,7 @@ class iso8583_1987
      * anp	Caracteres alfabéticos y/o numéricos y espacios
      * as	Caracteres alfabéticos y/o especiales
      * ans	Caracteres alfabéticos, numéricos y/o especiales
+     * ansb	Caracteres alfabéticos, numéricos y/o especiales, binarios
      * s	Caracteres especiales ASCII character set 32 - 126
      * ns	Caracteres numéricos y/o especiales
      * b	Binario
@@ -77,7 +78,7 @@ class iso8583_1987
     ];
 
     protected $DATA_ELEMENT = [
-        1 =>   ['type' => 'b',   'size' => 8,   'fixed' => true,  'mandatory' => false, 'usage' => 'Bit Map Extended' ],
+        1 =>   ['type' => 'b',   'size' => 8,   'fixed' => true,  'mandatory' => false, 'usage' => 'Bit Map Extended'],
         2 =>   ['type' => 'n',   'size' => 19,  'fixed' => false, 'sizepos' => 'LL', 'mandatory' => false, 'usage' => 'Primary account number (PAN)'],
         3 =>   ['type' => 'n',   'size' => 6,   'fixed' => true,  'mandatory' => false, 'usage' => 'Processing code'],
         4 =>   ['type' => 'n',   'size' => 12,  'fixed' => true,  'mandatory' => false, 'usage' => 'Amount, transaction'],
@@ -258,16 +259,19 @@ class iso8583_1987
             $this->SPECIAL_CHARS_S[$cChar] = chr($cChar);
             $this->SPECIAL_CHARS_AS[$cChar] = chr($cChar);
             $this->SPECIAL_CHARS_ANS[$cChar] = chr($cChar);
+            $this->SPECIAL_CHARS_ANSB[$cChar] = chr($cChar);
             $this->SPECIAL_CHARS_NS[$cChar] = chr($cChar);
         }
         // Asigna caracteres alpha
         foreach($aAlphaChars as $cChar) {
             $this->SPECIAL_CHARS_AS[$cChar] = chr($cChar);
             $this->SPECIAL_CHARS_ANS[$cChar] = chr($cChar);
+            $this->SPECIAL_CHARS_ANSB[$cChar] = chr($cChar);
         }
         // Asigna caracteres num
         foreach($aNumChars as $cChar) {
             $this->SPECIAL_CHARS_ANS[$cChar] = chr($cChar);
+            $this->SPECIAL_CHARS_ANSB[$cChar] = chr($cChar);
             $this->SPECIAL_CHARS_NS[$cChar] = chr($cChar);
         }
     }
@@ -300,6 +304,7 @@ class iso8583_1987
             case "an": // Caracteres numéricos
             case "anp": // Caracteres alfanuméricos y espacios
             case "as": // Caracteres alfabéticos y especiales
+            case "ansb": // Caracteres alfanuméricos y especiales
             case "ans": // Caracteres alfanuméricos y especiales
             case "s": // Caracteres alfanuméricos y especiales
             case "ns": // Caracteres alfanuméricos y especiales
@@ -395,6 +400,9 @@ class iso8583_1987
             $tmp = substr($tmp, 4, strlen($tmp) - 4);
         }
 
+        // Ordena campos
+        ksort($this->_data);
+
         // Actualiza ISO
         $this->_iso = $this->_mti . $this->_bitmap . implode($this->_data);
         $this->_iso_encoded = $this->ascii2ebcdic_hex($this->_mti) . $this->_bitmap . implode($this->_data_encoded);
@@ -472,6 +480,11 @@ class iso8583_1987
             case "as": // Caracteres alfabéticos y/o especiales
                 if(!$this->_validateAsciiChars($data, $this->SPECIAL_CHARS_AS)) {
                     throw new \Exception("Tipo de campo as {$aDataElementDefinition['type']} inválido: '" . $data . "'");
+                }
+                break;
+            case "ansb": // Caracteres alfabéticos, numéricos y/o especiales, binarios
+                if(!$this->_validateAsciiChars($data, $this->SPECIAL_CHARS_ANSB)) {
+                    throw new \Exception("Tipo de campo ans {$aDataElementDefinition['type']} inválido: '" . $data . "'");
                 }
                 break;
             case "ans": // Caracteres alfabéticos, numéricos y/o especiales
