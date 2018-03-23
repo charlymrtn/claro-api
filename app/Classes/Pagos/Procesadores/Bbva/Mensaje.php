@@ -28,7 +28,7 @@ class Mensaje extends iso8583_1987
     private $CUSTOM_DATA_ELEMENT = [
         1 =>   ['type' => 'an',   'size' => 16,   'fixed' => true,  'mandatory' => true, 'usage' => 'Secondary Bit Map' ],
         3 =>   [],
-        4 =>   [],
+        4 =>   ['format' => ['pad_type' => 'left', 'pad_string' => '0']],
         7 =>   ['mandatory' => true],
         11 =>  ['mandatory' => true],
         12 =>  [],
@@ -122,36 +122,85 @@ class Mensaje extends iso8583_1987
     {
         $sResultado = '';
         // 1-2 Tipo de transacción
-        //     00 = Compra, Check-in, Reautorización, Compra con Pre-Propina
-        //     06 = Check-out
-        //     07 = Post-Propina
-        //     20 = Devolución
-        //     09 = Cash advance/Compra con cash back
-        //     16 = Consulta de Puntos
-        //     17 = Dinero Móvil
-        //     18 = Compra con Puntos
-        //     65 = Pago Finanzia
-        //     28 = Pago de tarjeta
-        //     40 = Transferencia
-        //     50 = Multipago
-        $sResultado .= sprintf("%02s", $aData['tipo']);
+        if (empty($aData['tipo'])) {
+            // Default - compra
+            $sResultado .= '00';
+        } else if (in_array($aData['tipo'], ['compra', 'checkin', 'reautorizacion'])) {
+            // 00 = Compra, Check-in, Reautorización, Compra con Pre-Propina
+            $sResultado .= '00';
+        } else if ($aData['tipo'] == 'checkout') {
+            // 06 = Check-out
+            $sResultado .= '06';
+        } else if ($aData['tipo'] == 'postpropina') {
+            // 07 = Post-Propina
+            $sResultado .= '07';
+        } else if ($aData['tipo'] == 'devolucion') {
+            // 20 = Devolución
+            $sResultado .= '20';
+        } else if (in_array($aData['tipo'], ['cash_advance', 'cash_back'])) {
+            // 09 = Cash advance/Compra con cash back
+            $sResultado .= '09';
+        } else if ($aData['tipo'] == 'puntos_consulta') {
+            // 16 = Consulta de Puntos
+            $sResultado .= '16';
+        } else if ($aData['tipo'] == 'puntos_compra') {
+            // 18 = Compra con Puntos
+            $sResultado .= '18';
+        } else if ($aData['tipo'] == 'dineromovil') {
+            // 17 = Dinero Móvil
+            $sResultado .= '17';
+        } else if ($aData['tipo'] == 'pago_finanzia') {
+            // 65 = Pago Finanzia
+            $sResultado .= '65';
+        } else if ($aData['tipo'] == 'pago_tarjeta') {
+            // 28 = Pago de tarjeta
+            $sResultado .= '28';
+        } else if ($aData['tipo'] == 'transferencia') {
+            // 40 = Transferencia
+            $sResultado .= '40';
+        } else if ($aData['tipo'] == 'multipago') {
+            // 50 = Multipago
+            $sResultado .= '50';
+       }
         // 3-4 Cuenta Origen
-        //     00 = Cuenta por omisión
-        //     99 = Multipago en efectivo
-        $sResultado .= sprintf("%02s", $aData['origen']);
+        if (empty($aData['cuenta_origen'])) {
+            // Default - Cuenta por omisión
+            $sResultado .= '00';
+        } else if ($aData['cuenta_origen'] == 'default') {
+            // 00 = Cuenta por omisión
+            $sResultado .= '00';
+        } else if ($aData['cuenta_origen'] == 'multipago') {
+            // 99 = Multipago en efectivo
+            $sResultado .= '99';
+        }
         // 5 Cuenta Destino – Parte 1 Mensaje de solicitud de la Interred:
-        //     0   = Cuenta por omisión
-        //     Mensaje de respuesta del Adquirente:
-        //     0   = Cuenta por omisión. Transacción NO QPS
-        //     9   = Transacción QPS (ver Anexo 6), Dinero Móvil
-        $sResultado .= sprintf("%1s", $aData['destino1']);
+        if (empty($aData['cuenta_destino'])) {
+            // Default - Cuenta por omisión
+            $sResultado .= '0';
+        } else if ($aData['cuenta_destino'] == 'default') {
+            // 0 = Cuenta por omisión. Transacción NO QPS
+            $sResultado .= '0';
+        } else if ($aData['cuenta_destino'] == 'dineromovil') {
+            // Mensaje de respuesta del Adquirente:
+            // 9 = Transacción QPS (ver Anexo 6), Dinero Móvil
+            $sResultado .= '9';
+        }
         // 6 Cuenta Destino – Parte 2 Mensaje de solicitud de la Interred:
-        //     0   = Cuenta por omisión
-        //     Mensaje de respuesta del Adquirente:
-        //     0   = Cuenta por omisión. Pin Pad NO requiere telecarga
-        //     1   = Pin Pad requiere telecarga
-        //     9   = Dinero Móvil
-        $sResultado .= sprintf("%1s", $aData['destino2']);
+        if (empty($aData['cuenta_destino'])) {
+            // Default - Cuenta por omisión
+            $sResultado .= '0';
+        } else if ($aData['cuenta_destino'] == 'default') {
+            // 0  = Cuenta por omisión. Pin Pad NO requiere telecarga
+            $sResultado .= '0';
+        } else if ($aData['cuenta_destino'] == 'telecarga') {
+            // Mensaje de respuesta del Adquirente:
+            // 1 = Pin Pad requiere telecarga
+            $sResultado .= '9';
+        } else if ($aData['cuenta_destino'] == 'dineromovil') {
+            // Mensaje de respuesta del Adquirente:
+            // 9 = Dinero Móvil
+            $sResultado .= '9';
+        }
 
         return $sResultado;
     }

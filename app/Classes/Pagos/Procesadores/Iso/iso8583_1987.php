@@ -432,6 +432,41 @@ class iso8583_1987
     }
 
     /**
+     * Formatea el dato si está definido en el elemento.
+     *
+     * @param mixed $data Dato a validar.
+     * @param array $aDataElementDefinition Data element definition.
+     *
+     * @return string Regresa el dato formateado.
+     */
+    private function _formateaData($data, array $aDataElementDefinition): bool
+    {
+        // Verifica definición de formato
+        if(isset($aDataElementDefinition['format'])) {
+            // Formato padding
+            // pad_type = [right, left, center]
+            // pad_length = $aDataElementDefinition['size']
+            // pad_string = ' '
+            if(isset($aDataElementDefinition['format']['pad_type'])) {
+                if ($aDataElementDefinition['format']['pad_type'] == 'left') {
+                    $cPadType = STR_PAD_LEFT;
+                } else if ($aDataElementDefinition['format']['pad_type'] == 'center') {
+                    $cPadType = STR_PAD_BOTH;
+                } else {
+                    $cPadType = STR_PAD_RIGHT;
+                }
+                $data = str_pad(
+                    $data,
+                    $aDataElementDefinition['format']['pad_length'] ?? $aDataElementDefinition['size'],
+                    $aDataElementDefinition['format']['pad_string'] ?? ' ',
+                    $cPadType
+                );
+            }
+        }
+        return $data;
+    }
+
+    /**
      * Valida el tipo, tamaño y mandatorio de un dato.
      *
      * @param mixed $data Dato a validar.
@@ -812,6 +847,10 @@ class iso8583_1987
                 $this->_validaData($data, $this->DATA_ELEMENT[$bit]);
             } catch(\Exception $e) {
                 throw new \Exception("Error al definir el campo {$bit}: " . $e->getMessage());
+            }
+            // Formatea data
+            if (isset($this->DATA_ELEMENT[$bit]['format'])) {
+                $data = $this->_formateaData($data, $this->DATA_ELEMENT[$bit]);
             }
             // Codifica data
             $this->_packElement($bit, $data);
