@@ -30,7 +30,6 @@ class Telefono extends Model
      * Atributos no asignables en masa
      */
     protected $guarded = [
-        'uuid', // Identificador único
         'created_at', // Fecha de creación del objeto tipo Carbon
         'updated_at', // Fecha de actualización del objeto tipo Carbon
     ];
@@ -43,18 +42,13 @@ class Telefono extends Model
     /*
      * Atributos mutables
      */
-    protected $casts = [
-        'codigo_pais' => 'integer',
-        'codigo_area' => 'integer',
-        'numero' => 'integer',
-        'extension' => 'integer',
-    ];
+    //protected $casts = [];
 
     /*
      * Atributos mutables a fechas
      */
     protected $dates = [
-        'creacion', 'nacimiento',
+        'nacimiento',
         'created_at', 'updated_at', 'deleted_at',
     ];
 

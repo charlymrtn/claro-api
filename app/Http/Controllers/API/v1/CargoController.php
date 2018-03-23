@@ -64,8 +64,6 @@ class CargoController extends Controller
         // Encapsula, valida y formatea datos en PeticionCargo
         $oPeticionCargo = new PeticionCargo($oRequest->all());
 
-        // @todo: Cambiar Cliente en peticion de cargo por objeto Contacto
-        // @todo: Cambiar Telefono en direccion de objeto Telefono
         // @todo: Cambiar Procesadores\Amex\InternetDirect por Procesadores\sProcesadorAmex
 
         // Inicializa transaccion
@@ -98,6 +96,16 @@ class CargoController extends Controller
             // Fechas
             'created_at' => date('Y-m-d H:i:s'),
         ];
+
+//dump($oPeticionCargo->toArray());
+//dump($aTrx);
+//die;
+
+//$oProcesador = new \App\Classes\Pagos\Procesadores\ProcesadorAmex();
+//$oResultado = $oProcesador->carga($oPeticionCargo);
+//dump($oResultado);
+//die;
+
 
         // Evalúa en Antifraude
         if ($oPeticionCargo->tarjeta->_pan == '4111111111111111') {

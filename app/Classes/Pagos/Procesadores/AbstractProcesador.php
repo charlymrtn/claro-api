@@ -2,11 +2,6 @@
 
 namespace App\Classes\Pagos\Procesadores;
 
-use Jenssegers\Model\Model;
-use Exception;
-use Carbon\Carbon;
-use Illuminate\Support\Collection;
-
 /**
  * Description of ProcesadorAbstract
  *
@@ -133,6 +128,15 @@ abstract class AbstractProcesador implements InterfaceProcesador
         return method_exists($this, 'preautoriza');
     }
 
+    /**
+     * Regresa si el procesador de pagos puede realizar preautorizaciones sin cargo directo.
+     *
+     * @return bool Puede confirmar un cargo preautorizado?
+     */
+    public function puedeConfirmar(): bool
+    {
+        return method_exists($this, 'confirma');
+    }
 
     /**
      * Regresa si el procesador de pagos puede realizar cancelaciones.

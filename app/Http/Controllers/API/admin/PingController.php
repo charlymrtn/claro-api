@@ -15,12 +15,7 @@ class PingController extends Controller
      */
     public function index()
     {
-        try {
-            return ejsend_success(['sistema' => true]);
-
-        } catch (\Exception $e) {
-
-        }
+        return ejsend_success(['sistema' => true]);
     }
 
 }

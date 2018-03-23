@@ -13,7 +13,7 @@ Homestead.yaml
 # Other
 /public/storage
 /public/hot
-/storage/*.key
+!/storage/*.key # Temporal key sharing
 /.idea
 .php_cs.cache
 

@@ -1,84 +1,85 @@
 <?php
 
-namespace App\Classes\Pagos\Procesadores\Iso;
+echo "<h2>Prueba de conexión</h2>\n";
 
-/*
- * Clase para manejo de mensajes ISO-8586
- *
- * Definición: Documento E-Global Anexo A - ISO8583
- * Definición: https://es.wikipedia.org/wiki/ISO_8583
- *
- * @package Procesadores
- */
+$aConfig = [
+	'port' => 8315,
+	'ip' => '172.26.202.4',
+];
+
+/* Create a TCP/IP socket. */
+$socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+if ($socket === false) {
+    echo "socket_create() failed: reason: " . socket_strerror(socket_last_error()) . "\n";
+} else {
+    echo "<br>Socket creation OK.\n";
+}
+
+echo "<br>Conectando a '" . $aConfig['ip'] . "' on port '" . $aConfig['port'] . "'...";
+$result = socket_connect($socket, $aConfig['ip'], $aConfig['port']);
+if ($result === false) {
+    echo "socket_connect() failed.\nReason: ($result) " . socket_strerror(socket_last_error($socket)) . "\n";
+} else {
+    echo "<br>Socket connection OK.\n";
+}
+
+// Prepara mensaje echo
+$oMensaje = new Mensaje();
+
+// Variables
+$sSystemsTraceAuditNumber = $oMensaje->generateSystemsTraceAuditNumber();
+// Define campos
+$oMensaje->setData(7, date('mdhis')); // Date & time
+$oMensaje->setData(11, $sSystemsTraceAuditNumber); // Systems Trace Audit Number
+$oMensaje->setData(15, date('md')); // Date & time
+$oMensaje->setData(70, 301); // Network Management Information Code
+
+// Prepara mensaje
+echo "<br>Preparando mensaje: ";
+$in = $oMensaje->getISO(true);
+$out = '';
+echo $in;
+
+// Envía mensaje
+echo "<br>Enviando mensaje: ";
+socket_write($socket, $in, strlen($in));
+echo "OK";
+
+echo "<br>Sending message...";
+socket_write($socket, $in, strlen($in));
+echo "<br>Sending messge OK.\n";
+
+
+echo "<br>Reading response:\n\n";
+$buf = 'This is my buffer.';
+if (false !== ($bytes = socket_recv($socket, $buf, 2048, MSG_DONTWAIT))) {
+    echo "Read $bytes bytes from socket_recv():" . $buf;
+} else {
+    echo "No response: socket_recv() failed; reason: " . socket_strerror(socket_last_error($socket)) . "\n";
+}
+
+echo "<br>Closing socket...";
+socket_close($socket);
+echo "<br>Closing socket OK.\n\n";
+
+
 
 class iso8583_1987
 {
-    // {{{ properties
-
-    /*
-     * @var array Tabla de caracteres especiales en ASCII.
-     */
     protected $SPECIAL_CHARS_S = [];
 
-    /*
-     * @var array Tabla de caracteres especiales y alfabéticos en ASCII.
-     */
     protected $SPECIAL_CHARS_AS = [];
 
-    /*
-     * @var array Tabla de caracteres especiales y alfanuméricos en ASCII.
-     */
     protected $SPECIAL_CHARS_ANS = [];
 
-    /**
-     * Elementos de datos - Son los campos individuales que llevan la información sustancial acerca de la transacción.
-     * Hay 128 campos definidos en el estándar ISO8583:1987, y 192 en posteriores releases.
-     *
-     * TIPO (type)
-     * n	Caracteres numéricos
-     * a	Caracteres alfabéticos
-     * an	Caracteres alfabéticos y/o numéricos
-     * anp	Caracteres alfabéticos y/o numéricos y espacios
-     * as	Caracteres alfabéticos y/o especiales
-     * ans	Caracteres alfabéticos, numéricos y/o especiales
-     * ansb	Caracteres alfabéticos, numéricos y/o especiales, binarios
-     * s	Caracteres especiales ASCII character set 32 - 126
-     * ns	Caracteres numéricos y/o especiales
-     * b	Binario
-     * z	Tracks 2 y 3 code set como se define en la ISO 4909 y en ISO 7813.
-     *
-     * FIXED
-     * true
-     * false
-     *
-     * SIZE - Max size in bytes
-     * llvar  Variable length data field specification. LL: 01 a 99 positions; VAR: Variable length data
-     * lllvar Variable length data field specification. LL: 001 a 999 positions; VAR: Variable length data
-     *
-     * USAGE - Field description
-     *
-     * MANDATORY
-     * true
-     * false
-     *
-     * ENCODING
-     * bin
-     * hex
-     * string
-     *
-     * CHARSET
-     * ascii
-     * ebcdic
-     *
-     * @var array Mapa de elementos de datos
-     */
+
     protected $HEADER_ELEMENT = [
         'MTI' =>    ['type' => 'n',   'size' => 4,  'fixed' => true,  'usage' => 'MTI', 'mandatory' => true],
         'BITMAP' => ['type' => 'b',   'size' => 8,  'fixed' => true,  'usage' => 'Bit Map Primary', 'mandatory' => true],
     ];
 
     protected $DATA_ELEMENT = [
-        1 =>   ['type' => 'b',   'size' => 8,   'fixed' => true,  'mandatory' => false, 'usage' => 'Bit Map Extended'],
+        1 =>   ['type' => 'b',   'size' => 8,   'fixed' => true,  'mandatory' => false, 'usage' => 'Bit Map Extended' ],
         2 =>   ['type' => 'n',   'size' => 19,  'fixed' => false, 'sizepos' => 'LL', 'mandatory' => false, 'usage' => 'Primary account number (PAN)'],
         3 =>   ['type' => 'n',   'size' => 6,   'fixed' => true,  'mandatory' => false, 'usage' => 'Processing code'],
         4 =>   ['type' => 'n',   'size' => 12,  'fixed' => true,  'mandatory' => false, 'usage' => 'Amount, transaction'],
@@ -216,18 +217,6 @@ class iso8583_1987
     private $_iso = '';
     private $_iso_encoded = '';
 
-    // }}}
-
-    /**
-     * --------------------------------------------------------------------------------------------------------
-     * Métodos privados
-     * --------------------------------------------------------------------------------------------------------
-     */
-    // {{{ private functions
-
-    /**
-     * Construye tabla de caracteres especiales
-     */
     private function _caracteresEspeciales(): void
     {
         // Construye arreglo inicial
@@ -259,31 +248,20 @@ class iso8583_1987
             $this->SPECIAL_CHARS_S[$cChar] = chr($cChar);
             $this->SPECIAL_CHARS_AS[$cChar] = chr($cChar);
             $this->SPECIAL_CHARS_ANS[$cChar] = chr($cChar);
-            $this->SPECIAL_CHARS_ANSB[$cChar] = chr($cChar);
             $this->SPECIAL_CHARS_NS[$cChar] = chr($cChar);
         }
         // Asigna caracteres alpha
         foreach($aAlphaChars as $cChar) {
             $this->SPECIAL_CHARS_AS[$cChar] = chr($cChar);
             $this->SPECIAL_CHARS_ANS[$cChar] = chr($cChar);
-            $this->SPECIAL_CHARS_ANSB[$cChar] = chr($cChar);
         }
         // Asigna caracteres num
         foreach($aNumChars as $cChar) {
             $this->SPECIAL_CHARS_ANS[$cChar] = chr($cChar);
-            $this->SPECIAL_CHARS_ANSB[$cChar] = chr($cChar);
             $this->SPECIAL_CHARS_NS[$cChar] = chr($cChar);
         }
     }
 
-    /**
-     * Empaca valor en el formato del elemento definido
-     *
-     * @param int $bit Index de dato.
-     * @param string $data Valor del dato.
-     *
-     * @return void
-     */
     private function _packElement(int $bit, string $data): void
     {
         // Por tipo de dato
@@ -304,7 +282,6 @@ class iso8583_1987
             case "an": // Caracteres numéricos
             case "anp": // Caracteres alfanuméricos y espacios
             case "as": // Caracteres alfabéticos y especiales
-            case "ansb": // Caracteres alfanuméricos y especiales
             case "ans": // Caracteres alfanuméricos y especiales
             case "s": // Caracteres alfanuméricos y especiales
             case "ns": // Caracteres alfanuméricos y especiales
@@ -400,9 +377,6 @@ class iso8583_1987
             $tmp = substr($tmp, 4, strlen($tmp) - 4);
         }
 
-        // Ordena campos
-        ksort($this->_data);
-
         // Actualiza ISO
         $this->_iso = $this->_mti . $this->_bitmap . implode($this->_data);
         $this->_iso_encoded = $this->ascii2ebcdic_hex($this->_mti) . $this->_bitmap . implode($this->_data_encoded);
@@ -411,13 +385,6 @@ class iso8583_1987
         return $this->_bitmap;
     }
 
-    /**
-     * Define el MTI del string ISO8586
-     *
-     * @param string $mti MTI del string ISO8586.
-     *
-     * @return bool Regresa si es válido el MTI
-     */
     private function _setMTI(string $mti): bool
     {
         // Valida MTI
@@ -431,14 +398,6 @@ class iso8583_1987
         return true;
     }
 
-    /**
-     * Valida el tipo, tamaño y mandatorio de un dato.
-     *
-     * @param mixed $data Dato a validar.
-     * @param array $aDataElementDefinition Data element definition.
-     *
-     * @return bool Regresa si es válido el dato.
-     */
     private function _validaData($data, array $aDataElementDefinition): bool
     {
         // Valida si es mandatorio
@@ -482,11 +441,6 @@ class iso8583_1987
                     throw new \Exception("Tipo de campo as {$aDataElementDefinition['type']} inválido: '" . $data . "'");
                 }
                 break;
-            case "ansb": // Caracteres alfabéticos, numéricos y/o especiales, binarios
-                if(!$this->_validateAsciiChars($data, $this->SPECIAL_CHARS_ANSB)) {
-                    throw new \Exception("Tipo de campo ans {$aDataElementDefinition['type']} inválido: '" . $data . "'");
-                }
-                break;
             case "ans": // Caracteres alfabéticos, numéricos y/o especiales
                 if(!$this->_validateAsciiChars($data, $this->SPECIAL_CHARS_ANS)) {
                     throw new \Exception("Tipo de campo ans {$aDataElementDefinition['type']} inválido: '" . $data . "'");
@@ -527,13 +481,6 @@ class iso8583_1987
         return true;
     }
 
-    /**
-     * Parse iso string and set mti, bitmap & data
-     *
-     * @param string $sIso String ISO
-     *
-     * @return void
-     */
     private function _parseIso(string $sIso): void
     {
         // Revisa si está codificado en hexadecimal
@@ -558,14 +505,6 @@ class iso8583_1987
         }
     }
 
-    /**
-     * Parse decoded iso data
-     *
-     * @param string $sData Data
-     * @param bool $bIsEncoded Está codificado
-     *
-     * @return void
-     */
     private function _parseIsoData(string $sData, bool $bIsEncoded): void
     {
         // Bitmap primario
@@ -606,11 +545,6 @@ class iso8583_1987
         }
     }
 
-    /**
-     * Borra todos los datos
-     *
-     * @return void
-     */
     private function _clear(): void
     {
         $this->_mti = '';
@@ -621,23 +555,6 @@ class iso8583_1987
         $this->_iso_encoded = '';
     }
 
-    // }}}
-
-    /**
-     * --------------------------------------------------------------------------------------------------------
-     * Métodos protegidos
-     * --------------------------------------------------------------------------------------------------------
-     */
-    // {{{ protected functions
-
-    /**
-     * Agrega el arreglo a la definición de elementos de datos del esquema ISO8586
-     *
-     * @param array $aCustomHeaderElement Arreglo con definición de elementos del header a actualizar/agregar.
-     * @param array $aCustomDataElement Arreglo con definición de elementos de datos a actualizar/agregar.
-     *
-     * @return void
-     */
     protected function updateDefinition(array $aCustomHeaderElement, array $aCustomDataElement): void
     {
         // Obtiene el índice mayor
@@ -662,13 +579,6 @@ class iso8583_1987
         }
     }
 
-    /**
-     * Convierte un string en ascii a su representacion hex ebcdic
-     *
-     * @param string $sString String en ascii
-     *
-     * @return string String en hex ebcdic
-     */
     protected function ascii2ebcdic_hex(string $sString): string
     {
         // ASCII Hex to EBCDIC Hex Map
@@ -708,13 +618,6 @@ class iso8583_1987
         return $hString;
     }
 
-    /**
-     * Convierte un string hex ebcdic a un string ascii
-     *
-     * @param string $hEbcdicString String en hex ebcdic
-     *
-     * @return string String en ascii
-     */
     protected function ebcdic_hex2ascii(string $hEbcdicString): string
     {
         // EBCDIC Hex to ASCII Hex Map
@@ -754,54 +657,22 @@ class iso8583_1987
         return $sString;
     }
 
-    // }}}
-
-    /**
-     * --------------------------------------------------------------------------------------------------------
-     * Métodos públicos
-     * --------------------------------------------------------------------------------------------------------
-     */
-    // {{{ public functions
-
-    /**
-     * Constructor
-     */
     public function __construct()
     {
         // Construye arreglo de caracteres especiales
         $this->_caracteresEspeciales();
     }
 
-    /**
-     * Obtiene MTI del string ISO8586
-     *
-     * @return string
-     */
     public function getMTI(): string
     {
         return $this->_mti;
     }
 
-    /**
-     * Define el MTI del string ISO8586
-     *
-     * @param string $mti MTI del string ISO8586.
-     *
-     * @return bool
-     */
     public function setMTI(string $mti): bool
     {
         return $this->_setMTI($mti);
     }
 
-    /**
-     * Agrega data al elemento de datos del string ISO8586
-     *
-     * @param int $bit Posición de elemento de datos.
-     * @param string $data Valor del dato.
-     *
-     * @return bool
-     */
     public function setData(int $bit, string $data): bool
     {
 #echo "\n<br>Setting data {$bit}: '" . $data . "' [" . strlen($data) . "]";
@@ -823,14 +694,6 @@ class iso8583_1987
         return false;
     }
 
-    /**
-     * Obtiene la seccion de elementos de datos del string ISO8586
-     *
-     * @param int $bit Posición de elemento de datos.
-     * @param bool $bEncoded Return encoded data or plain data.
-     *
-     * @return string
-     */
     public function getData(int $bit, bool $bEncoded = false): string
     {
         if ($bEncoded) {
@@ -840,13 +703,6 @@ class iso8583_1987
         }
     }
 
-    /**
-     * Obtiene el arreglo de elementos de datos del ISO8586.
-     *
-     * @param bool $bEncoded Return encoded data or plain data.
-     *
-     * @return array
-     */
     public function getDataArray(bool $bEncoded = false): array
     {
         if ($bEncoded) {
@@ -856,13 +712,6 @@ class iso8583_1987
         }
     }
 
-    /**
-     * Obtiene el valor real del elementos de datos del string ISO8586
-     *
-     * @param int $bit Posición de elemento de datos.
-     *
-     * @return string
-     */
     public function getValue(int $bit): string
     {
         if (isset($this->_data[$bit])) {
@@ -875,13 +724,6 @@ class iso8583_1987
         return '';
     }
 
-    /**
-     * Obtiene string ISO8586 completo
-     *
-     * @param bool $bEncoded Tipo de retorno codificado o sin codificar
-     *
-     * @return string
-     */
     public function getISO(bool $bEncoded = false): string
     {
         if ($bEncoded) {
@@ -891,13 +733,6 @@ class iso8583_1987
         }
     }
 
-    /**
-     * Define string ISO8586 existente
-     *
-     * @param string $iso String ISO8586.
-     *
-     * @return void
-     */
     public function setISO(string $iso): void
     {
         // Inicializa todos los datos
@@ -905,14 +740,6 @@ class iso8583_1987
         $this->_parseIso($iso);
     }
 
-    /**
-     * Quita bit seleccionado del elemento de datos
-     *
-     * @param int $bit Definición de elemento de datos.
-     * @param string $data Valor del dato.
-     *
-     * @return void
-     */
     public function removeData(int $bit): void
     {
         if ($bit > 1 && array_key_exists($bit, $this->DATA_ELEMENT) && array_key_exists($bit, $this->_data)) {
@@ -922,13 +749,6 @@ class iso8583_1987
         }
     }
 
-    /**
-     * Obtiene la definición de elementos de datos del string ISO8586
-     *
-     * @param string $sElement Posición de elemento de datos. (opcional)
-     *
-     * @return array
-     */
     public function getHeaderElementDefinition(string $sElement = null): array
     {
         if (empty($sElement)) {
@@ -938,13 +758,6 @@ class iso8583_1987
         }
     }
 
-    /**
-     * Obtiene la definición de elementos de datos del string ISO8586
-     *
-     * @param int $bit Posición de elemento de datos. (opcional)
-     *
-     * @return array
-     */
     public function getDataElementDefinition(int $bit = null): array
     {
         if (is_null($bit)) {
@@ -956,3 +769,298 @@ class iso8583_1987
 
     // }}}
 }
+
+class iso8583_1993 extends iso8583_1987
+{
+    protected $CUSTOM_HEADER_ELEMENT = [];
+
+    private $CUSTOM_DATA_ELEMENT = [
+        12 =>  ['size' => 12],
+        15 =>  ['size' => 6],
+        22 =>  ['type' => 'an', 'size' => 12, 'usage' => 'Point of service data code'],
+        25 =>  ['size' => 4, 'usage' => 'Message reason code'],
+        26 =>  ['size' => 4, 'usage' => 'Card acceptor business code'],
+        28 =>  ['type' => 'n', 'size' => 6, 'usage' => 'Date, reconciliation'],
+        29 =>  ['type' => 'n', 'size' => 3, 'usage' => 'Reconciliation indicator'],
+        30 =>  ['type' => 'n', 'size' => 24, 'usage' => 'Amounts, original'],
+        31 =>  ['type' => 'ans', 'size' => 99, 'fixed' => false, 'sizepos' => 'LL',  'usage' => 'Acquirer reference data'],
+        34 =>  ['type' => 'ns'],
+        37 =>  ['type' => 'anp'],
+        38 =>  ['type' => 'anp'],
+        39 =>  ['type' => 'n', 'size' => 3, 'usage' => 'Action code'],
+        40 =>  ['type' => 'n'],
+        43 =>  ['size' => 99, 'fixed' => false, 'sizepos' => 'LL'],
+        44 =>  ['size' => 99],
+        45 =>  ['size' => 76],
+        46 =>  ['size' => 204, 'usage' => 'Amounts, fees'],
+        49 =>  ['type' => 'ans', 'size' => 3,   'fixed' => true,  'usage' => 'Currency code, transaction'],
+        50 =>  ['type' => 'ans', 'size' => 3,   'fixed' => true,  'usage' => 'Currency code, reconciliation'],
+        51 =>  ['type' => 'ans', 'size' => 3,   'fixed' => true,  'usage' => 'Currency code, cardholder billing'],
+        53 =>  ['type' => 'b',   'size' => 48,  'fixed' => false, 'sizepos' => 'LL', 'usage' => 'Security related control information'],
+        54 =>  ['type' => 'ans', 'size' => 120, 'fixed' => false, 'usage' => 'Additional amounts'],
+        55 =>  ['type' => 'b',   'size' => 255, 'fixed' => false, 'usage' => 'Integrated Circuit Card System Related Data'],
+        56 =>  ['type' => 'n',   'size' => 35, 'sizepos' => 'LL', 'usage' => 'Original Data elements'],
+        57 =>  ['type' => 'n',   'size' => 3,   'fixed' => true,  'usage' => 'Authorization Life Cycle Code'],
+        58 =>  ['type' => 'n',   'size' => 11, 'sizepos' => 'LL', 'usage' => 'Authorizing Agent Institution Identification Code'],
+        59 =>  ['usage' => 'Transport Data'],
+        60 =>  ['size' => 999, 'sizepos' => 'LLL', 'usage' => 'Reserved For National Use'],
+        66 =>  ['type' => 'ans', 'size' => 999, 'fixed' => false, 'sizepos' => 'LLL', 'usage' => 'Amounts, Original Fees'],
+        71 =>  ['size' => 8,   'fixed' => true],
+        72 =>  ['type' => 'ans', 'size' => 999, 'fixed' => false, 'sizepos' => 'LLL', 'usage' => 'Data record (ISO 8583:1993)'],
+        82 =>  ['type' => 'n',   'size' => 10,  'fixed' => true,  'usage' => 'Inquiries, reversal number'],
+        83 =>  ['type' => 'n',   'size' => 10,  'fixed' => true,  'usage' => 'Payments number'],
+        84 =>  ['type' => 'n',   'size' => 10,  'fixed' => true,  'usage' => 'Payments, reversal number'],
+        85 =>  ['type' => 'n',   'size' => 10,  'fixed' => true,  'usage' => 'Fee Collections, number'],
+        90 =>  ['type' => 'n',   'size' => 10,  'fixed' => true,  'usage' => 'Authorizations, Reversal Number'],
+        91 =>  ['type' => 'n',   'size' => 3,   'fixed' => true,  'usage' => 'COUNTRY Code, Transaction Destination Institution'],
+        92 =>  ['type' => 'n',   'size' => 3,   'fixed' => true,  'usage' => 'COUNTRY Code, Transaction Originator Institution'],
+        93 =>  ['type' => 'n',   'size' => 11,  'fixed' => false, 'sizepos' => 'LL', 'usage' => 'Transaction Destination Institution Identification Code'],
+        94 =>  ['type' => 'n',   'size' => 11,  'fixed' => false, 'sizepos' => 'LL', 'usage' => 'Transaction Originator Institution Identification Code'],
+        95 =>  ['type' => 'ans', 'size' => 99,  'fixed' => false, 'sizepos' => 'LL', 'usage' => 'CARD ISSUER REFERENCE DATA'],
+        96 =>  ['type' => 'b',   'size' => 999, 'fixed' => false, 'sizepos' => 'LLL', 'usage' => 'KEY MANAGEMENT DATA'],
+        97 =>  ['type' => 'an',  'size' => 17,  'fixed' => true,  'usage' => 'Amount, net settlement'],
+        99 =>  ['type' => 'an'],
+        102 => ['type' => 'ans'],
+        103 => ['type' => 'ans'],
+        105 => ['type' => 'n', 'size' => 16,  'fixed' => true,  'usage' => 'Credits Chargeback Amount'],
+        106 => ['type' => 'n', 'size' => 16,  'fixed' => true,  'usage' => 'Debits Chargeback Amount'],
+        107 => ['type' => 'n', 'size' => 10,  'fixed' => true,  'usage' => 'Credits Chargeback Number'],
+        108 => ['type' => 'n', 'size' => 10,  'fixed' => true,  'usage' => 'Debits Chargeback Number'],
+        109 => ['size' => 84,  'fixed' => false, 'sizepos' => 'LL', 'usage' => 'Reserved for ISO use'],
+        110 => ['size' => 84,  'fixed' => false, 'sizepos' => 'LL', 'usage' => 'Reserved for ISO use'],
+    ];
+
+    public function __construct()
+    {
+        // Ejecuta constructor padre
+        parent::__construct();
+        // Incorpora campos custom
+        $this->updateDefinition($this->CUSTOM_HEADER_ELEMENT, $this->CUSTOM_DATA_ELEMENT);
+    }
+
+    // }}}
+}
+
+class Mensaje extends iso8583_1993
+{
+    /**
+     * @var array Tamaño máximo permitido por campo en bytes.
+     */
+    const MAX_DATA_ELEMENT_SIZE = 290;
+
+    /**
+     * @var array Elementos de header diferentes al iso8583_1993
+     */
+    protected $CUSTOM_HEADER_ELEMENT = [
+        'MTI' =>    ['encoding' => 'hex', 'charset' => 'EBCDIC'],
+        'BITMAP' => ['encoding' => 'hex'],
+    ];
+
+    /**
+     * @var array Elementos de datos diferentes al iso8583_1993
+     */
+    private $CUSTOM_DATA_ELEMENT = [
+        1 =>   ['size' => 16, 'usage' => 'Secondary Bit Map'],
+        3 =>   ['encoding' => 'hex', 'charset' => 'EBCDIC'],
+        11 =>  ['type' => 'ans', 'size' => 6,   'fixed' => true,  'usage' => 'Systems trace audit number', 'text' => 'uppercase'],
+        22 =>  ['text' => 'uppercase'],
+        31 =>  ['type' => 'ans', 'size' => 50,  'fixed' => false, 'usage' => 'Acquirer reference data'],
+        32 =>  ['type' => 'n',   'size' => 13,  'fixed' => false, 'usage' => 'Acquiring institution identification code'],
+        33 =>  ['type' => 'n',   'size' => 13,  'fixed' => false, 'usage' => 'Forwarding institution identification code'],
+        34 =>  ['type' => 'n',   'size' => 30,  'fixed' => false, 'usage' => 'Primary account number, extended'],
+        35 =>  ['type' => 'ans', 'size' => 39,  'fixed' => false, 'usage' => 'Track 2 data'],
+        36 =>  ['type' => 'ns',  'size' => 107, 'fixed' => false, 'usage' => 'Track 3 data'],
+        37 =>  ['type' => 'ans', 'size' => 12,  'fixed' => true,  'usage' => 'Retrieval reference number'],
+        38 =>  ['type' => 'anp', 'size' => 6,   'fixed' => true,  'usage' => 'Approval code'],
+        40 =>  ['type' => 'n',   'size' => 3,   'fixed' => true,  'usage' => 'Service code'],
+        42 =>  ['justify' => 'left'],
+        43 =>  ['type' => 'ans', 'size' => 101, 'fixed' => false, 'usage' => 'Card acceptor name/location'],
+        44 =>  ['type' => 'ans', 'size' => 27,  'fixed' => false, 'usage' => 'Additional response data'],
+        45 =>  ['type' => 'ans', 'size' => 78,  'fixed' => false, 'usage' => 'Track 1 Data'],
+        46 =>  ['type' => 'an',  'size' => 207, 'fixed' => false, 'usage' => 'Amounts, fees'],
+        47 =>  ['type' => 'ans', 'size' => 304, 'fixed' => false, 'usage' => 'Additional data - National'],
+        48 =>  ['type' => 'ans', 'size' => 43,  'fixed' => false, 'usage' => 'Additional data - Private'],
+        49 =>  ['type' => 'n',   'size' => 3,   'fixed' => true,  'usage' => 'Currency code, transaction'],
+        50 =>  ['type' => 'an',  'size' => 3,   'fixed' => true,  'usage' => 'Currency code, reconciliation'],
+        51 =>  ['type' => 'an',  'size' => 3,   'fixed' => true,  'usage' => 'Currency code, cardholder billing'],
+        53 =>  ['type' => 'an',  'size' => 10,  'fixed' => false, 'usage' => 'Security related control information'],
+        54 =>  ['type' => 'ans', 'size' => 123, 'fixed' => false, 'usage' => 'Additional amounts'],
+        55 =>  ['type' => 'ans', 'size' => 259, 'fixed' => false, 'usage' => 'Integrated Circuit Card System Related Data'],
+        56 =>  ['type' => 'ans',   'size' => 37,  'fixed' => false, 'usage' => 'Original Data elements'],
+        58 =>  ['type' => 'n',   'size' => 13,  'fixed' => false, 'usage' => 'Authorizing Agent Institution Identification Code'],
+        59 =>  ['type' => 'ans', 'size' => 1002,'fixed' => false, 'usage' => 'Transport Data'],
+        60 =>  ['type' => 'ans', 'size' => 106, 'fixed' => false, 'usage' => 'National Use Data'],
+        61 =>  ['type' => 'ans', 'size' => 103, 'fixed' => false, 'usage' => 'National Use Data'],
+        62 =>  ['type' => 'ans', 'size' => 63,  'fixed' => false, 'usage' => 'Reserved Private'],
+        63 =>  ['type' => 'ans', 'size' => 208, 'fixed' => false, 'usage' => 'Reserved Private', 'encoding' => 'hex', 'charset' => 'EBCDIC'],
+        66 =>  ['type' => 'ans', 'size' => 204, 'fixed' => false, 'usage' => 'Amounts, Original Fees'],
+        97 =>  ['type' => 'an',  'size' => 16,  'fixed' => true,  'usage' => 'Amount, net settlement'],
+    ];
+
+    /**
+     * @var array Lista de elementos bloqueados para mensajes GHDC
+     */
+    protected $BLOCKED_DATA_ELEMENT = [
+        5, 6, 8, 9,
+        10, 16, 17, 18,
+        20, 21, 23, 29,
+        36,
+        40, 46,
+        50, 51, 57, 58, 59,
+        64, 65, 66, 67, 68, 69,
+        70, 71, 72, 73, 74, 75, 76, 77, 78, 79,
+        80, 81, 82, 83, 84, 85, 86, 87, 88, 89,
+        90, 91, 92, 93, 94, 95, 97, 98, 99,
+        100, 101, 102, 103, 104, 105, 106, 107, 108, 109,
+        110, 111, 112, 113, 114, 115, 116, 117, 118, 119,
+        120, 121, 122, 123, 124, 125, 126, 127, 128,
+    ];
+
+    public function __construct()
+    {
+        // Ejecuta constructor padre
+        parent::__construct();
+        // Incorpora campos custom
+        $this->updateDefinition($this->CUSTOM_HEADER_ELEMENT, $this->CUSTOM_DATA_ELEMENT);
+    }
+
+    /**
+     * Campo 47
+     * @todo: Cambiar arreglo por objeto request de datos
+     */
+    public function formatAdditionalDataNational(array $aData): string
+    {
+        // Primary ID (AX) 'AX'
+        $sResultado = 'AX';
+        // Secondary Id (ITD) 'ITD'
+        $sResultado .= $aData['secondary_id'];
+        // 1 Customer Email 'CE '
+        $sResultado .= 'CE ';
+        // LLVAR Customer Email length '24'
+        $sResultado .= sprintf("%02s", strlen($aData['cliente']['email']));
+         // 2 Customer Email 'CFFROST@EMAILADDRESS.COM'
+        $sResultado .= $aData['cliente']['email'];
+        // 3 Customer Hostname 'CH '
+        $sResultado .= 'CH ';
+        // LLVAR Customer Hostname length '14'
+        $sResultado .= sprintf("%02s", strlen($aData['cliente']['hostname']));
+         // 4 Customer Hostname 'PHX.QW.AOL.COM'
+        $sResultado .= $aData['cliente']['hostname'];
+         // 5 HTTP Browser type id 'HBT'
+        $sResultado .= 'HBT';
+        // LLVAR Browser type length '46'
+        $sResultado .= sprintf("%02s", strlen($aData['cliente']['browser']));
+         // 6 HTTP Browser type 'MOZILLA/4.0 (COMPATIBLE; MSIE 5.0; WINDOWS 95)'
+        $sResultado .= $aData['cliente']['browser'];
+         // 7 Ship to country id 'STC'
+        $sResultado .= 'STC';
+        // LLVAR Browser type length '03'
+        $sResultado .= '03';
+        // 8 HTTP Browser type '840'
+        $sResultado .= sprintf("%03s", $aData['direccion_envio']['pais_n3']);
+        // 9 Shipping method id 'SM '
+        $sResultado .= 'SM ';
+        // LLVAR Browser type length '02'
+        $sResultado .= '02';
+         // 10 Shipping method '02'
+        $sResultado .= $aData['direccion_envio']['envio_tipo'];
+         // 11 merchant product sku id 'MPS'
+        $sResultado .= 'MPS';
+         // LLVAR sku length '08'
+        $sResultado .= sprintf("%02s", strlen($aData['producto']['sku']));
+         // 12 merchant product sku  'TKDC315U'
+        $sResultado .= $aData['producto']['sku'];
+         // 13 Costumer IP '127.142.005.056'
+        $sResultado .= sprintf("%-15s", $aData['cliente']['ip']);
+         // 14 Costumer ANI (Telefono) '6025551212'
+        $sResultado .= sprintf("%-10s", $aData['cliente']['telefono']);
+         // 15 Costumer II digits (Telefono prefijo) '00'
+        $sResultado .= sprintf("%02s", $aData['cliente']['prefijo']);
+
+        return $sResultado;
+    }
+
+    /**
+     * Campo 48 - Additional Data Private (Parcialidades)
+     * @todo: Cambiar arreglo por objeto request de datos
+     */
+    public function formatAdditionalDataPrivate(array $aData): string
+    {
+        // Plan Type ['03', '05']
+        $sResultado = $aData['plan_pago'];
+        // Num of installments
+        $sResultado .= sprintf("%02s", $aData['parcialidades']);
+
+        return $sResultado;
+    }
+
+    /**
+     * Campo 63
+     * @todo: Cambiar arreglo por objeto request de datos
+     */
+    public function formatPrivateUseData(array $aData): string
+    {
+        // Service ID (AX)                  "AX"
+        $sResultado = 'AX';
+        // ReqType Id (AD)                  "AD"
+        $sResultado .= $aData['req_type_id'];
+
+        // Direccion de pago CP             "850544500"
+        $sResultado .= sprintf("%- 9s", $aData['direccion']['cp']);
+        // Direccion de pago Address        "18850 N 56 ST #301  "
+        $sAddress =  $aData['direccion']['linea1'];
+        if (!empty($aData['direccion']['linea2'])) {
+            $sAddress .= ' ' . $aData['direccion']['linea2'];
+        }
+        $sResultado .= sprintf("%- 20s", $sAddress);
+        // Direccion de pago First Name     "JANE           "
+        $sResultado .= sprintf("%- 15s", $aData['direccion']['nombre']);
+        // Direccion de pago Last Name     "SMITH                         "
+        $sLastName =  $aData['direccion']['apellido_paterno'];
+        if (!empty($aData['direccion']['apellido_materno'])) {
+            $sLastName .= ' ' . $aData['direccion']['apellido_materno'];
+        }
+        $sResultado .= sprintf("%- 30s", $sLastName);
+        // Direccion de pago Tel        "1234567890"
+        $sResultado .= $aData['direccion']['telefono'];
+
+        // Direccion de envio CP             "850221800"
+        $sResultado .= sprintf("%- 9s", $aData['direccion_envio']['cp']);
+        // Direccion de envio Address        "4102 N 289 PL                                     "
+        $sAddress =  $aData['direccion_envio']['linea1'];
+        if (!empty($aData['direccion_envio']['linea2'])) {
+            $sAddress .= ' ' . $aData['direccion_envio']['linea2'];
+        }
+        $sResultado .= sprintf("%- 50s", $sAddress);
+        // Direccion de envio First Name     "ROBERT         "
+        $sResultado .= sprintf("%- 15s", $aData['direccion_envio']['nombre']);
+        // Direccion de envio Last Name     "JONES                         "
+        $sLastName =  $aData['direccion_envio']['apellido_paterno'];
+        if (!empty($aData['direccion_envio']['apellido_materno'])) {
+            $sLastName .= ' ' . $aData['direccion_envio']['apellido_materno'];
+        }
+        $sResultado .= sprintf("%- 30s", $sLastName);
+        // Direccion de envio Tel        "5555370000"
+        $sResultado .= sprintf("%-10s", $aData['direccion_envio']['telefono']);
+        // Direccion de envio Pais        "484"
+        $sResultado .= $aData['direccion_envio']['pais_n3'];
+
+        return $sResultado;
+    }
+
+    public function generateSystemsTraceAuditNumber(int $iLength = 6): string
+    {
+        // Define characters
+        // No permitidos: ( -> 40, [ -> 91, | -> 124
+        //$aChars = array_merge(range(32, 39), range(42, 90), range(92, 96), [123, 125, 126]);
+        $aChars = array_merge(range(48, 57), range(65, 90));
+        $iCharsLength = count($aChars);
+        $sSTAN = '';
+        for ($i = 0; $i < $iLength; $i++) {
+            $sSTAN .= chr($aChars[mt_rand(0, $iCharsLength - 1)]);
+        }
+        return $sSTAN;
+    }
+
+}
+
