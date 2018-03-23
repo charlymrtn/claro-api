@@ -45,13 +45,13 @@ class Mensaje extends iso8583_1987
         39 =>  [],
         41 =>  ['size' => 16],
         43 =>  [],
-        48 =>  ['size' => 27],
+        48 =>  ['size' => 30],
         49 =>  [],
-        54 =>  ['type' => 'ans', 'size' => 12],
+        54 =>  ['type' => 'ans', 'size' => 15],
         55 =>  ['type' => 'ansb', 'usage' => 'Datos de la tarjeta de circuito integrado (ICC – EMV Full Grade)'],
         58 =>  ['size' => 420,  'usage' => 'Datos de Lealtad'],
         59 =>  ['usage' => 'Datos de Campaña'],
-        60 =>  ['sizepos' => 'LLL', 'size' => 16, 'usage' => 'POS Terminal Data'],
+        60 =>  ['sizepos' => 'LLL', 'size' => 19, 'usage' => 'POS Terminal Data'],
         63 =>  ['usage' => 'POS Additional Data'],
         70 =>  [],
         90 =>  ['type' => 'ans'],
@@ -340,7 +340,10 @@ class Mensaje extends iso8583_1987
         // 17 Comercios Multicaja.
         // 19 CAT a través de la Interred.
         // 24 TAG (IAVE) a través de la Interred
-        if ($aData['plataforma'] == 'automatico') {
+        if (empty($aData['plataforma'])) {
+            // Default
+            $sResultado .= '09';
+        } else if ($aData['plataforma'] == 'automatico') {
             $sResultado .= '02';
         } else if ($aData['plataforma'] == 'interred') {
             $sResultado .= '04';
@@ -359,7 +362,10 @@ class Mensaje extends iso8583_1987
         $sResultado .= sprintf("%02s", $aData['diferimiento'] ?? '00');
         $sResultado .= sprintf("%02s", $aData['parcialidades'] ?? '00');
         $sResultado .= sprintf("%02s", $aData['parcialidades'] ?? '00');
-        if ($aData['plan'] == 'sinintereses') {
+        if (empty($aData['plan'])) {
+            // Default
+            $sResultado .= '00';
+        } else if ($aData['plan'] == 'sinintereses') {
             $sResultado .= '03';
         } else if ($aData['plan'] == 'conintereses') {
             $sResultado .= '05';
@@ -381,7 +387,10 @@ class Mensaje extends iso8583_1987
         // 5 Comercio Electrónico Seguro, Titular autenticado
         // 6 Comercio Electrónico seguro, Titular no autenticado
         // 7 Comercio Electrónico Canal Seguro (SSL).
-        if ($aData['ecommerce'] == 'no') {
+        if (empty($aData['ecommerce'])) {
+            // Default
+            $sResultado .= '7';
+        } else if ($aData['ecommerce'] == 'no') {
             $sResultado .= '0';
         } else if ($aData['ecommerce'] == 'telefono') {
             $sResultado .= '1';
@@ -398,13 +407,16 @@ class Mensaje extends iso8583_1987
         // 1 El CV2 está presente
         // 2 El CV2 está impreso en la tarjeta pero es ilegible
         // 9 El CV2 no está impreso en la tarjeta
-        if ($aData['indicador_cvv2'] == 'no') {
+        if (empty($aData['indicador_cvv2'])) {
+            // Default
             $sResultado .= '0';
-        } else if ($aData['ecommerce'] == 'presente') {
+        } else if ($aData['indicador_cvv2'] == 'no') {
+            $sResultado .= '0';
+        } else if ($aData['indicador_cvv2'] == 'presente') {
             $sResultado .= '1';
-        } else if ($aData['ecommerce'] == 'ilegible') {
+        } else if ($aData['indicador_cvv2'] == 'ilegible') {
             $sResultado .= '2';
-        } else if ($aData['ecommerce'] == 'no_presente') {
+        } else if ($aData['indicador_cvv2'] == 'no_presente') {
             $sResultado .= '9';
         }
         $sResultado .= ' ';
@@ -431,11 +443,16 @@ class Mensaje extends iso8583_1987
         // C4
         $sResultado .= '! C400012 102';
         // Indicador de presencia del tarjetahabiente:
-        // 0 El CV2 no fue incluido deliberadamente o no proporcionado
-        // 1 El CV2 está presente
-        // 2 El CV2 está impreso en la tarjeta pero es ilegible
-        // 9 El CV2 no está impreso en la tarjeta
-        if ($aData['tarjetahabiente'] == 'presente') {
+        // 0 El tarjetahabiente está presente
+        // 1 El tarjetahabiente no está presente (no se especifica razón)
+        // 2 El tarjetahabiente no está presente (transacción iniciada por correo o fax)
+        // 3 El tarjetahabiente no está presente (autorización por voz, MO/TO)
+        // 4 El tarjetahabiente no está presente (transacción recurrente)
+        // 5 El tarjetahabiente no está presente (orden electrónica desde una PC o internet)
+        if (empty($aData['tarjetahabiente'])) {
+            // Default
+            $sResultado .= '5';
+        } else if ($aData['tarjetahabiente'] == 'presente') {
             $sResultado .= '0';
         } else if ($aData['tarjetahabiente'] == 'no_presente') {
             $sResultado .= '2';
@@ -447,7 +464,10 @@ class Mensaje extends iso8583_1987
             $sResultado .= '5';
         }
         // Indicador de presencia de tarjeta
-        if ($aData['tarjeta'] == 'presente') {
+        if (empty($aData['tarjeta'])) {
+            // Default
+            $sResultado .= '1';
+        } else if ($aData['tarjeta'] == 'presente') {
             $sResultado .= '0';
         } else if ($aData['tarjeta'] == 'no_presente') {
             $sResultado .= '1';
@@ -455,7 +475,10 @@ class Mensaje extends iso8583_1987
         // Indicador de capacidad de captura de tarjetas
         $sResultado .= '0';
         // Indicador de status
-        if ($aData['status'] == 'normal') {
+        if (empty($aData['status'])) {
+            // Default
+            $sResultado .= '0';
+        } else if ($aData['status'] == 'normal') {
             $sResultado .= '0';
         } else if ($aData['status'] == 'preautorizado') {
             $sResultado .= '4';
@@ -470,39 +493,41 @@ class Mensaje extends iso8583_1987
         $sResultado .= '0';
 
         // C5 - Multipagos
-        if ($aData['multipagos']['tipo'] == 'cie') {
-            // CIE
-            $sResultado .= '! C500078 01';
-            $sResultado .= sprintf("%-09s", $aData['multipagos']['convenio_cie'] ?? '0');
-            $sResultado .= sprintf("% 20s", $aData['multipagos']['referencia'] ?? '0');
-            $sResultado .= sprintf("%-07s", $aData['multipagos']['guia_cie'] ?? '0');
-            $sResultado .= sprintf("% 40s", $aData['multipagos']['referencia'] ?? ' ');
-        } else if ($aData['multipagos'] == 'hipoteca') {
-            // Pago de Crédito Hipotecario
-            $sResultado .= '! C500090 02009999901';
-            // Número de Crédito Hipotecario
-            $sResultado .= sprintf("% 20s", $aData['multipagos']['credito_hipotecario'] ?? ' ');
-            $sResultado .= sprintf("%-07s", $aData['multipagos']['folio'] ?? '0');
-            $sResultado .= sprintf("% 40s", $aData['multipagos']['titular'] ?? ' ');
-            $sResultado .= sprintf("%-012s", $aData['multipagos']['importe'] ?? '0');
-        } else if ($aData['multipagos'] == 'express') {
-            // Depósito a Cuenta Express
-            $sResultado .= '! C500078 ';
-            // Dataset Id
-            if ($aData['multipagos']['deposito'] == 'celular') {
-                $sResultado .= '03';
-            } else if ($aData['multipagos']['deposito'] == 'cuenta') {
-                $sResultado .= '04';
+        if (!empty($aData['multipagos'])) {
+            if ($aData['multipagos']['tipo'] == 'cie') {
+                // CIE
+                $sResultado .= '! C500078 01';
+                $sResultado .= sprintf("%-09s", $aData['multipagos']['convenio_cie'] ?? '0');
+                $sResultado .= sprintf("% 20s", $aData['multipagos']['referencia'] ?? '0');
+                $sResultado .= sprintf("%-07s", $aData['multipagos']['guia_cie'] ?? '0');
+                $sResultado .= sprintf("% 40s", $aData['multipagos']['referencia'] ?? ' ');
+            } else if ($aData['multipagos'] == 'hipoteca') {
+                // Pago de Crédito Hipotecario
+                $sResultado .= '! C500090 02009999901';
+                // Número de Crédito Hipotecario
+                $sResultado .= sprintf("% 20s", $aData['multipagos']['credito_hipotecario'] ?? ' ');
+                $sResultado .= sprintf("%-07s", $aData['multipagos']['folio'] ?? '0');
+                $sResultado .= sprintf("% 40s", $aData['multipagos']['titular'] ?? ' ');
+                $sResultado .= sprintf("%-012s", $aData['multipagos']['importe'] ?? '0');
+            } else if ($aData['multipagos'] == 'express') {
+                // Depósito a Cuenta Express
+                $sResultado .= '! C500078 ';
+                // Dataset Id
+                if ($aData['multipagos']['deposito'] == 'celular') {
+                    $sResultado .= '03';
+                } else if ($aData['multipagos']['deposito'] == 'cuenta') {
+                    $sResultado .= '04';
+                }
+                $sResultado .= sprintf("%-09s", $aData['multipagos']['convenio_cie'] ?? '009999903');
+                $sResultado .= sprintf("% 20s", $aData['multipagos']['cuenta'] ?? '0000000000');
+                $sResultado .= '       ';
+                $sResultado .= sprintf("% 40s", $aData['multipagos']['referencia'] ?? ' ');
+            } else if ($aData['multipagos'] == 'dinero_movil') {
+                // Dinero móvil
+                $sResultado .= '! C500018 05';
+                $sResultado .= sprintf("%04s", $aData['multipagos']['codigo'] ?? '0');
+                $sResultado .= sprintf("%012s", $aData['multipagos']['confirmacion'] ?? '0');
             }
-            $sResultado .= sprintf("%-09s", $aData['multipagos']['convenio_cie'] ?? '009999903');
-            $sResultado .= sprintf("% 20s", $aData['multipagos']['cuenta'] ?? '0000000000');
-            $sResultado .= '       ';
-            $sResultado .= sprintf("% 40s", $aData['multipagos']['referencia'] ?? ' ');
-        } else if ($aData['multipagos'] == 'dinero_movil') {
-            // Dinero móvil
-            $sResultado .= '! C500018 05';
-            $sResultado .= sprintf("%04s", $aData['multipagos']['codigo'] ?? '0');
-            $sResultado .= sprintf("%012s", $aData['multipagos']['confirmacion'] ?? '0');
         }
 
         // ER, ES, ET, EW, EX, EY, EZ - No implmentado por ser ecommerce
@@ -513,13 +538,17 @@ class Mensaje extends iso8583_1987
         // R8 - No implmentado, sólo respuesta
 
         // C6 - Datos de autenticación para tarjetas marca Visa (XID y CAVV). Programa 3-D Secure (Verified by Visa)
-        $sResultado .= '! C600080 ';
-        $sResultado .= sprintf("% 40s", $aData['3dsecure']['xid'] ?? ' ');
-        $sResultado .= sprintf("% 40s", $aData['3dsecure']['cavv'] ?? ' ');
+        if (!empty($aData['3dsecure'])) {
+            $sResultado .= '! C600080 ';
+            $sResultado .= sprintf("% 40s", $aData['3dsecure']['xid'] ?? ' ');
+            $sResultado .= sprintf("% 40s", $aData['3dsecure']['cavv'] ?? ' ');
+        }
 
         // CE - Datos de autenticación para tarjetas marca MasterCard (UCAF-AAV). Programa Secure Code
-        $sResultado .= '! CE00200 01';
-        $sResultado .= sprintf("% 200s", $aData['secure_code']['ucaf'] ?? ' ');
+        if (!empty($aData['secure_code'])) {
+            $sResultado .= '! CE00200 01';
+            $sResultado .= sprintf("% 200s", $aData['secure_code']['ucaf'] ?? ' ');
+        }
 
         // CZ - No implmentado, sólo contactless
 
