@@ -380,7 +380,8 @@ class SocketServerProxy implements MessageComponentInterface {
     public function keepalive(): string
     {
         $this->loguea("Enviando keepalive a eglobal.", 'debug');
-        return $this->enviaEglobal('Echo!');
+        return $this->enviaEglobal(chr(hexdec('00')) + chr(hexdec('5C')) + 'ISO0234000700800822200000001000004000000000000000326061922192569032601650NNNY2010000 001'
+);
     }
 
     // }}}
