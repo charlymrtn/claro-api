@@ -199,8 +199,9 @@ class SocketServerProxy implements MessageComponentInterface {
                 // Recibe mensaje de conexión
                 $this->loguea("Esperando respuesta de eglobal...", 'info');
                 $this->recibeEglobal();
+                $this->loguea("Respuesta recibida", 'info');
                 // @todo: Envía mensaje de sign on
-                // chr(hexdec('00')) + chr(hexdec('5C')) + 'ISO0234000700800822200000001000004000000000000000326061922192569032601650NNNY2010000 001'
+                $this->enviaEglobal(chr(hexdec('00')) . chr(hexdec('5C')) . 'ISO023400070080082220000000100000400000000000000' . gmdate('mdHis') . '192569032601650NNNY2010000 001');
             }
         }
         // Regresa resultado de conexión
@@ -380,8 +381,7 @@ class SocketServerProxy implements MessageComponentInterface {
     public function keepalive(): string
     {
         $this->loguea("Enviando keepalive a eglobal.", 'debug');
-        return $this->enviaEglobal(chr(hexdec('00')) + chr(hexdec('5C')) + 'ISO0234000700800822200000001000004000000000000000326061922192569032601650NNNY2010000 001'
-);
+        return $this->enviaEglobal(chr(hexdec('00')) . chr(hexdec('49')) . 'ISO023400070080082220000000000000400000000000000' . gmdate('mdHis') . '3992670326301');
     }
 
     // }}}
