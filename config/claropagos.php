@@ -78,6 +78,22 @@ return [
                 'region' => 'LAC',
                 'rtind' => '050',
             ],
+            'eglobal' => [
+                // Proxy
+                'proxy' => [
+                    'ip' => '127.0.0.1',
+                    'puerto' => '8300',
+                    'timeout' => 15,
+                    'verbose' => true,
+                ],
+                // Servidor
+                'ip' => '127.0.0.1',
+                'puerto' => '8315',
+                'timeout' => 120,
+                'keepalive' => 30,
+                // Afiliación
+                'afiliacion' => '5462742',
+            ],
         ],
 
     ],
@@ -152,45 +168,21 @@ return [
                 'region' => 'LAC',
                 'rtind' => '050',
             ],
-        ],
-
-    ],
-
-    'qa' => [
-
-        // Servidores del ecosistema Claro Pagos
-        'server' => [
-            'admin' => [
-                'url' => env('CP_ADMIN', 'atenea.qa.mavericksgateway.net'),
-            ],
-            'antifraude' => [
-                'url' => env('CP_ANTIFRAUDE', 'ares.qa.mavericksgateway.net'),
-            ],
-            'api' => [
-                'url' => env('CP_API', 'ciclope.qa.mavericksgateway.net'),
-            ],
-            'boveda' => [
-                'url' => env('CP_BOVEDA', 'busiris.qa.mavericksgateway.net'),
-            ],
-            'clientes' => [
-                'url' => env('CP_CLIENTE', 'apolo.qa.mavericksgateway.net'),
-            ],
-            'monitor' => [
-                'url' => env('CP_MONITOR', 'medusa.qa.mavericksgateway.net'),
-            ],
-            'tareas' => [
-                'url' => env('CP_TAREAS', 'triton.qa.mavericksgateway.net'),
-            ],
-        ],
-
-        // Configuración de procesadores de pago
-        'procesadores_pago' => [
-            'amex' => [
-                'api_url' => 'https://qwww318.americanexpress.com/IPPayments/inter/CardAuthorization.do',
-                'origin' => 'AMERICAMOVIL-28705',
-                'country' => '484',
-                'region' => 'LAC',
-                'rtind' => '050',
+            'eglobal' => [
+                // Proxy
+                'proxy' => [
+                    'ip' => '127.0.0.1',
+                    'puerto' => '8300',
+                    'timeout' => 15,
+                    'verbose' => true,
+                ],
+                // Servidor
+                'ip' => '172.26.202.4',
+                'puerto' => '8315',
+                'timeout' => 120,
+                'keepalive' => 30,
+                // Afiliación
+                'afiliacion' => '5462742',
             ],
         ],
 
@@ -232,6 +224,22 @@ return [
                 'region' => 'LAC',
                 'rtind' => '050',
             ],
+            'eglobal' => [
+                // Proxy
+                'proxy' => [
+                    'ip' => '127.0.0.1',
+                    'puerto' => '8300',
+                    'timeout' => 15,
+                    'verbose' => false,
+                ],
+                // Servidor
+                'ip' => '127.0.0.1',
+                'puerto' => '8300',
+                'timeout' => 60,
+                'keepalive' => 40,
+                // Afiliación
+                'afiliacion' => '5462742',
+            ],
         ],
 
     ],
@@ -272,6 +280,22 @@ return [
                 'region' => 'LAC',
                 'rtind' => '050',
             ],
+            'eglobal' => [
+                // Proxy
+                'proxy' => [
+                    'ip' => '127.0.0.1',
+                    'puerto' => '8300',
+                    'timeout' => 15,
+                    'verbose' => false,
+                ],
+                // Servidor
+                'ip' => '127.0.0.1',
+                'puerto' => '8300',
+                'timeout' => 60,
+                'keepalive' => 30,
+                // Afiliación
+                'afiliacion' => '5462742',
+            ],
         ],
 
     ],
@@ -311,6 +335,22 @@ return [
                 'country' => '484',
                 'region' => 'LAC',
                 'rtind' => '035',
+            ],
+            'eglobal' => [
+                // Proxy
+                'proxy' => [
+                    'ip' => '127.0.0.1',
+                    'puerto' => '8300',
+                    'timeout' => 15,
+                    'verbose' => false,
+                ],
+                // Servidor
+                'ip' => '172.26.202.4',
+                'puerto' => '8315',
+                'timeout' => 60,
+                'keepalive' => 30,
+                // Afiliación
+                'afiliacion' => '5462742',
             ],
         ],
 

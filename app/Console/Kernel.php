@@ -17,6 +17,10 @@ class Kernel extends ConsoleKernel
         Commands\TestappCommand::class,
         // Comando de pruebas de sistema
         Commands\HealthcheckCommand::class,
+        // Servidor de sockets
+        Commands\EglobalSocketServerMockCommand::class,
+        // BBVA Socket Proxy
+        Commands\EglobalSocketProxyCommand::class,
     ];
 
     /**

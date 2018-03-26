@@ -1,6 +1,5 @@
-<?php
-
-namespace App\Classes\Pagos\Procesadores\Iso;
+<?php 
+namespace BbvaSocket;
 
 /*
  * Clase para manejo de mensajes ISO-8586

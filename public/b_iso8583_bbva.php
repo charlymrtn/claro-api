@@ -1,8 +1,5 @@
-<?php
-
-namespace App\Classes\Pagos\Procesadores\Bbva;
-
-use App\Classes\Pagos\Procesadores\Iso\iso8583_1987;
+<?php 
+namespace BbvaSocket;
 
 class Mensaje extends iso8583_1987
 {
@@ -624,3 +621,4 @@ class Mensaje extends iso8583_1987
 
     // }}}
 }
+

@@ -6,6 +6,7 @@
     "type": "project",
     "require": {
         "php": ">=7.1",
+        "cboden/ratchet": "^0.4.1",
         "filp/whoops": "^2.1",
         "jenssegers/model": "^1.1",
         "laravel/framework": "5.5.*",
