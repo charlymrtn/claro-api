@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use Ratchet\MessageComponentInterface;
 use Ratchet\ConnectionInterface;
 use React\EventLoop\StreamSelectLoop;
+use App\Classes\Pagos\Procesadores\Bbva\Interred as BBVAInterred;
 
 /**
  * Implementación de servidor mock de eglobal.
@@ -27,6 +28,7 @@ class SocketServerMock implements MessageComponentInterface {
         'cyan' => "\033[01;36m",
         'reset' => "\033[0m",
     ];
+
 
     /**
      * Constructor
@@ -50,9 +52,29 @@ class SocketServerMock implements MessageComponentInterface {
     }
 
     public function onMessage(ConnectionInterface $from, $msg) {
-        echo $this->TS['cyan'] . "    Mensaje de cliente {$from->resourceId}: {$msg}" . $this->TS['reset'] . "\n";
-        echo $this->TS['cyan'] . "    Mensaje en hex     {$from->resourceId}: " . $this->TS['reset'] . $this->ascii2hex($msg) . "\n";
-        $from->send("Mensaje recibido: {$msg}");
+        echo $this->TS['cyan'] . "    Recibiendo mensaje de cliente {$from->resourceId} (str): {$msg}" . $this->TS['reset'] . "\n";
+        echo $this->TS['cyan'] . "    Recibiendo mensaje de cliente {$from->resourceId} (hex): " . $this->TS['reset'] . $this->ascii2hex($msg) . "\n";
+        // Procesa mensaje ISO recibido
+        try {
+            $oInterred = new BBVAInterred();
+            $aMensajeISO = $oInterred->procesaMensaje($msg);
+            echo $this->TS['cyan'] . "    Mensaje ISO (array): " . json_encode($aMensajeISO) . "\n";
+        } catch (Exception $e) {
+            echo $this->TS['red'] . "    Mensaje incorrecto: " . $this->TS['red'] . $e->getMessage() . "\n";
+        }
+        // Responde acorde al tio pde mensaje
+        if ($aMensajeISO['iso_mti'] == '0800') {
+            if ($aMensajeISO['iso_parsed']['70'] == '001') {
+                echo "\nEnviando respuesta de Signon";
+                $from->send($oInterred->respuestaSignOn());
+            } else if ($aMensajeISO['iso_parsed']['70'] == '301') {
+                echo "\nEnviando respuesta de Echo";
+                $from->send($oInterred->respuestaEcho());
+            }
+        } else {
+            echo "\nEnviando respuesta desconocida";
+            $from->send("Mensaje recibido: {$msg}");
+        }
         echo $this->TS['cyan'] . "    Respuesta enviada a {$from->resourceId}." . $this->TS['reset'] . "\n";
 //        $this->sendMessage("{$from->resourceId} envió un mensaje.", $from->resourceId);
 //        // Do we have a username for this user yet?

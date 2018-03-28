@@ -6,17 +6,11 @@ use App;
 use Log;
 use Exception;
 use App\Classes\Pagos\Procesadores\Bbva\Mensaje;
-use GuzzleHttp\Client as GuzzleClient;
 
 class Interred
 {
 
     // {{{ properties
-
-    /*
-     * @var GuzzleHttp\Client $this->oHttpClient Cliente Guzzle para transmisión de datos HTTP.
-     */
-    protected $oHttpClient;
 
     /*
      * @var Bbva\Mensaje
@@ -47,16 +41,6 @@ class Interred
      *
      * @return Client
      */
-    protected function getDefaultHttpClient()
-    {
-        return new GuzzleClient();
-    }
-
-    /**
-     * Obtiene el cliente HTTP por default (guzzle).
-     *
-     * @return Client
-     */
     protected function getDefaultMensaje()
     {
         return new Mensaje();
@@ -74,50 +58,92 @@ class Interred
     private function sendData(string $hEbcdicMessage)
     {
         // Config
-        $sUrl = $this->aConfig['api_url']; // "https://qwww318.americanexpress.com/IPPayments/inter/CardAuthorization.do";
-
-        // Prepare content
-        $sMessage = $hEbcdicMessage;
-        $sHeader = strlen($hEbcdicMessage);
-        $sRequestMessage = "AuthorizationRequestParam=" . $hEbcdicMessage;
-
-        // Envía request
-        try {
-        } catch (\GuzzleHttp\Exception\ConnectException $e) {
-            $sErrorMessage = $e->getMessage();
-            //Log::error('Error on '.__METHOD__.' line '.__LINE__.':' . $sErrorMessage);
-            //echo "\n<br>Error on " . __METHOD__ . ' line ' . __LINE__ . ':' . $sErrorMessage;
-            if (strpos($sErrorMessage, 'cURL error 28') !== false) {
-                $aResponseResult = [
-                    'status' => 'fail',
-                    'status_message' => 'Gateway Timeout.',
-                    'status_code' => '504',
-                    'response' => null,
-                ];
-            } else {
-                $aResponseResult = [
-                    'status' => 'fail',
-                    'status_message' => 'Connection error, bad gateway: ' . $sErrorMessage,
-                    'status_code' => '502',
-                    'response' => null,
-                ];
-            }
-        } catch (Exception $e) {
-            $sErrorMessage = $e->getMessage();
-            Log::error('Error on '.__METHOD__.' line '.__LINE__.':' . $sErrorMessage);
-            //echo "\n<br>Error on " . __METHOD__ . ' line ' . __LINE__ . ':' . $sErrorMessage;
-            //echo "\n<br>Exception: " .  get_class($e) . "";
-            $aResponseResult = [
-                'status' => 'fail',
-                'status_message' => 'Unknown error: ' . $sErrorMessage,
-                'status_code' => '520',
-                'response' => null,
-            ];
-        }
-
-        // Regresa objeto con respuesta
-        return (object) $aResponseResult;
+//        $sUrl = $this->aConfig['api_url']; // "https://qwww318.americanexpress.com/IPPayments/inter/CardAuthorization.do";
+//
+//        // Prepare content
+//        $sMessage = $hEbcdicMessage;
+//        $sHeader = strlen($hEbcdicMessage);
+//        $sRequestMessage = "AuthorizationRequestParam=" . $hEbcdicMessage;
+//
+//        // Envía request
+//        try {
+//        } catch (\GuzzleHttp\Exception\ConnectException $e) {
+//            $sErrorMessage = $e->getMessage();
+//            //Log::error('Error on '.__METHOD__.' line '.__LINE__.':' . $sErrorMessage);
+//            //echo "\n<br>Error on " . __METHOD__ . ' line ' . __LINE__ . ':' . $sErrorMessage;
+//            if (strpos($sErrorMessage, 'cURL error 28') !== false) {
+//                $aResponseResult = [
+//                    'status' => 'fail',
+//                    'status_message' => 'Gateway Timeout.',
+//                    'status_code' => '504',
+//                    'response' => null,
+//                ];
+//            } else {
+//                $aResponseResult = [
+//                    'status' => 'fail',
+//                    'status_message' => 'Connection error, bad gateway: ' . $sErrorMessage,
+//                    'status_code' => '502',
+//                    'response' => null,
+//                ];
+//            }
+//        } catch (Exception $e) {
+//            $sErrorMessage = $e->getMessage();
+//            Log::error('Error on '.__METHOD__.' line '.__LINE__.':' . $sErrorMessage);
+//            //echo "\n<br>Error on " . __METHOD__ . ' line ' . __LINE__ . ':' . $sErrorMessage;
+//            //echo "\n<br>Exception: " .  get_class($e) . "";
+//            $aResponseResult = [
+//                'status' => 'fail',
+//                'status_message' => 'Unknown error: ' . $sErrorMessage,
+//                'status_code' => '520',
+//                'response' => null,
+//            ];
+//        }
+//
+//        // Regresa objeto con respuesta
+//        return (object) $aResponseResult;
     }
+
+	private function preparaMensaje($sIso)
+	{
+		$sMensaje = 'ISO023400070' . $sIso;
+		return $this->isoLength(strlen('00' . $sMensaje)) . $sMensaje;
+	}
+
+	private function isoLength(int $size)
+	{
+		$part = str_split(sprintf("%04s", dechex($size)), 2);
+		return chr(hexdec($part[0])) . chr(hexdec($part[1]));
+	}
+
+
+	private function isoTipoRed($sNMICode, $sMTI = '0800')
+	{
+		// Define campos
+		$oMensaje = new Mensaje();
+		$oMensaje->setMTI($sMTI);
+		$oMensaje->setData(7, gmdate('mdHis')); // Date & time
+		$oMensaje->setData(11, $oMensaje->generateSystemsTraceAuditNumber()); // Systems Trace Audit Number
+		$oMensaje->setData(15, date('md')); // Date & time
+        if ($sMTI == '0810') {
+            $oMensaje->setData(39, '00'); // Date & time
+        } else {
+            if ($sNMICode != '301') {
+                $oMensaje->setData(48, '50NNNY2010000   '); // Additional DataRetailer Data - Define la afiliación del Establecimiento
+            }
+        }
+		$oMensaje->setData(70, $sNMICode); // Network Management Information Code
+		return $oMensaje->getISO(false);
+	}
+
+	public function ascii2hex($ascii) {
+	  $hex = '';
+	  for ($i = 0; $i < strlen($ascii); $i++) {
+		$byte = strtoupper(dechex(ord($ascii{$i})));
+		$byte = str_repeat('0', 2 - strlen($byte)).$byte;
+		$hex.=$byte." ";
+	  }
+	  return $hex;
+	}
 
     // }}}
 
@@ -131,18 +157,68 @@ class Interred
     /**
      * Constructor
      *
-     * @param GHDC $oGhdc Contenedor de mensaje GHDC necesario para Bbva (ISO-8583)
-     * @param GuzzleClient $oGuzzleClient  Cliente HTTP para hacer las llamadas al API
+     * @param Mensaje $oMensaje Contenedor de mensaje BBVA (ISO-8583)
      */
-    public function __construct(Mensaje $oMensaje = null, GuzzleClient $oGuzzleClient = null)
+    public function __construct(Mensaje $oMensaje = null)
     {
         $this->oMensaje = $oMensaje ?? $this->getDefaultMensaje();
-        $this->oHttpClient = $oGuzzleClient ?? $this->getDefaultHttpClient();
         // Define variables comunes
         $this->sEnv = App::environment();
         // Carga configuración de servidores dependiendo del ambiente
-        $this->aConfig = config('claropagos.' . $this->sEnv . '.procesadores_pago.amex');
+        $this->aConfig = config('claropagos.' . $this->sEnv . '.procesadores_pago.eglobal');
     }
+
+    public function procesaMensaje($sMensaje): array
+    {
+        // Tamaño del mensaje
+        $iMensajeBytes = hexdec($this->ascii2hex(substr($sMensaje, 0, 2)));
+        // Encabezado de mensaje
+        $sMensajeHeader = substr($sMensaje, 2, 12);
+        // ISO
+        $sMensajeIso = substr($sMensaje, 14, $iMensajeBytes - 14); #, $iMensajeBytes);
+        // Parsea ISO
+        $oParsedIso = new Mensaje();
+        $oParsedIso->setISO($sMensajeIso);
+        // Formatea resultado
+        $aResultado = [
+            'bytes' => $iMensajeBytes,
+            'header' => $sMensajeHeader,
+            'iso' => $sMensajeIso,
+            'iso_mti' => $oParsedIso->getMTI(),
+            'iso_parsed' => $oParsedIso->getDataArray(),
+        ];
+        return $aResultado;
+    }
+
+	public function mensajeEcho(): string
+	{
+		return $this->preparaMensaje($this->isoTipoRed('301'));
+	}
+
+	public function mensajeSignOn(): string
+	{
+		return $this->preparaMensaje($this->isoTipoRed('001'));
+	}
+
+	public function mensajeSignOff(): string
+	{
+		return $this->preparaMensaje($this->isoTipoRed('002'));
+	}
+
+	public function mensajeCutoff(): string
+	{
+		return $this->preparaMensaje($this->isoTipoRed('201'));
+	}
+
+	public function respuestaSignOn(): string
+	{
+		return $this->preparaMensaje($this->isoTipoRed('001', '0810'));
+	}
+
+	public function respuestaEcho(): string
+	{
+		return $this->preparaMensaje($this->isoTipoRed('301', '0810'));
+	}
 
     /**
      * @todo: Cambiar arreglos por objeto de pago amex
@@ -384,11 +460,11 @@ class Interred
 
         // Atributos de sistema
         if (in_array($aBbvaOverride['mti'], ['1100', '1200'])) {
-            $this->oMensaje->setData(7, date('mdhis')); // Date & time
+            $this->oMensaje->setData(7, gmdate('mdHis')); // Date & time
         }
         $this->oMensaje->setData(11, $sSystemsTraceAuditNumber); // Systems Trace Audit Number
         if (in_array($aBbvaOverride['mti'], ['1200', '1420'])) {
-            $this->oMensaje->setData(28, date('ymd')); // Date, Reconciliation
+            $this->oMensaje->setData(28, gmdate('ymd')); // Date, Reconciliation
         }
         $this->oMensaje->setData(33, 111); // Forwarding Institution ID Code
         $this->oMensaje->setData(42, $nMerchantNumber);  // Card Acceptor Identification Code

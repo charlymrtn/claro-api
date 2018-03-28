@@ -14,6 +14,7 @@ class pruebaBBVA
 		//'port' => 8315,
 		'ip' => '127.0.0.1',
 		'port' => 8300,
+		'proxy' => true,
 		'timeout' => 3,
 		'afiliacion' => '5462742',
 	];
@@ -55,6 +56,7 @@ class pruebaBBVA
 		// Envía datos
 		if ($bEcho) {
 			echo "<br>Enviando mensaje: '" . $sMensaje . "'";
+			echo "\n<br>Enviando: " . $this->ascii2hex($sMensaje);
 		}
 		$size = strlen($sMensaje);
 		$bytes = fwrite($this->client, $sMensaje, $size);
@@ -77,7 +79,8 @@ class pruebaBBVA
 		// Recibe datos 1
 		echo "<br>Escuchando socket...";
 		$data = stream_get_contents($this->client);
-		echo "<br>Respuesta: " . $data;
+		echo "\n<br>Respuesta: " . $data;
+		echo "\n<br>Respuesta hex: " . $this->ascii2hex($data);
 		return $data;
 	}
 	
@@ -111,7 +114,7 @@ class pruebaBBVA
 		// Define campos
 		$oMensaje = new Mensaje();
 		$oMensaje->setMTI('0800');
-		$oMensaje->setData(7, gmdate('mdhis')); // Date & time
+		$oMensaje->setData(7, gmdate('mdHis')); // Date & time
 		$oMensaje->setData(11, $oMensaje->generateSystemsTraceAuditNumber()); // Systems Trace Audit Number
 		$oMensaje->setData(15, date('md')); // Date & time
 		if ($sNMICode != '301') {
@@ -128,7 +131,7 @@ class pruebaBBVA
 		$oMensaje->setMTI('0200');
 		$oMensaje->setData(3, $oMensaje->formateaCampo3($aData)); // Processing Code
 		$oMensaje->setData(4, $aData['monto_x_100']); // Transaction Amount - Monto de la transacción con centavos
-		$oMensaje->setData(7, gmdate('mdhis')); // Date & time
+		$oMensaje->setData(7, gmdate('mdHis')); // Date & time
 		$oMensaje->setData(11, $oMensaje->generateSystemsTraceAuditNumber()); // Systems Trace Audit Number
 		$oMensaje->setData(12, date('his')); // Hora local de la transacción
 		$oMensaje->setData(13, date('md')); // Date & time - Día local de la transacción 
@@ -212,7 +215,7 @@ class pruebaBBVA
 		$oMensaje->setMTI('0200');
 		$oMensaje->setData(3, '000000'); // Processing Code
 		$oMensaje->setData(4, '000000183000'); // Transaction Amount - Monto de la transacción con centavos
-		$oMensaje->setData(7, date('mdhis')); // Date & time
+		$oMensaje->setData(7, gmdate('mdHis')); // Date & time
 		$oMensaje->setData(11, $oMensaje->generateSystemsTraceAuditNumber()); // Systems Trace Audit Number
 		$oMensaje->setData(12, date('his')); // Hora local de la transacción
 		$oMensaje->setData(13, date('md')); // Date & time - Día local de la transacción 
@@ -256,36 +259,19 @@ $respuesta4 = null; $respuesta5 = null; $respuesta6 = null;
 
 $oPruebaBBVA = new pruebaBBVA();
 
-/**
-echo "<h2>Prueba</h2>\n";
-
-	echo "\n<br>" . $oPruebaBBVA->mensajePrueba1();
-	echo "\n<br>" . $oPruebaBBVA->mensajeVenta([
-		'tipo' => 'compra',
-		'monto' => '1830.00',
-		'monto_x_100' => '183000',
-	], false);
-	
-exit;
-**/
-
 $respuesta1 = $oPruebaBBVA->conecta();
+#flush(); sleep(4);
 
 if ($respuesta1) {
 	// ----------------------------------------------------------------------------------------------------------------------------------
 	// Envía mensaje Sign On
 	$mensaje = $oPruebaBBVA->mensajeSignOn();
-	echo "\n<br>Enviando: " . $oPruebaBBVA->ascii2hex($mensaje);
 	$oPruebaBBVA->envia($mensaje);
 	#sleep(1);
 	$respuesta2 = $oPruebaBBVA->escucha();
-	#flush(); sleep(1);
+	flush(); sleep(2);
 	// ----------------------------------------------------------------------------------------------------------------------------------
 }
-
-
-
-/**
 
 if (!empty($respuesta2)) {
 	// ----------------------------------------------------------------------------------------------------------------------------------
@@ -295,6 +281,8 @@ if (!empty($respuesta2)) {
 	flush(); sleep(2);
 	// ----------------------------------------------------------------------------------------------------------------------------------
 }
+
+/**
 
 if (!empty($respuesta3)) {
 	// ----------------------------------------------------------------------------------------------------------------------------------
@@ -308,7 +296,7 @@ if (!empty($respuesta3)) {
 if (!empty($respuesta4)) {
 	// ----------------------------------------------------------------------------------------------------------------------------------
 	// Envía mensaje Sign Off
-	$oPruebaBBVA->envia($oPruebaBBVA->mensajeSignOn());
+	$oPruebaBBVA->envia($oPruebaBBVA->mensajeSignOff());
 	$respuesta5 = $oPruebaBBVA->escucha();
 	flush(); sleep(2);
 	// ----------------------------------------------------------------------------------------------------------------------------------

@@ -62,7 +62,12 @@ class CargoController extends Controller
          */
 
         // Encapsula, valida y formatea datos en PeticionCargo
-        $oPeticionCargo = new PeticionCargo($oRequest->all());
+        try {
+            $oPeticionCargo = new PeticionCargo($oRequest->all());
+        } catch (\Exception $e) {
+            Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ':' . $e->getMessage());
+            return ejsend_fail(['code' => $e->getCode(), 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], $e->getCode(), ['errors' => $e->getMessage()]);
+        }
 
         // @todo: Cambiar Procesadores\Amex\InternetDirect por Procesadores\sProcesadorAmex
 

@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use Ratchet\MessageComponentInterface;
 use Ratchet\ConnectionInterface;
 use React\EventLoop\StreamSelectLoop;
+use App\Classes\Pagos\Procesadores\Bbva\Interred as BBVAInterred;
 
 /**
  * Implementación de servidor proxy para peticiones a eglobal.
@@ -197,11 +198,12 @@ class SocketServerProxy implements MessageComponentInterface {
                 stream_set_timeout($this->oEglobalCliente, $this->aConfig['timeout']);
                 stream_set_blocking($this->oEglobalCliente, 0);
                 // Recibe mensaje de conexión
-                $this->loguea("Esperando respuesta de eglobal...", 'info');
                 $this->recibeEglobal();
-                $this->loguea("Respuesta recibida", 'info');
-                // @todo: Envía mensaje de sign on
-                $this->enviaEglobal(chr(hexdec('00')) . chr(hexdec('5C')) . 'ISO023400070080082220000000100000400000000000000' . gmdate('mdHis') . '192569032601650NNNY2010000 001');
+                // Envía mensaje de sign on
+                $oInterred = new BBVAInterred();
+                // Recibe mensaje de sign on
+                $this->enviaEglobal($oInterred->mensajeSignOn());
+                $this->recibeEglobal();
             }
         }
         // Regresa resultado de conexión
@@ -228,6 +230,8 @@ class SocketServerProxy implements MessageComponentInterface {
         // Envía mensaje
         try {
             $iMessageSize = strlen($sMensaje);
+            $this->loguea("Enviando mensaje a eglobal (str): " . $sMensaje, 'debug', 'error');
+            $this->loguea("Enviando mensaje a eglobal (hex): " . $this->ascii2hex($sMensaje), 'debug');
             $iMessageBytes = fwrite($this->oEglobalCliente, $sMensaje, $iMessageSize);
             if ($iMessageBytes === false || $iMessageBytes < $iMessageSize) {
                 $this->loguea("ERROR: Error al escribir en el socket de eglobal.", 'error');
@@ -254,11 +258,14 @@ class SocketServerProxy implements MessageComponentInterface {
      */
 	public function recibeEglobal(): string
 	{
+        // Prepara variables
         usleep(500);
-		// Recibe datos
         $sData = '';
+		// Recibe datos
+        $this->loguea(Carbon::now() . " Esperando respuesta de eglobal...", 'debug');
 		$sData = stream_get_contents($this->oEglobalCliente, 1024);
-        $this->loguea("Recibiendo datos de eglobal: " . $sData, 'debug');
+        $this->loguea(Carbon::now() . " Respuesta recibida (str): " . $sData, 'debug');
+        $this->loguea(Carbon::now() . " Respuesta recibida (hex): " . $this->ascii2hex($sData), 'debug');
 		return $sData;
 	}
 
@@ -381,7 +388,8 @@ class SocketServerProxy implements MessageComponentInterface {
     public function keepalive(): string
     {
         $this->loguea("Enviando keepalive a eglobal.", 'debug');
-        return $this->enviaEglobal(chr(hexdec('00')) . chr(hexdec('49')) . 'ISO023400070080082220000000000000400000000000000' . gmdate('mdHis') . '3992670326301');
+        $oInterred = new BBVAInterred();
+        return $this->enviaEglobal($oInterred->mensajeEcho());
     }
 
     // }}}
