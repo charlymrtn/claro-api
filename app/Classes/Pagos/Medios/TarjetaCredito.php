@@ -142,13 +142,13 @@ class TarjetaCredito extends Model
         // Valida año
         $iAnioLength = strlen($sAnio);
         if ($iAnioLength < 2 || $iAnioLength > 4) {
-            throw new Exception('Año inválido: ' . $sAnio);
+            throw new Exception('Año inválido: ' . $sAnio, 400);
         }
         // Formatea año
         if (strlen($sAnio) > 2 ) {
             // Valida rango
             if ($sAnio < 1920 || $sAnio > 2180) {
-                throw new Exception('Año inválido: ' . $sAnio);
+                throw new Exception('Año inválido: ' . $sAnio, 400);
             }
             return substr($sAnio, -2);
         } else {
@@ -167,7 +167,7 @@ class TarjetaCredito extends Model
         // Valida mes
         $iMesLength = strlen($sMes);
         if ($iMesLength < 1 || $iMesLength > 2 || $sMes < 1 || $sMes > 12) {
-            throw new Exception('Mes inválido.');
+            throw new Exception('Mes inválido.', 400);
         }
         // Formatea mes
         return str_pad($sMes, 2, "0", STR_PAD_LEFT);
@@ -207,10 +207,10 @@ class TarjetaCredito extends Model
         // Valida tarjeta
         $iPanLength = strlen($iPan);
         if ($iPanLength < self::CARD_MIN_LENGTH || $iPanLength > self::CARD_MAX_LENGTH) {
-            throw new Exception('Número de tarjeta inválida.');
+            throw new Exception('Número de tarjeta inválida.', 400);
         }
         if (!$this->esLuhnValido($iPan)) {
-            throw new Exception('Número de tarjeta inválida.');
+            throw new Exception('Número de tarjeta inválida.', 400);
         }
         // Asigna Issuer Identification Number
         $this->attributes['iin'] = substr($iPan, 0, 6);

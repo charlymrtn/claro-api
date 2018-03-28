@@ -94,7 +94,7 @@ class Direccion extends Model
             'latitud' => 'numeric|min:-90|max:90',
         ]);
         if ($oValidator->fails()) {
-            throw new Exception('Error en parámetros de entrada: ' . $oValidator->errors());
+            throw new Exception($oValidator->errors(), 400);
         }
     }
 
