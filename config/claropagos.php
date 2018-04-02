@@ -83,7 +83,7 @@ return [
                 'proxy' => [
                     'ip' => '127.0.0.1',
                     'puerto' => '8300',
-                    'timeout' => 15,
+                    'timeout' => 60,
                     'verbose' => true,
                 ],
                 // Servidor

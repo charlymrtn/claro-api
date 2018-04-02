@@ -17,3 +17,6 @@
 
 // Auth
 //Auth::routes();
+
+// BBVA Pruebas
+Route::any('/bbva', 'Bbva\BbvaController@index')->name('default');

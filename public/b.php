@@ -1,100 +1,136 @@
 <?php
+namespace app\Prueba\Bbva;
 
-namespace BbvaSocket;
+use App;
+use Log;
+use Carbon\Carbon;
+use App\Classes\Pagos\Procesadores\Bbva\Mensaje;
+use App\Classes\Pagos\Medios\TarjetaCredito;
+use App\Classes\Pagos\Parametros\PeticionCargo;
+use Webpatser\Uuid\Uuid;
+use App\Classes\Pagos\Procesadores\Bbva\Interred as BBVAInterred;
 
-require_once('b_iso8583_1987.php');
-require_once('b_iso8583_bbva.php');
-
-class pruebaBBVA
+class BbvaTest
 {
-	protected $client;
-	protected $client2;
+    private $oTarjetaCredito1 = null;
+    private $oTarjetaCredito2 = null;
+    private $oPeticionCargo = null;
+
+    /**
+     * Constructor
+     */
+    public function __construct()
+    {
+        // Construye tarjetas de credito
+        $this->oTarjetaCredito1 = new TarjetaCredito([
+            'pan' => '4772135000003584',
+            'nombre' => 'Juan Perez Lopez',
+            'cvv2' => '340',
+            'nip' => '3344',
+            'expiracion_mes' => '05',
+            'expiracion_anio' => '20',
+        ]);
+        $this->oTarjetaCredito2 = new TarjetaCredito([
+            'pan' => '4152315000122697',
+            'nombre' => 'Juan Perez Lopez',
+            'cvv2' => '427',
+            'nip' => '5897',
+            'expiracion_mes' => '05',
+            'expiracion_anio' => '20',
+        ]);
+        // Construye petición de cargo
+        $this->oPeticionCargo = new PeticionCargo([
+            'prueba' => true,
+            'id' => Uuid::generate(4)->string,
+            'tarjeta' => $this->oTarjetaCredito1,
+            'monto' =>  0,
+            'puntos' => 0,
+            'descripcion' => 'Prueba EGlobal BBVA',
+            'parcialidades' => 0,
+            'diferido' => 0,
+            'comercio_uuid' => '176f76a8-2670-4288-9800-1dd5f031a57e',
+        ]);
+
+
+    }
+
+    public function prueba1()
+    {
+        $iPrueba = 1;
+        echo "Prueba {$iPrueba}";
+        // Datos de prueba
+        $this->oPeticionCargo->monto = 1830.00;
+        $this->oPeticionCargo->descripcion = 'Prueba ' . $iPrueba . ' EGlobal BBVA';
+        // Prepara mensaje
+        $oInterredProxy = new InterredProxy();
+        $oResultado = $oInterredProxy->mensajeVenta($this->oPeticionCargo, true);
+        // Regresa resultados
+        return $oResultado;
+    }
+
+    public function prueba2()
+    {
+        $iPrueba = 2;
+        echo "Prueba {$iPrueba}";
+        // Datos de prueba
+        $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito2;
+        $this->oPeticionCargo->monto = 223.00;
+        $this->oPeticionCargo->descripcion = 'Prueba ' . $iPrueba . ' EGlobal BBVA';
+        // Prepara mensaje
+        $oInterredProxy = new InterredProxy();
+        $oResultado = $oInterredProxy->mensajeVenta($this->oPeticionCargo, true);
+        // Regresa resultados
+        return $oResultado;
+    }
+
+    public function prueba3()
+    {
+        $iPrueba = 3;
+        echo "Prueba {$iPrueba}";
+        // Datos de prueba
+        $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito2;
+        $this->oPeticionCargo->monto = 532.00;
+        $this->oPeticionCargo->descripcion = 'Prueba ' . $iPrueba . ' EGlobal BBVA';
+        // Prepara mensaje
+        $oInterredProxy = new InterredProxy();
+        $oResultado = $oInterredProxy->mensajeVenta($oPeticionCargo, true);
+        // Regresa resultados
+        return $oResultado;
+    }
+
+    public function prueba4()
+    {
+        $iPrueba = 3;
+        echo "Prueba {$iPrueba}";
+        // Datos de prueba
+        $this->oPeticionCargo->monto = 728.00;
+        $this->oPeticionCargo->descripcion = 'Prueba ' . $iPrueba . ' EGlobal BBVA';
+        // Prepara mensaje
+        $oInterredProxy = new InterredProxy();
+        $oResultado = $oInterredProxy->mensajeVenta($oPeticionCargo, true);
+        // Regresa resultados
+        return $oResultado;
+    }
+
+}
+
+
+
+
+class InterredProxy
+{
+    protected $oEglobalProxyCliente;
+
 	protected $config = [
-		//'ip' => '172.26.202.4',
-		//'port' => 8315,
-		'ip' => '127.0.0.1',
-		'port' => 8300,
-		'proxy' => true,
-		'timeout' => 3,
+		'proxy' => [
+			'ip' => '127.0.0.1', // '172.26.202.4'
+			'port' => 8300, // 8315
+			'proxy' => true,
+			'timeout' => 5,
+		],
 		'afiliacion' => '5462742',
 	];
-	
-	public function conecta($bReconnect = false)
-	{
-		// Conecta
-		$this->client = false;
-		try {
-			$this->client = @stream_socket_client('tcp://' . $this->config['ip'] . ':' . $this->config['port'], $aError['number'], $aError['error'], $this->config['timeout'], STREAM_CLIENT_CONNECT);
-			if ($this->client === false) {
-				throw new \Exception("Error al crear el socket: " . socket_strerror(socket_last_error()));
-			}
-			echo "<br>Socket creado OK.\n";
-			// Define timeout
-			stream_set_timeout($this->client, $this->config['timeout']);
-			// Autentica
-			$respuesta = $this->escucha();
-		} catch (\Exception $e) {
-			echo "\n<br>Error al crear el socket: " . $e->getMessage();
-			return false;
-		}
-		return true;
-	}
-	
-	public function desconecta()
-	{
-		if (fclose($this->client) === false) {
-			echo "<br>Error al cerrar el socket: " . socket_strerror(socket_last_error()) . "\n";
-			throw new \Exception("Error al cerrar el socket: " . socket_strerror(socket_last_error()));
-		} else {
-			$this->client = false;
-			echo "<br>Socket cerrado OK.\n";
-		}
-	}
-	
-	public function envia($sMensaje, $bEcho = true, $bValida = true): bool
-	{
-		// Envía datos
-		if ($bEcho) {
-			echo "<br>Enviando mensaje: '" . $sMensaje . "'";
-			echo "\n<br>Enviando: " . $this->ascii2hex($sMensaje);
-		}
-		$size = strlen($sMensaje);
-		$bytes = fwrite($this->client, $sMensaje, $size);
-		if ($bytes === false || $bytes < $size) {
-			if ($bEcho) {
-				echo "<br>Error al escribir en el socket!\n";
-			}
-			return false;
-		} else {
-			if ($bEcho) {
-				echo "<br>Mensaje enviado OK ({$bytes}).\n";
-			}
-			return true;
-		}
-	}
-	
-	public function escucha()
-	{
-		usleep(500);
-		// Recibe datos 1
-		echo "<br>Escuchando socket...";
-		$data = stream_get_contents($this->client);
-		echo "\n<br>Respuesta: " . $data;
-		echo "\n<br>Respuesta hex: " . $this->ascii2hex($data);
-		return $data;
-	}
-	
-	public function valida_conexion()
-	{
-		// Valida conexión enviando mensaje al socket resource
-		echo "<br>Validando conexión.";
-		$bConexion = $this->envia($this->mensajeEcho(false), false, false);
-		if (!$bConexion) {
-			$this->conecta(true);
-		}
-	}
-	
-	// ********************************************************************************************************************
+
 	// ********************************************************************************************************************
 
 	private function preparaMensaje($sIso, $bEcho = true)
@@ -109,49 +145,40 @@ class pruebaBBVA
 		return chr(hexdec($part[0])) . chr(hexdec($part[1]));
 	}
 
-	private function isoTipoRed($sNMICode)
-	{
-		// Define campos
-		$oMensaje = new Mensaje();
-		$oMensaje->setMTI('0800');
-		$oMensaje->setData(7, gmdate('mdHis')); // Date & time
-		$oMensaje->setData(11, $oMensaje->generateSystemsTraceAuditNumber()); // Systems Trace Audit Number
-		$oMensaje->setData(15, date('md')); // Date & time
-		if ($sNMICode != '301') {
-			$oMensaje->setData(48, '50NNNY2010000   '); // Additional DataRetailer Data - Define la afiliación del Establecimiento
-		}
-		$oMensaje->setData(70, $sNMICode); // Network Management Information Code
-		return $oMensaje->getISO(false);
-	}
-
-	private function isoTipoCompra(array $aData = [])
+	private function isoTipoCompra(PeticionCargo $oPeticionCargo, array $aTipo = [])
 	{
 		// Define campos
 		$oMensaje = new Mensaje();
 		$oMensaje->setMTI('0200');
-		$oMensaje->setData(3, $oMensaje->formateaCampo3($aData)); // Processing Code
-		$oMensaje->setData(4, $aData['monto_x_100']); // Transaction Amount - Monto de la transacción con centavos
+		$oMensaje->setData(3, $oMensaje->formateaCampo3($aTipo)); // Processing Code
+		$oMensaje->setData(4, $oMensaje->formateaCampo4($oPeticionCargo->monto)); // Transaction Amount - Monto de la transacción con centavos
 		$oMensaje->setData(7, gmdate('mdHis')); // Date & time
 		$oMensaje->setData(11, $oMensaje->generateSystemsTraceAuditNumber()); // Systems Trace Audit Number
 		$oMensaje->setData(12, date('his')); // Hora local de la transacción
-		$oMensaje->setData(13, date('md')); // Date & time - Día local de la transacción 
+		$oMensaje->setData(13, date('md')); // Date & time - Día local de la transacción
 		$oMensaje->setData(17, date('md')); // Date & time - Día en el cual la transacción es registrada por el Adquirente
-		$oMensaje->setData(22, '012'); // PoS Entry Mode 
+		$oMensaje->setData(22, '012'); // PoS Entry Mode
 		#$oMensaje->setData(23, ''); //
 		$oMensaje->setData(25, '59'); // Point of Service Condition Code - 59 = Comercio Electrónico
 		$oMensaje->setData(32, '12'); // Acquiring Institution Identification Code
-		$oMensaje->setData(35, '477213******3584=2005'); // Track 2 Data
-		$oMensaje->setData(37, '000000123401'); // Retrieval Reference Number 
-		$oMensaje->setData(41, '0000CP01        '); // Card Acceptor Terminal Identification 
-		//$oMensaje->setData(43, 'Radiomovil DIPSA SA CVCMXCMXMX'); //  Card Acceptor Name/Location 
+		$oMensaje->setData(35, $oMensaje->formateaCampo35($oPeticionCargo->tarjeta)); // Track 2 Data
+		$oMensaje->setData(37, '000000123401'); // Retrieval Reference Number
+		$oMensaje->setData(41, '0000CP01        '); // Card Acceptor Terminal Identification
+		//$oMensaje->setData(43, 'Radiomovil DIPSA SA CVCMXCMXMX'); //  Card Acceptor Name/Location
 		$oMensaje->setData(48, '5462742            00000000'); // Additional DataRetailer Data - Define la afiliación del Establecimiento
-		$oMensaje->setData(49, '484'); // Transaction Currency Code. 
+		$oMensaje->setData(49, '484'); // Transaction Currency Code.
 		//$oMensaje->setData(54, '000000000000')); // Additional Amounts - Monto del cash advance/back con centavos
 		#$oMensaje->setData(55, ''); //
 		#$oMensaje->setData(58, ''); //
 		#$oMensaje->setData(59, ''); //
 		$oMensaje->setData(60, 'CLPGTES1+0000000'); // POS Terminal Data
-		$oMensaje->setData(63, $oMensaje->formateaCampo63(['mti' => '0200'])); // POS Additional Data
+		$oMensaje->setData(63, $oMensaje->formateaCampo63([
+            'mti' => '0200',
+            'parcialidades' => $oPeticionCargo->parcialidades,
+            'diferimiento' => $oPeticionCargo->diferido,
+            'cvv2' => $oPeticionCargo->tarjeta->cvv2,
+            'indicador_cvv2' => $oPeticionCargo->tarjeta->cvv2 ? 'presente' : 'no',
+        ])); // POS Additional Data
 		#$oMensaje->setData(103, ''); //
 		echo "<pre>" . print_r($oMensaje->getDataArray(), true) . "</pre>";
 		return $oMensaje->getISO(false);
@@ -159,159 +186,152 @@ class pruebaBBVA
 
 	// ********************************************************************************************************************
 
-	public function mensajeEcho($bEcho = true)
-	{
-		if ($bEcho) {
-			echo "<br>Preparando mensaje Echo...";
-		}
-		$sIso = $this->isoTipoRed('301');
-		return $this->preparaMensaje($sIso, $bEcho);
-	}
-
-	public function mensajeSignOn($bEcho = true)
-	{
-		if ($bEcho) {
-			echo "<br>Preparando mensaje Sign On...";
-		}
-		$sIso = $this->isoTipoRed('001');
-		return $this->preparaMensaje($sIso, $bEcho);
-	}
-	
-	public function mensajeSignOff($bEcho = true)
-	{
-		if ($bEcho) {
-			echo "<br>Preparando mensaje Sign Off...";
-		}
-		$sIso = $this->isoTipoRed('002');
-		return $this->preparaMensaje($sIso, $bEcho);
-	}
-
-	public function mensajeCutoff($bEcho = true)
-	{
-		if ($bEcho) {
-			echo "<br>Preparando mensaje Cutoff...";
-		}
-		$sIso = $this->isoTipoRed('201');
-		return $this->preparaMensaje($sIso, $bEcho);
-	}
-	
-	public function mensajeVenta(array $aData, $bEcho = true)
+	public function mensajeVenta(PeticionCargo $oPeticionCargo, $bEnvia = false, $bEcho = true)
 	{
 		if ($bEcho) {
 			echo "<br>Preparando mensaje de Venta...";
 		}
 		// Define campos
-		$sIso = $this->isoTipoCompra($aData);
-		return $this->preparaMensaje($sIso, $bEcho);
+		$sIso = $this->isoTipoCompra($oPeticionCargo);
+		$sMensaje = $this->preparaMensaje($sIso, $bEcho);
+        // Evalua retorno
+        if ($bEnvia) {
+            return $this->enviaMensaje($oPeticionCargo->id, $sMensaje, $bEcho);
+        } else {
+            return $sMensaje;
+        }
 	}
 
-	// ********************************************************************************************************************
-	
-	public function mensajePrueba1()
+    public function enviaMensaje(string $sId, string $sMensaje, $bEcho = true)
+    {
+        // Prepara resultado
+        $aResponseResult = [
+            'status' => 'fail',
+            'status_message' => 'Unknown error.',
+            'status_code' => '520',
+            'response' => null,
+        ];
+
+		if ($bEcho) {
+			echo "<br>Enviando mensaje...";
+		}
+
+		// Conecta
+		try {
+			$this->oEglobalProxyCliente = stream_socket_client('tcp://' . $this->config['proxy']['ip'] . ':' . $this->config['proxy']['port'], $aResponseResult['status_code'], $aResponseResult['status_message'], $this->config['proxy']['timeout'], STREAM_CLIENT_CONNECT);
+			if ($this->oEglobalProxyCliente === false) {
+                $aResponseResult = [
+                    'status' => 'fail',
+                    'status_message' => socket_strerror(socket_last_error()),
+                    //'status_code' => '500',
+                ];
+			}
+			// Define timeout
+			stream_set_timeout($this->oEglobalProxyCliente, $this->config['proxy']['timeout']);
+			stream_set_blocking($this->oEglobalProxyCliente, 0);
+            stream_set_read_buffer($this->oEglobalProxyCliente, 0);
+			// Espera mensaje de conexión
+            $oData = $this->recibeEglobalProxy($bEcho);
+			if ($oData->conexion != 'success') {
+                $aResponseResult = [
+                    'status' => 'fail',
+                    'status_message' => 'Error al conectarse a eglobalProxyServer',
+                    'status_code' => '502',
+                ];
+                return false;
+			}
+			// Prepara mensaje
+			$aRequest = [
+				'accion' => 'send',
+				'id' => $sId,
+				'mensaje' => $sMensaje,
+			];
+			// Envía mensaje
+			$jRequest = json_encode($aRequest);
+			$size = strlen($jRequest);
+			$bytes = fwrite($this->oEglobalProxyCliente, $jRequest, $size);
+			if ($bytes === false || $bytes < $size) {
+                if ($bEcho) {
+                    echo "<br>Error al escribir en el socket!\n";
+                }
+			} else {
+                if ($bEcho) {
+    				echo "<br>Mensaje enviado OK ({$bytes}).\n";
+                }
+			}
+			// Espera respuesta
+            $oData = $this->recibeEglobalProxy($bEcho);
+            // Procesa mensaje
+            if (!empty($oData->respuesta)) {
+                try {
+                    if ($oData->encoding == 'base64') {
+                        $sRespuesta = base64_decode($oData->respuesta);
+                    } else {
+                        $sRespuesta = $oData->respuesta;
+                    }
+                    dump($sRespuesta);
+                    $oInterred = new BBVAInterred();
+                    $aMensajeISO = $oInterred->procesaMensaje($sRespuesta);
+                    #dump($aMensajeISO);
+                    $jMensajeISO = json_encode($aMensajeISO['iso_parsed']);
+                    dump($jMensajeISO);
+                    echo "<br>Respuesta recibida (iso): {$jMensajeISO} \n";
+                } catch (\Exception $e) {
+                    $jMensajeISO = "{}";
+                }
+            }
+            // Prepara respuesta
+            $aResponseResult = [
+                'status' => 'success',
+                'status_message' => 'Mensaje enviado y respuesta recibida',
+                'status_code' => '200',
+                'respuesta' => $oData,
+                'respuesta_iso' => $aMensajeISO,
+            ];
+		} catch (\Exception $e) {
+			echo "\n<br>Error al crear el socket: " . $e->getMessage();
+			return false;
+		}
+		if (fclose($this->oEglobalProxyCliente) === false) {
+			echo "<br>Error al cerrar el socket: " . socket_strerror(socket_last_error()) . "\n";
+			throw new \Exception("Error al cerrar el socket: " . socket_strerror(socket_last_error()));
+		} else {
+			$this->oEglobalProxyCliente = false;
+			echo "<br>Socket cerrado OK.\n";
+		}
+        return (object) $aResponseResult;
+    }
+
+	public function recibeEglobalProxy($bEcho = true)
 	{
-		echo "<br>Preparando mensaje de prueba...";
-		// Define campos
-		$oMensaje = new Mensaje();
-		$oMensaje->setMTI('0200');
-		$oMensaje->setData(3, '000000'); // Processing Code
-		$oMensaje->setData(4, '000000183000'); // Transaction Amount - Monto de la transacción con centavos
-		$oMensaje->setData(7, gmdate('mdHis')); // Date & time
-		$oMensaje->setData(11, $oMensaje->generateSystemsTraceAuditNumber()); // Systems Trace Audit Number
-		$oMensaje->setData(12, date('his')); // Hora local de la transacción
-		$oMensaje->setData(13, date('md')); // Date & time - Día local de la transacción 
-		$oMensaje->setData(17, date('md')); // Date & time - Día en el cual la transacción es registrada por el Adquirente
-		$oMensaje->setData(22, '012'); // PoS Entry Mode 
-		#$oMensaje->setData(23, ''); //
-		$oMensaje->setData(25, '59'); // Point of Service Condition Code - 59 = Comercio Electrónico
-		$oMensaje->setData(32, '12'); // Acquiring Institution Identification Code
-		$oMensaje->setData(35, '477213******3584=2005'); // Track 2 Data
-		$oMensaje->setData(37, '000000123401'); // Retrieval Reference Number 
-		$oMensaje->setData(41, '0000CP01        '); // Card Acceptor Terminal Identification 
-		//$oMensaje->setData(43, 'Radiomovil DIPSA SA CVCMXCMXMX'); //  Card Acceptor Name/Location 
-		$oMensaje->setData(48, '5462742            00000000'); // Additional DataRetailer Data - Define la afiliación del Establecimiento
-		$oMensaje->setData(49, '484'); // Transaction Currency Code. 
-		//$oMensaje->setData(54, '000000000000')); // Additional Amounts - Monto del cash advance/back con centavos
-		#$oMensaje->setData(55, ''); //
-		#$oMensaje->setData(58, ''); //
-		#$oMensaje->setData(59, ''); //
-		$oMensaje->setData(60, 'CLPGTES1+0000000'); // POS Terminal Data
-		$oMensaje->setData(63, $oMensaje->formateaCampo63(['mti' => '0200'])); // POS Additional Data
-		#$oMensaje->setData(103, ''); //
-		$sIso = $oMensaje->getISO(false);
-		echo "<pre>" . print_r($oMensaje->getDataArray(), true) . "</pre>";
-		return $this->preparaMensaje($sIso);
+        // Prepara variables
+        $sMensaje = null;
+        $oTime = Carbon::now();
+		// Recibe datos
+        if ($bEcho) {
+            echo "\n<br>Esperando respuesta de eglobal proxy...";
+        }
+        while(empty($sMensaje)) {
+            usleep(10000);
+            $sMensaje = stream_get_contents($this->oEglobalProxyCliente, 1024);
+            if ($oTime->diffInSeconds() > 15) {
+                break;
+            }
+        }
+        // Mensaje raw
+        if ($bEcho) {
+            echo "\n<br>Respuesta recibida (str): " . $sMensaje;
+        }
+        // Decodifica respuesta
+        $jRespuesta = json_decode($sMensaje);
+        #$this->loguea("    Respuesta recibida (str): " . $sMensaje, 'debug');
+        #$this->loguea("    Respuesta recibida (hex): " . $this->ascii2hex($sMensaje), 'debug');
+        if (!empty($jRespuesta) && !empty($jRespuesta->data)) {
+            return $jRespuesta->data;
+        } else {
+            return $jRespuesta;
+        }
+
 	}
 
-	public function ascii2hex($ascii) {
-	  $hex = '';
-	  for ($i = 0; $i < strlen($ascii); $i++) {
-		$byte = strtoupper(dechex(ord($ascii{$i})));
-		$byte = str_repeat('0', 2 - strlen($byte)).$byte;
-		$hex.=$byte." ";
-	  }
-	  return $hex;
-	}
-}
-
-// Variables
-$respuesta1 = null; $respuesta2 = null; $respuesta3 = null;
-$respuesta4 = null; $respuesta5 = null; $respuesta6 = null;
-
-$oPruebaBBVA = new pruebaBBVA();
-
-$respuesta1 = $oPruebaBBVA->conecta();
-#flush(); sleep(4);
-
-if ($respuesta1) {
-	// ----------------------------------------------------------------------------------------------------------------------------------
-	// Envía mensaje Sign On
-	$mensaje = $oPruebaBBVA->mensajeSignOn();
-	$oPruebaBBVA->envia($mensaje);
-	#sleep(1);
-	$respuesta2 = $oPruebaBBVA->escucha();
-	flush(); sleep(2);
-	// ----------------------------------------------------------------------------------------------------------------------------------
-}
-
-if (!empty($respuesta2)) {
-	// ----------------------------------------------------------------------------------------------------------------------------------
-	// Envía mensaje Echo
-	$oPruebaBBVA->envia($oPruebaBBVA->mensajeEcho(), true, false);
-	$respuesta3 = $oPruebaBBVA->escucha();
-	flush(); sleep(2);
-	// ----------------------------------------------------------------------------------------------------------------------------------
-}
-
-/**
-
-if (!empty($respuesta3)) {
-	// ----------------------------------------------------------------------------------------------------------------------------------
-	// Envía mensaje Venta normal Caso 1
-	$oPruebaBBVA->envia($oPruebaBBVA->mensajePrueba1());
-	$respuesta4 = $oPruebaBBVA->escucha();
-	flush(); sleep(2);
-	// ----------------------------------------------------------------------------------------------------------------------------------
-}
-
-if (!empty($respuesta4)) {
-	// ----------------------------------------------------------------------------------------------------------------------------------
-	// Envía mensaje Sign Off
-	$oPruebaBBVA->envia($oPruebaBBVA->mensajeSignOff());
-	$respuesta5 = $oPruebaBBVA->escucha();
-	flush(); sleep(2);
-	// ----------------------------------------------------------------------------------------------------------------------------------
-}
-
-if (!empty($respuesta5)) {
-	// ----------------------------------------------------------------------------------------------------------------------------------
-	// Envía mensaje Cutoff
-	$oPruebaBBVA->envia($oPruebaBBVA->mensajeCutoff());
-	$respuesta6 = $oPruebaBBVA->escucha();
-	flush(); sleep(2);
-	// ----------------------------------------------------------------------------------------------------------------------------------
-}
-**/
-
-if ($respuesta1) {
-	$oPruebaBBVA->desconecta();
 }

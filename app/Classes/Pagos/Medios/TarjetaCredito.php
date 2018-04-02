@@ -4,6 +4,7 @@ namespace App\Classes\Pagos\Medios;
 
 use Jenssegers\Model\Model;
 use Exception;
+use Validator;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
 use App\Classes\Pagos\Base\Direccion;
@@ -14,7 +15,6 @@ use App\Classes\Pagos\Base\Direccion;
  */
 class TarjetaCredito extends Model
 {
-
     // {{{ properties
 
     const CARD_MIN_LENGTH = 13;
@@ -27,6 +27,7 @@ class TarjetaCredito extends Model
         'pan', // Número de tarjeta sanitizado
         'nombre', // Nombre como aparece en la tarjeta
         'cvv2', // Código de seguridad de la tarjeta cvv2, cvc
+        'nip', // Código nip de la tarjeta
         'expiracion_mes', // Mes de expiración
         'expiracion_anio', // Año de expiracion
         'inicio_mes', // Mes de inicio de la tarjeta
@@ -38,7 +39,7 @@ class TarjetaCredito extends Model
     ];
 
     /*
-     * Atributos no asignables en masa
+     * @var array $guarded Atributos no asignables en masa
      */
     protected $guarded = [
         'iin', // Issuer Identification Number (bin)
@@ -49,18 +50,36 @@ class TarjetaCredito extends Model
     ];
 
     /*
-     * Atributos escondidos
+     * @var array $hidden Atributos escondidos
      */
     protected $hidden = [
         '_pan', // Número de tarjeta (16-19)
         'cvv2', // CVV2 (3-4)
+        'nip', // NIP
     ];
 
     /*
-     * Atributos mutables a fechas
+     * @var array $dates Atributos mutables a fechas
      */
     protected $dates = [
         'created_at', 'updated_at', 'deleted_at'
+    ];
+
+    /*
+     * @var array $rules Reglas de validación
+     */
+    protected $rules = [
+        'pan' => 'required|numeric',
+        'nombre' => 'required_without:nombres|min:3|max:60',
+        'cvv2' => 'numeric|min:0|max:9999',
+        'nip' => 'numeric|min:0|max:99999999',
+        'expiracion_mes' => 'required|numeric',
+        'expiracion_anio' => 'required|numeric',
+        'inicio_mes' => 'numeric',
+        'inicio_anio' => 'numeric',
+        'nombres' => 'required_without:nombre|min:3|max:30',
+        'apellido_paterno' => 'required_without:nombre|min:3|max:30',
+        'apellido_materno' => 'required_without:nombre|min:3|max:30',
     ];
 
     // }}}}
@@ -71,7 +90,6 @@ class TarjetaCredito extends Model
      * --------------------------------------------------------------------------------------------------------
      */
     // {{{ protected functions
-
     // }}}
 
     /**
@@ -112,7 +130,6 @@ class TarjetaCredito extends Model
         }
     }
 
-
     /**
      * Valida la tarjeta contra el algoritmo Luhn
      *
@@ -138,14 +155,15 @@ class TarjetaCredito extends Model
      *
      * @return void
      */
-    public function formateaAnio(string $sAnio) {
+    private function formateaAnio(string $sAnio)
+    {
         // Valida año
         $iAnioLength = strlen($sAnio);
         if ($iAnioLength < 2 || $iAnioLength > 4) {
             throw new Exception('Año inválido: ' . $sAnio, 400);
         }
         // Formatea año
-        if (strlen($sAnio) > 2 ) {
+        if (strlen($sAnio) > 2) {
             // Valida rango
             if ($sAnio < 1920 || $sAnio > 2180) {
                 throw new Exception('Año inválido: ' . $sAnio, 400);
@@ -163,7 +181,8 @@ class TarjetaCredito extends Model
      *
      * @return void
      */
-    public function formateaMes(string $sMes) {
+    private function formateaMes(string $sMes)
+    {
         // Valida mes
         $iMesLength = strlen($sMes);
         if ($iMesLength < 1 || $iMesLength > 2 || $sMes < 1 || $sMes > 12) {
@@ -172,7 +191,6 @@ class TarjetaCredito extends Model
         // Formatea mes
         return str_pad($sMes, 2, "0", STR_PAD_LEFT);
     }
-
 
     // }}}
 
@@ -188,11 +206,32 @@ class TarjetaCredito extends Model
      */
     public function __construct($aAttributes)
     {
+        // Obtiene configuración laravel
+
         // Define fecha de creación
         $this->attributes['created_at'] = Carbon::now();
+        // Valida entradas
+        $this->valida($aAttributes);
         // Ejecuta constructor padre
         parent::__construct($aAttributes);
     }
+
+    /**
+     * Valida input con las reglas de validación del modelo
+     *
+     * @param array $aAttributes Arreglo con valores de los campos
+     *
+     * @return void
+     */
+    public function valida($aAttributes)
+    {
+        $oValidator = Validator::make($aAttributes, $this->rules);
+        if ($oValidator->fails()) {
+            throw new Exception($oValidator->errors(), 400);
+        }
+    }
+
+    // --------------------------------------------------------------------------------------------------------
 
     /**
      * Define el pan (numero) de tarjeta
@@ -201,7 +240,8 @@ class TarjetaCredito extends Model
      *
      * @return void
      */
-    public function setPanAttribute(string $sPan) {
+    public function setPanAttribute(string $sPan)
+    {
         // Prepara PAN
         $iPan = preg_replace('/\D/', '', $sPan);
         // Valida tarjeta
@@ -217,7 +257,7 @@ class TarjetaCredito extends Model
         // Asigna versión sanitizada
         $this->attributes['pan'] = $this->attributes['iin'] . str_repeat('*', ($iPanLength - 10)) . substr($iPan, -4);
         // Asigna hash/fingerprint
-        $this->attributes['pan_hash'] = Hash::make($iPan);
+        $this->attributes['pan_hash'] = hash('sha256', $iPan . 'e14626acd3aad61fe5c196f68bea80adaaea6655a9b033af913a1535973f2d57');
         // Asigna pan
         $this->attributes['_pan'] = $iPan;
         // Define marca
@@ -231,7 +271,8 @@ class TarjetaCredito extends Model
      *
      * @return void
      */
-    public function setInicioAnioAttribute(string $sAnio) {
+    public function setInicioAnioAttribute(string $sAnio)
+    {
         // Valida y formatea
         $this->attributes['inicio_anio'] = $this->formateaAnio($sAnio);
     }
@@ -243,7 +284,8 @@ class TarjetaCredito extends Model
      *
      * @return void
      */
-    public function setExpiracionAnioAttribute(string $sAnio) {
+    public function setExpiracionAnioAttribute(string $sAnio)
+    {
         // Valida y formatea
         $this->attributes['expiracion_anio'] = $this->formateaAnio($sAnio);
     }
@@ -255,7 +297,8 @@ class TarjetaCredito extends Model
      *
      * @return void
      */
-    public function setInicioMesAttribute(string $sMes) {
+    public function setInicioMesAttribute(string $sMes)
+    {
         // Valida y formatea
         $this->attributes['inicio_mes'] = $this->formateaMes($sMes);
     }
@@ -267,7 +310,8 @@ class TarjetaCredito extends Model
      *
      * @return void
      */
-    public function setExpiracionMesAttribute(string $sMes) {
+    public function setExpiracionMesAttribute(string $sMes)
+    {
         // Valida y formatea
         $this->attributes['expiracion_mes'] = $this->formateaMes($sMes);
     }
@@ -275,10 +319,13 @@ class TarjetaCredito extends Model
     /*
      * Atributos de clases
      */
+
     public function setDireccionAttribute(Direccion $oDireccion): void
     {
         $this->attributes['direccion'] = $oDireccion;
     }
+
+    // --------------------------------------------------------------------------------------------------------
 
     // }}}
 }

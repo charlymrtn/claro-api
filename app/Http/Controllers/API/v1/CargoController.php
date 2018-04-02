@@ -61,12 +61,56 @@ class CargoController extends Controller
          * @todo: IMPORTANTE: Versión para demo, cambiar pasando el demo!
          */
 
-        // Encapsula, valida y formatea datos en PeticionCargo
+         // Valida datos de entrada
+        $oValidator = Validator::make($this->toArray(), [
+            'prueba' => 'boolean',
+            'tarjeta' => 'required|array',
+                'tarjeta.pan' => 'required|numeric',
+                'tarjeta.nombre' => 'required|min:3|max:60',
+                'tarjeta.cvv2' => 'required|numeric',
+                'tarjeta.expiracion_mes' => 'required|numeric',
+                'tarjeta.expiracion_anio' => 'required|numeric',
+                'tarjeta.inicio_mes' => 'numeric',
+                'tarjeta.inicio_anio' => 'numeric',
+                'tarjeta.nombres' => 'required_without:nombre|min:3|max:30',
+                'tarjeta.apellido_paterno' => 'required_without:nombre|min:3|max:30',
+                'tarjeta.apellido_materno' => 'required_without:nombre|min:3|max:30',
+                'tarjeta.direccion' => 'array',
+            'monto' => 'required',
+            'descripcion' => 'max:250',
+            'pedido' => 'required|array',
+                'pedido.id' => 'max:48',
+                'pedido.direccion_envio' => 'array',
+                'pedido.articulos' => 'array',
+            'cliente' => 'required|array',
+                'cliente.id' => 'required|string',
+                'cliente.nombre' => 'required|min:3|max:30',
+                'cliente.apellido_paterno' => 'required|min:3|max:30',
+                'cliente.apellido_materno' => 'min:3|max:30',
+                'cliente.email' => 'required|email',
+                'cliente.telefono' => 'string',
+                'cliente.direccion' => 'array',
+                'cliente.creacion' => 'date',
+            'parcialidades' => 'numeric|min:0|max:48',
+            'comercio_uuid' => 'required|string',
+        ]);
+        if ($oValidator->fails()) {
+            throw new Exception($oValidator->errors(), 400);
+        }
+
+        // Formatea y encapsula datos
         try {
+            $this->attributes['pedido']['direccion_envio'] = new Direccion($this->attributes['pedido']['direccion_envio']);
+
             $oPeticionCargo = new PeticionCargo($oRequest->all());
         } catch (\Exception $e) {
+            if (empty($e->getCode())) {
+                $sCode = '401';
+            } else {
+                $sCode = $e->getCode();
+            }
             Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ':' . $e->getMessage());
-            return ejsend_fail(['code' => $e->getCode() ?? '400', 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], $e->getCode() ?? '400', ['errors' => $e->getMessage()]);
+            return ejsend_fail(['code' => $sCode, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], $sCode, ['errors' => $e->getMessage()]);
         }
 
         // @todo: Cambiar Procesadores\Amex\InternetDirect por Procesadores\sProcesadorAmex

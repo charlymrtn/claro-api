@@ -57,53 +57,9 @@ class Interred
 
     private function sendData(string $hEbcdicMessage)
     {
-        // Config
-//        $sUrl = $this->aConfig['api_url']; // "https://qwww318.americanexpress.com/IPPayments/inter/CardAuthorization.do";
-//
-//        // Prepare content
-//        $sMessage = $hEbcdicMessage;
-//        $sHeader = strlen($hEbcdicMessage);
-//        $sRequestMessage = "AuthorizationRequestParam=" . $hEbcdicMessage;
-//
-//        // Envía request
-//        try {
-//        } catch (\GuzzleHttp\Exception\ConnectException $e) {
-//            $sErrorMessage = $e->getMessage();
-//            //Log::error('Error on '.__METHOD__.' line '.__LINE__.':' . $sErrorMessage);
-//            //echo "\n<br>Error on " . __METHOD__ . ' line ' . __LINE__ . ':' . $sErrorMessage;
-//            if (strpos($sErrorMessage, 'cURL error 28') !== false) {
-//                $aResponseResult = [
-//                    'status' => 'fail',
-//                    'status_message' => 'Gateway Timeout.',
-//                    'status_code' => '504',
-//                    'response' => null,
-//                ];
-//            } else {
-//                $aResponseResult = [
-//                    'status' => 'fail',
-//                    'status_message' => 'Connection error, bad gateway: ' . $sErrorMessage,
-//                    'status_code' => '502',
-//                    'response' => null,
-//                ];
-//            }
-//        } catch (Exception $e) {
-//            $sErrorMessage = $e->getMessage();
-//            Log::error('Error on '.__METHOD__.' line '.__LINE__.':' . $sErrorMessage);
-//            //echo "\n<br>Error on " . __METHOD__ . ' line ' . __LINE__ . ':' . $sErrorMessage;
-//            //echo "\n<br>Exception: " .  get_class($e) . "";
-//            $aResponseResult = [
-//                'status' => 'fail',
-//                'status_message' => 'Unknown error: ' . $sErrorMessage,
-//                'status_code' => '520',
-//                'response' => null,
-//            ];
-//        }
-//
-//        // Regresa objeto con respuesta
-//        return (object) $aResponseResult;
     }
 
-	private function preparaMensaje($sIso)
+	public function preparaMensaje($sIso)
 	{
 		$sMensaje = 'ISO023400070' . $sIso;
 		return $this->isoLength(strlen('00' . $sMensaje)) . $sMensaje;
@@ -116,13 +72,13 @@ class Interred
 	}
 
 
-	private function isoTipoRed($sNMICode, $sMTI = '0800')
+	private function isoTipoRed($sNMICode, $sMTI = '0800', $aOpt = [])
 	{
 		// Define campos
 		$oMensaje = new Mensaje();
 		$oMensaje->setMTI($sMTI);
 		$oMensaje->setData(7, gmdate('mdHis')); // Date & time
-		$oMensaje->setData(11, $oMensaje->generateSystemsTraceAuditNumber()); // Systems Trace Audit Number
+		$oMensaje->setData(11, $aOpt['stan'] ?? $oMensaje->generateSystemsTraceAuditNumber()); // Systems Trace Audit Number
 		$oMensaje->setData(15, date('md')); // Date & time
         if ($sMTI == '0810') {
             $oMensaje->setData(39, '00'); // Date & time
@@ -132,6 +88,45 @@ class Interred
             }
         }
 		$oMensaje->setData(70, $sNMICode); // Network Management Information Code
+		return $oMensaje->getISO(false);
+	}
+
+	private function isoTipoCompra(PeticionCargo $oPeticionCargo, array $aTipo = [])
+	{
+		// Define campos
+		$oMensaje = new Mensaje();
+		$oMensaje->setMTI('0200');
+		$oMensaje->setData(3, $oMensaje->formateaCampo3($aTipo)); // Processing Code
+		$oMensaje->setData(4, $oMensaje->formateaCampo4($oPeticionCargo->monto)); // Transaction Amount - Monto de la transacción con centavos
+		$oMensaje->setData(7, gmdate('mdHis')); // Date & time
+		$oMensaje->setData(11, $oMensaje->generateSystemsTraceAuditNumber()); // Systems Trace Audit Number
+		$oMensaje->setData(12, date('his')); // Hora local de la transacción
+		$oMensaje->setData(13, date('md')); // Date & time - Día local de la transacción
+		$oMensaje->setData(17, date('md')); // Date & time - Día en el cual la transacción es registrada por el Adquirente
+		$oMensaje->setData(22, '012'); // PoS Entry Mode
+		#$oMensaje->setData(23, ''); //
+		$oMensaje->setData(25, '59'); // Point of Service Condition Code - 59 = Comercio Electrónico
+		$oMensaje->setData(32, '12'); // Acquiring Institution Identification Code
+		$oMensaje->setData(35, $oMensaje->formateaCampo35($oPeticionCargo->tarjeta)); // Track 2 Data
+		$oMensaje->setData(37, '000000123401'); // Retrieval Reference Number
+		$oMensaje->setData(41, '0000CP01        '); // Card Acceptor Terminal Identification
+		//$oMensaje->setData(43, 'Radiomovil DIPSA SA CVCMXCMXMX'); //  Card Acceptor Name/Location
+		$oMensaje->setData(48, '5462742            00000000'); // Additional DataRetailer Data - Define la afiliación del Establecimiento
+		$oMensaje->setData(49, '484'); // Transaction Currency Code.
+		//$oMensaje->setData(54, '000000000000')); // Additional Amounts - Monto del cash advance/back con centavos
+		#$oMensaje->setData(55, ''); //
+		#$oMensaje->setData(58, ''); //
+		#$oMensaje->setData(59, ''); //
+		$oMensaje->setData(60, 'CLPGTES1+0000000'); // POS Terminal Data
+		$oMensaje->setData(63, $oMensaje->formateaCampo63([
+            'mti' => '0200',
+            'parcialidades' => $oPeticionCargo->parcialidades,
+            'diferimiento' => $oPeticionCargo->diferido,
+            'cvv2' => $oPeticionCargo->tarjeta->cvv2,
+            'indicador_cvv2' => $oPeticionCargo->tarjeta->cvv2 ? 'presente' : 'no',
+        ])); // POS Additional Data
+		#$oMensaje->setData(103, ''); //
+		echo "<pre>" . print_r($oMensaje->getDataArray(), true) . "</pre>";
 		return $oMensaje->getISO(false);
 	}
 
@@ -183,7 +178,8 @@ class Interred
         $aResultado = [
             'bytes' => $iMensajeBytes,
             'header' => $sMensajeHeader,
-            'iso' => $sMensajeIso,
+            'iso' => $oParsedIso,
+            'iso_string' => $sMensajeIso,
             'iso_mti' => $oParsedIso->getMTI(),
             'iso_parsed' => $oParsedIso->getDataArray(),
         ];
@@ -210,14 +206,14 @@ class Interred
 		return $this->preparaMensaje($this->isoTipoRed('201'));
 	}
 
-	public function respuestaSignOn(): string
+	public function respuestaSignOn($aOpt = []): string
 	{
-		return $this->preparaMensaje($this->isoTipoRed('001', '0810'));
+		return $this->preparaMensaje($this->isoTipoRed('001', '0810', $aOpt));
 	}
 
-	public function respuestaEcho(): string
+	public function respuestaEcho($aOpt = []): string
 	{
-		return $this->preparaMensaje($this->isoTipoRed('301', '0810'));
+		return $this->preparaMensaje($this->isoTipoRed('301', '0810', $aOpt));
 	}
 
     /**

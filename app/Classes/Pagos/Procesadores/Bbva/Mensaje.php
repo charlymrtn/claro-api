@@ -3,6 +3,7 @@
 namespace App\Classes\Pagos\Procesadores\Bbva;
 
 use App\Classes\Pagos\Procesadores\Iso\iso8583_1987;
+use App\Classes\Pagos\Medios\TarjetaCredito;
 
 class Mensaje extends iso8583_1987
 {
@@ -26,7 +27,7 @@ class Mensaje extends iso8583_1987
      * @var array Elementos de datos diferentes al iso8583_1987
      */
     private $CUSTOM_DATA_ELEMENT = [
-        1 =>   ['type' => 'an',   'size' => 16,   'fixed' => true,  'mandatory' => true, 'usage' => 'Secondary Bit Map' ],
+        1 =>   ['type' => 'an',   'size' => 16,   'fixed' => true,  'mandatory' => false, 'usage' => 'Secondary Bit Map' ],
         3 =>   [],
         4 =>   ['format' => ['pad_type' => 'left', 'pad_string' => '0']],
         7 =>   ['mandatory' => true],
@@ -41,7 +42,7 @@ class Mensaje extends iso8583_1987
         32 =>  [],
         35 =>  ['type' => 'ans'],
         37 =>  [],
-        38 =>  [],
+        38 =>  ['format' => ['pad_type' => 'right', 'pad_string' => '0']],
         39 =>  [],
         41 =>  ['size' => 16],
         43 =>  [],
@@ -206,6 +207,14 @@ class Mensaje extends iso8583_1987
     }
 
     /**
+     * Campo 4 - Monto
+     */
+    public function formateaCampo4(float $fMonto): int
+    {
+        return (int) number_format($fMonto, 2, '', '');
+    }
+
+    /**
      * Campo 22 - Point of Service Entry Mode
      */
     public function formateaCampo22(array $aData): string
@@ -230,6 +239,19 @@ class Mensaje extends iso8583_1987
         //     8 - El PIN pad está fuera de Servicio
         $sResultado .= sprintf("%01s", $aData['acepta_nip']);
 
+        return $sResultado;
+    }
+
+    /**
+     * Campo 35 - Track 2
+     */
+    public function formateaCampo35(TarjetaCredito $oTarjetaCredito): string
+    {
+        $sResultado = '';
+        $sResultado .= $oTarjetaCredito->_pan;
+        $sResultado .= '=';
+        $sResultado .= sprintf("%02s", $oTarjetaCredito->expiracion_anio);
+        $sResultado .= sprintf("%02s", $oTarjetaCredito->expiracion_mes);
         return $sResultado;
     }
 
@@ -366,8 +388,10 @@ class Mensaje extends iso8583_1987
      */
     public function formateaCampo63(array $aData = []): string
     {
+		$iTokens = 0;
         $sResultado = '';
         // Q1
+		$iTokens += 1;
         $sResultado .= '! Q100002 ';
         // 4 Autorizado off-line por el negocio, archivo negativo.
         // 5 Transacción forzada o de ajuste, 0220/0221.
@@ -379,6 +403,7 @@ class Mensaje extends iso8583_1987
         }
 
         // Q2
+		$iTokens += 1;
         $sResultado .= '! Q200002 ';
         // 01 Autorización Voz (Operador).
         // 02 Cargos Automáticos a través de la Interred.
@@ -407,25 +432,30 @@ class Mensaje extends iso8583_1987
         }
 
         // Q6
-        $sResultado .= '! Q600006 ';
-        $sResultado .= sprintf("%02s", $aData['diferimiento'] ?? '00');
-        $sResultado .= sprintf("%02s", $aData['parcialidades'] ?? '00');
-        $sResultado .= sprintf("%02s", $aData['parcialidades'] ?? '00');
-        if (empty($aData['plan'])) {
-            // Default
-            $sResultado .= '00';
-        } else if ($aData['plan'] == 'sinintereses') {
-            $sResultado .= '03';
-        } else if ($aData['plan'] == 'conintereses') {
-            $sResultado .= '05';
-        } else if ($aData['plan'] == 'diferido') {
-            $sResultado .= '07';
-        }
+		if (!empty($aData['diferimiento']) && !empty($aData['parcialidades'])) {
+			$iTokens += 1;
+			$sResultado .= '! Q600006 ';
+			$sResultado .= sprintf("%02s", $aData['diferimiento'] ?? '00');
+			$sResultado .= sprintf("%02s", $aData['parcialidades'] ?? '00');
+			$sResultado .= sprintf("%02s", $aData['parcialidades'] ?? '00');
+			if (empty($aData['plan'])) {
+				// Default
+				$sResultado .= '00';
+			} else if ($aData['plan'] == 'sinintereses') {
+				$sResultado .= '03';
+			} else if ($aData['plan'] == 'conintereses') {
+				$sResultado .= '05';
+			} else if ($aData['plan'] == 'diferido') {
+				$sResultado .= '07';
+			}
+		}
 
         // 04
+		$iTokens += 1;
         $sResultado .= '! 0400020                     ';
 
         // C0
+		$iTokens += 1;
         $sResultado .= '! C000026 ';
         // Código de validación 2: CVV2 para VISA CVC2 para MasterCard 4DBC para American Express Los datos deben de estar justificados a la izquierda. “ ” Código de validación 2 no presente
         $sResultado .= sprintf("%- 4s", $aData['cvv2'] ?? ' ');
@@ -490,6 +520,7 @@ class Mensaje extends iso8583_1987
         $sResultado .= ' ';
 
         // C4
+		$iTokens += 1;
         $sResultado .= '! C400012 102';
         // Indicador de presencia del tarjetahabiente:
         // 0 El tarjetahabiente está presente
@@ -544,6 +575,7 @@ class Mensaje extends iso8583_1987
         // C5 - Multipagos
         if (!empty($aData['multipagos'])) {
             if ($aData['multipagos']['tipo'] == 'cie') {
+				$iTokens += 1;
                 // CIE
                 $sResultado .= '! C500078 01';
                 $sResultado .= sprintf("%-09s", $aData['multipagos']['convenio_cie'] ?? '0');
@@ -551,6 +583,7 @@ class Mensaje extends iso8583_1987
                 $sResultado .= sprintf("%-07s", $aData['multipagos']['guia_cie'] ?? '0');
                 $sResultado .= sprintf("% 40s", $aData['multipagos']['referencia'] ?? ' ');
             } else if ($aData['multipagos'] == 'hipoteca') {
+				$iTokens += 1;
                 // Pago de Crédito Hipotecario
                 $sResultado .= '! C500090 02009999901';
                 // Número de Crédito Hipotecario
@@ -559,6 +592,7 @@ class Mensaje extends iso8583_1987
                 $sResultado .= sprintf("% 40s", $aData['multipagos']['titular'] ?? ' ');
                 $sResultado .= sprintf("%-012s", $aData['multipagos']['importe'] ?? '0');
             } else if ($aData['multipagos'] == 'express') {
+				$iTokens += 1;
                 // Depósito a Cuenta Express
                 $sResultado .= '! C500078 ';
                 // Dataset Id
@@ -572,6 +606,7 @@ class Mensaje extends iso8583_1987
                 $sResultado .= '       ';
                 $sResultado .= sprintf("% 40s", $aData['multipagos']['referencia'] ?? ' ');
             } else if ($aData['multipagos'] == 'dinero_movil') {
+				$iTokens += 1;
                 // Dinero móvil
                 $sResultado .= '! C500018 05';
                 $sResultado .= sprintf("%04s", $aData['multipagos']['codigo'] ?? '0');
@@ -582,12 +617,15 @@ class Mensaje extends iso8583_1987
         // ER, ES, ET, EW, EX, EY, EZ - No implmentado por ser ecommerce
 
         // R7 - Indicador Bonus Merchant y Número de Referencia de Campañas
-        $sResultado .= '! R700013 N000000000000';
+		// No se debe enviar
+		//$iTokens += 1;
+        //$sResultado .= '! R700013 N000000000000';
 
         // R8 - No implmentado, sólo respuesta
 
         // C6 - Datos de autenticación para tarjetas marca Visa (XID y CAVV). Programa 3-D Secure (Verified by Visa)
         if (!empty($aData['3dsecure'])) {
+			$iTokens += 1;
             $sResultado .= '! C600080 ';
             $sResultado .= sprintf("% 40s", $aData['3dsecure']['xid'] ?? ' ');
             $sResultado .= sprintf("% 40s", $aData['3dsecure']['cavv'] ?? ' ');
@@ -595,13 +633,21 @@ class Mensaje extends iso8583_1987
 
         // CE - Datos de autenticación para tarjetas marca MasterCard (UCAF-AAV). Programa Secure Code
         if (!empty($aData['secure_code'])) {
+			$iTokens += 1;
             $sResultado .= '! CE00200 01';
             $sResultado .= sprintf("% 200s", $aData['secure_code']['ucaf'] ?? ' ');
         }
 
         // CZ - No implmentado, sólo contactless
 
-        return $sResultado;
+
+		// Header
+		$iTokens += 1;
+		$sHeader = '& ' . sprintf("%05s", $iTokens);
+		$sSize = strlen($sHeader . '00000' . $sResultado);
+		$sHeader .= sprintf("%05s", $sSize);
+
+        return $sHeader . $sResultado;
     }
 
     /**
