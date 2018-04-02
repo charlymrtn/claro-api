@@ -186,6 +186,7 @@ class InterredProxy
         if (!empty($aTipo['tipo']) && $aTipo['tipo'] == 'puntos_compra') {
     		$oMensaje->setData(58, $oMensaje->formateaCampo58([
                 //'numero' => str_random(8), // No necesario
+                //'numero' => $this->ascii2hex('        ', false),
                 'importe' => $oPeticionCargo->puntos,
             ])); //
         }
@@ -355,4 +356,17 @@ class InterredProxy
 
 	}
 
+	public function ascii2hex($ascii, $bSeprator = true) {
+        $hex = '';
+        for ($i = 0; $i < strlen($ascii); $i++) {
+            $byte = strtoupper(dechex(ord($ascii{$i})));
+            $byte = str_repeat('0', 2 - strlen($byte)).$byte;
+            if ($bSeprator) {
+                $hex.=$byte." ";
+            }
+        }
+        return $hex;
+	}
+
 }
+

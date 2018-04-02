@@ -342,13 +342,13 @@ class Mensaje extends iso8583_1987
     {
         $sResultado = '';
         // 16 Número impredecible
-        $sResultado .= $aData['numero'] ?? '        ';
+        $sResultado .= $aData['numero'] ?? '2020202020202020';
         // 12 Importe en pesos
         // Venta con Redención de Puntos Se enviará el total del importe en pesos de la venta. En la respuesta, el host enviará sólo el importe en pesos realmente redimidos.
         // Venta Normal con Bin Presente en Tabla de Lealtad y Consulta de Puntos Se enviará el importe en ceros. En la respuesta, la información en este campo no es relevante
-        $sResultado .= sprintf("%01s", $aData['importe']);
+        $sResultado .= sprintf("%012s", $aData['importe']);
         // 10 Número de puntos. Se enviará el número de puntos en cero. En la respuesta se regresará el número de puntos redimidos. Aplica para TDC y TDD
-        $sResultado .= '0';
+        $sResultado .= sprintf("%010s", $aData['importe']);
         // 02 Tipo POS. 00 -> POS No tiene la funcionalidad de VB, 01 -> POS tiene la funcionalidad de VB
         $sResultado .= $aData['pos_vb'] ?? '00';
 
