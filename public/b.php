@@ -100,10 +100,26 @@ class BbvaTest
 
     public function prueba4()
     {
-        $iPrueba = 3;
+        $iPrueba = 4;
         echo "Prueba {$iPrueba}";
         // Datos de prueba
         $this->oPeticionCargo->monto = 728.00;
+        $this->oPeticionCargo->descripcion = 'Prueba ' . $iPrueba . ' EGlobal BBVA';
+        // Prepara mensaje
+        $oInterredProxy = new InterredProxy();
+        $oResultado = $oInterredProxy->mensajeVenta($oPeticionCargo, true);
+        // Regresa resultados
+        return $oResultado;
+    }
+
+    public function prueba5()
+    {
+        $iPrueba = 5;
+        echo "Prueba {$iPrueba}";
+        // Datos de prueba
+        $this->oTarjetaCredito1->cvv2 = '123';
+        $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1;
+        $this->oPeticionCargo->monto = 412.00;
         $this->oPeticionCargo->descripcion = 'Prueba ' . $iPrueba . ' EGlobal BBVA';
         // Prepara mensaje
         $oInterredProxy = new InterredProxy();
@@ -167,9 +183,14 @@ class InterredProxy
 		//$oMensaje->setData(43, 'Radiomovil DIPSA SA CVCMXCMXMX'); //  Card Acceptor Name/Location
 		$oMensaje->setData(48, '5462742            00000000'); // Additional DataRetailer Data - Define la afiliación del Establecimiento
 		$oMensaje->setData(49, '484'); // Transaction Currency Code.
+        if (!empty($aTipo['tipo']) && $aTipo['tipo'] == 'puntos_compra') {
+    		$oMensaje->setData(58, $oMensaje->formateaCampo58([
+                //'numero' => str_random(8), // No necesario
+                'importe' => $oPeticionCargo->puntos,
+            ])); //
+        }
 		//$oMensaje->setData(54, '000000000000')); // Additional Amounts - Monto del cash advance/back con centavos
 		#$oMensaje->setData(55, ''); //
-		#$oMensaje->setData(58, ''); //
 		#$oMensaje->setData(59, ''); //
 		$oMensaje->setData(60, 'CLPGTES1+0000000'); // POS Terminal Data
 		$oMensaje->setData(63, $oMensaje->formateaCampo63([
@@ -192,7 +213,7 @@ class InterredProxy
 			echo "<br>Preparando mensaje de Venta...";
 		}
 		// Define campos
-		$sIso = $this->isoTipoCompra($oPeticionCargo);
+		$sIso = $this->isoTipoCompra($oPeticionCargo, ['tipo' => 'puntos_compra']);
 		$sMensaje = $this->preparaMensaje($sIso, $bEcho);
         // Evalua retorno
         if ($bEnvia) {

@@ -50,7 +50,7 @@ class Mensaje extends iso8583_1987
         49 =>  [],
         54 =>  ['type' => 'ans', 'size' => 15],
         55 =>  ['type' => 'ansb', 'usage' => 'Datos de la tarjeta de circuito integrado (ICC – EMV Full Grade)'],
-        58 =>  ['size' => 420,  'usage' => 'Datos de Lealtad'],
+        58 =>  ['size' => 420,  'usage' => 'Datos de Lealtad', 'encoding' => 'hex'],
         59 =>  ['usage' => 'Datos de Campaña'],
         60 =>  ['sizepos' => 'LLL', 'size' => 19, 'usage' => 'POS Terminal Data'],
         63 =>  ['usage' => 'POS Additional Data'],
@@ -342,7 +342,7 @@ class Mensaje extends iso8583_1987
     {
         $sResultado = '';
         // 16 Número impredecible
-        $sResultado .= $aData['numero'];
+        $sResultado .= $aData['numero'] ?? '        ';
         // 12 Importe en pesos
         // Venta con Redención de Puntos Se enviará el total del importe en pesos de la venta. En la respuesta, el host enviará sólo el importe en pesos realmente redimidos.
         // Venta Normal con Bin Presente en Tabla de Lealtad y Consulta de Puntos Se enviará el importe en ceros. En la respuesta, la información en este campo no es relevante
@@ -568,7 +568,7 @@ class Mensaje extends iso8583_1987
         // Activación de la terminal por el tarjetahabiente
         $sResultado .= '6';
         // Indicador de capacidad para transferir datos de la tarjeta a la terminal
-        $sResultado .= '6';
+        $sResultado .= '0';
         // Método de Identificación del Tarjetahabiente
         $sResultado .= '0';
 
