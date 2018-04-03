@@ -281,11 +281,18 @@ class iso8583_1987
      *
      * @param int $bit Index de dato.
      * @param string $data Valor del dato.
+     * @param bool $bRaw Determina si el valor se debe poner sin procesado
      *
      * @return void
      */
-    private function _packElement(int $bit, string $data): void
+    private function _packElement(int $bit, string $data, bool $bRaw = false): void
     {
+        // Asigna valor si es raw
+        if ($bRaw) {
+            $this->_data[$bit] = $data;
+            $this->_data_encoded[$bit] = $data;
+            return;
+        }
         // Por tipo de dato
         switch($this->DATA_ELEMENT[$bit]['type']) {
             case "n": // Caracteres numéricos
@@ -372,7 +379,6 @@ class iso8583_1987
         // Ordena datos
         ksort($this->_data);
         ksort($this->_data_encoded);
-
         $tmp = sprintf("%064d", 0);
         $tmp2 = sprintf("%064d", 0);
         foreach ($this->_data as $key => $val) {
@@ -383,7 +389,6 @@ class iso8583_1987
                 $tmp2[$key - 65] = 1;
             }
         }
-
         // Bitmap secundario
         if ($tmp[0] == 1 || !empty($this->DATA_ELEMENT[1]['mandatory'])) {
             $this->_data[1] = "";
@@ -392,21 +397,18 @@ class iso8583_1987
                 $tmp2 = substr($tmp2, 4, strlen($tmp2) - 4);
             }
         }
-
         // Bitmap primario
         $this->_bitmap = "";
         while ($tmp != '') {
             $this->_bitmap .= base_convert(substr($tmp, 0, 4), 2, 16);
             $tmp = substr($tmp, 4, strlen($tmp) - 4);
         }
-
         // Ordena campos
         ksort($this->_data);
-
+        ksort($this->_data_encoded);
         // Actualiza ISO
         $this->_iso = $this->_mti . $this->_bitmap . implode($this->_data);
         $this->_iso_encoded = $this->ascii2ebcdic_hex($this->_mti) . $this->_bitmap . implode($this->_data_encoded);
-
         // Regresa resultado
         return $this->_bitmap;
     }
@@ -834,28 +836,38 @@ class iso8583_1987
      *
      * @param int $bit Posición de elemento de datos.
      * @param string $data Valor del dato.
+     * @param bool $bRaw Determina si el valor se debe poner sin procesado
      *
      * @return bool
      */
-    public function setData(int $bit, string $data): bool
+    public function setData(int $bit, string $data, bool $bRaw = false): bool
     {
-#echo "\n<br>Setting data {$bit}: '" . $data . "' [" . strlen($data) . "]";
+echo "\n<br>Setting data [{$bit}]: '" . $data . "' [" . strlen($data) . "]";
         // Valida bit proporcionado
         if ($bit > 1 && array_key_exists($bit, $this->DATA_ELEMENT) && !in_array($bit, $this->BLOCKED_DATA_ELEMENT)) {
-            // Valida data
-            try {
-                $this->_validaData($data, $this->DATA_ELEMENT[$bit]);
-            } catch(\Exception $e) {
-                throw new \Exception("Error al definir el campo {$bit}: " . $e->getMessage());
+echo "\n<br>Primera validación OK [{$bit}]";
+            // Verifica si no es raw
+            if (!$bRaw) {
+                // Valida data
+                try {
+echo "\n<br>Validando data [{$bit}]: '" . $data . "' [" . strlen($data) . "]";
+                    $this->_validaData($data, $this->DATA_ELEMENT[$bit]);
+                } catch(\Exception $e) {
+echo "\n<br>Error al definir el campo [{$bit}]: " . $e->getMessage();
+                    throw new \Exception("Error al definir el campo [{$bit}]: " . $e->getMessage());
+                }
+                // Formatea data
+                if (isset($this->DATA_ELEMENT[$bit]['format'])) {
+                    $data = $this->_formateaData($data, $this->DATA_ELEMENT[$bit]);
+                }
             }
-            // Formatea data
-            if (isset($this->DATA_ELEMENT[$bit]['format'])) {
-                $data = $this->_formateaData($data, $this->DATA_ELEMENT[$bit]);
-            }
+echo "\n<br>Codificando valor [{$bit}] => '{$data}'";
             // Codifica data
-            $this->_packElement($bit, $data);
+            $this->_packElement($bit, $data, $bRaw);
+echo "\n<br>calculando bitmaps";
             // Calcula bitmaps
             $this->_calculateBitmaps();
+echo "\n<br>bitmaps calculados";
 #echo " --> '" . $this->_data[$bit] . "' [" . strlen($this->_data[$bit]) . "] --> {" . $this->_data_encoded[$bit] . "}";
             return true;
         }

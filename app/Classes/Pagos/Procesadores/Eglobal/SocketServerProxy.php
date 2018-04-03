@@ -293,6 +293,7 @@ class SocketServerProxy implements MessageComponentInterface
             }
         } else {
             $this->loguea("ERROR: Mensaje desconocido: " . $sMensaje, 'error');
+            $this->aStats['eglobal']['conectado'] = false;
         }
         return $sMensaje;
     }
@@ -439,6 +440,11 @@ class SocketServerProxy implements MessageComponentInterface
      */
     public function keepalive(): string
     {
+        // Valida conexión
+        if ($this->aStats['eglobal']['conectado'] == false) {
+            $this->conectaEglobal();
+        }
+        // Evalúa tiempo de la última transacción
         $iUltimaTrx = $this->aStats['eglobal']['ultima_transaccion']->diffInSeconds();
         $this->loguea("Ultima transacción hace: {$iUltimaTrx} seg.", 'debug');
         if ($iUltimaTrx >= ($this->aConfig['keepalive'])) {

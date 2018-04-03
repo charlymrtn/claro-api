@@ -142,33 +142,40 @@ class SocketServerMock implements MessageComponentInterface {
 
 	private function isoRespuestaCompra(array $aIsoCompra)
 	{
+        try {
 echo $this->TS['cyan'] . "    " . Carbon::now() . " Generando respuesta de Cargo\n";
-        // Define campos
-		$oMensaje = new Mensaje();
-		$oMensaje->setMTI('0210');
-		$oMensaje->setData(3, $aIsoCompra[3]); // Processing Code
-		$oMensaje->setData(4, $aIsoCompra[4]); // Transaction Amount - Monto de la transacción con centavos
-		$oMensaje->setData(7, $aIsoCompra[7]); // Date & time
-		$oMensaje->setData(11, $aIsoCompra[11]); // Systems Trace Audit Number
-		$oMensaje->setData(12, $aIsoCompra[12]); // Hora local de la transacción
-		$oMensaje->setData(13, $aIsoCompra[13]); // Date & time - Día local de la transacción
-		$oMensaje->setData(17, $aIsoCompra[17]); // Date & time - Día en el cual la transacción es registrada por el Adquirente
-		$oMensaje->setData(22, $aIsoCompra[22]); // PoS Entry Mode
-		$oMensaje->setData(25, $aIsoCompra[25]); // Point of Service Condition Code - 59 = Comercio Electrónico
-		$oMensaje->setData(35, $aIsoCompra[35]); // Track 2 Data
-		$oMensaje->setData(37, $aIsoCompra[37]); // Retrieval Reference Number
-		$oMensaje->setData(38, 0); // Retrieval Reference Number
-		$oMensaje->setData(39, '00'); // Retrieval Reference Number
-		$oMensaje->setData(41, $aIsoCompra[41]); // Card Acceptor Terminal Identification
-//		$oMensaje->setData(48, $aIsoCompra[48]); // Additional DataRetailer Data - Define la afiliación del Establecimiento
-		$oMensaje->setData(49, $aIsoCompra[49]); // Transaction Currency Code.
-		$oMensaje->setData(60, $aIsoCompra[60]); // POS Terminal Data
-		$oMensaje->setData(63, $aIsoCompra[63]); // POS Additional Data
-//		echo "<pre>" . print_r($oMensaje->getDataArray(), true) . "</pre>";
-        dump($oMensaje->getDataArray());
+            // Define campos
+            $oMensaje = new Mensaje();
+            $oMensaje->setMTI('0210');
+            $oMensaje->setData(3, $aIsoCompra[3], true); // Processing Code
+            $oMensaje->setData(4, $aIsoCompra[4], true); // Transaction Amount - Monto de la transacción con centavos
+            $oMensaje->setData(7, $aIsoCompra[7], true); // Date & time
+            $oMensaje->setData(11, $aIsoCompra[11], true); // Systems Trace Audit Number
+            $oMensaje->setData(12, $aIsoCompra[12], true); // Hora local de la transacción
+            $oMensaje->setData(13, $aIsoCompra[13], true); // Date & time - Día local de la transacción
+            $oMensaje->setData(15, $aIsoCompra[13], true); // Date & time - Día local del settlement
+            $oMensaje->setData(17, $aIsoCompra[17], true); // Date & time - Día en el cual la transacción es registrada por el Adquirente
+            $oMensaje->setData(22, $aIsoCompra[22], true); // PoS Entry Mode
+            $oMensaje->setData(25, $aIsoCompra[25], true); // Point of Service Condition Code - 59 = Comercio Electrónico
+            $oMensaje->setData(35, $aIsoCompra[35], true); // Track 2 Data
+            $oMensaje->setData(37, $aIsoCompra[37], true); // Retrieval Reference Number
+            $oMensaje->setData(38, random_int(1, 999999)); // Retrieval Reference Number
+            $oMensaje->setData(39, '00'); // Retrieval Reference Number
+            $oMensaje->setData(41, $aIsoCompra[41], true); // Card Acceptor Terminal Identification
+            $oMensaje->setData(48, $aIsoCompra[48], true); // Additional DataRetailer Data - Define la afiliación del Establecimiento
+            $oMensaje->setData(49, $aIsoCompra[49], true); // Transaction Currency Code.
+            $oMensaje->setData(58, $aIsoCompra[58], true); // Transaction Currency Code.
+            $oMensaje->setData(60, $aIsoCompra[60], true); // POS Terminal Data
+    		$oMensaje->setData(63, $aIsoCompra[63], true); //
+    //		echo "<pre>" . print_r($oMensaje->getDataArray(), true) . "</pre>";
+    #        dump($oMensaje->getDataArray());
 echo $this->TS['cyan'] . "    " . Carbon::now() . " Respuesta de Cargo generada\n";
-        $oInterred = new BBVAInterred();
-        return $oInterred->preparaMensaje($oMensaje->getISO(false));
+            $oInterred = new BBVAInterred();
+            return $oInterred->preparaMensaje($oMensaje->getISO(false));
+        } catch (Exception $e) {
+            echo $this->TS['red'] . "    Error generando ISO: " . $this->TS['reset'] . $e->getMessage() . "\n";
+            return null;
+        }
 	}
 
 
