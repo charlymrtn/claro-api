@@ -202,7 +202,7 @@ class BbvaTest
         echo "Prueba {$iPrueba}: VENTAS CON PUNTOS - Venta con Puntos";
         // Datos de prueba
         $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
-        $this->oPeticionCargo->monto = 0.00;
+        $this->oPeticionCargo->monto = 360;
         $this->oPeticionCargo->puntos = 360;
         $this->oPeticionCargo->descripcion = 'Prueba ' . $iPrueba . ' EGlobal BBVA: VENTAS CON PUNTOS - Consulta de Puntos';
         // Prepara mensaje
@@ -233,9 +233,9 @@ class BbvaTest
         $iPrueba = 12;
         echo "Prueba {$iPrueba}: VENTAS CON PUNTOS - Venta Con Puntos";
         // Datos de prueba
-        $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
-        $this->oPeticionCargo->monto = 0.05;
-        $this->oPeticionCargo->puntos = 1362.50;
+        $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito2; // Débito
+        $this->oPeticionCargo->monto = 872.00;
+        $this->oPeticionCargo->puntos = 0;
         $this->oPeticionCargo->descripcion = 'Prueba ' . $iPrueba . ' EGlobal BBVA: VENTAS CON PUNTOS - Venta Con Puntos';
         // Prepara mensaje
         $oInterredProxy = new InterredProxy();
@@ -336,7 +336,6 @@ class InterredProxy
 	private function isoTipoCompra(PeticionCargo $oPeticionCargo, array $aTipo = [])
 	{
 		// Define campos
-		#$oMensaje = new MensajeEglobal();
 		$oMensaje = new Mensaje();
 		$oMensaje->setMTI('0200');
 		$oMensaje->setData(3, $oMensaje->formateaCampo3($aTipo)); // Processing Code
@@ -357,12 +356,14 @@ class InterredProxy
 		//$oMensaje->setData(43, 'Radiomovil DIPSA SA CVCMXCMXMX'); //  Card Acceptor Name/Location
 		$oMensaje->setData(48, '5462742            00000000'); // Additional DataRetailer Data - Define la afiliación del Establecimiento
 		$oMensaje->setData(49, '484'); // Transaction Currency Code.
-        if (!empty($aTipo['tipo']) && $aTipo['tipo'] == 'puntos_compra') {
+        if (!empty($aTipo['tipo']) && $aTipo['tipo'] == 'puntos_compra' && !empty($oPeticionCargo->puntos)) {
     		$oMensaje->setData(58, $oMensaje->formateaCampo58([
-                'importe' => $oPeticionCargo->puntos,
+                'importe_total' => $oPeticionCargo->monto,
+                //'importe_puntos' => $oPeticionCargo->puntos, // Cantidad de puntos debe enviarse con ceros a petición de EGlobal y BBVA
+                'importe_puntos' => 0,
             ]));
         }
-		//$oMensaje->setData(54, '000000000000')); // Additional Amounts - Monto del cash advance/back con centavos
+		#$oMensaje->setData(54, '000000000000')); // Additional Amounts - Monto del cash advance/back con centavos
 		#$oMensaje->setData(55, ''); //
 		#$oMensaje->setData(59, ''); //
 		$oMensaje->setData(60, 'CLPGTES1+0000000'); // POS Terminal Data
