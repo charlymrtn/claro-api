@@ -6,6 +6,7 @@ use Jenssegers\Model\Model;
 use Exception;
 use Validator;
 use Carbon\Carbon;
+use Webpatser\Uuid\Uuid;
 use App\Classes\Pagos\Base\Pedido;
 use App\Classes\Pagos\Base\Contacto;
 use App\Classes\Pagos\Base\Direccion;
@@ -31,7 +32,7 @@ class PeticionCargo extends Model
         'puntos', // Cantidad del monto total pagado en puntos (Si el procesador lo soporta)
         'descripcion',
         'pedido', // Objeto tipo Pedido
-        'cliente', // Objeto tipo Cliente
+        'cliente', // Objeto tipo Contacto
         'parcialidades',
         'diferido', // Número de meses de diferimiento del pago
         'direccion_cargo', // Objeto tipo Direccion
@@ -112,6 +113,7 @@ class PeticionCargo extends Model
     public function __construct($aAttributes)
     {
         // Define fecha de creación
+        $this->attributes['id'] = Uuid::generate(4)->string;
         $this->attributes['created_at'] = Carbon::now();
         $this->attributes['prueba'] = true;
         // Valida entradas
@@ -165,7 +167,7 @@ class PeticionCargo extends Model
      * @param Pedido $oPedido
      * @return void
      */
-    public function setPedidoAttribute(array $oPedido)
+    public function setPedidoAttribute(Pedido $oPedido)
     {
         $this->attributes['pedido'] = $oPedido;
     }

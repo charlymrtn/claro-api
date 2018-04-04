@@ -90,7 +90,6 @@ class Direccion extends Model
             'linea2' => 'string|max:120',
             'linea3' => 'string|max:120',
             'cp' => 'string|min:3|max:10', // Pueden ser alfanuméricos https://en.wikipedia.org/wiki/Postal_code
-            'telefono' => 'array',
             'longitud' => 'numeric|min:-180|max:180',
             'latitud' => 'numeric|min:-90|max:90',
         ]);

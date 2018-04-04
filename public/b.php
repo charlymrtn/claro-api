@@ -73,12 +73,12 @@ class BbvaTest
         $iPrueba = 2;
         echo "Prueba {$iPrueba}";
         // Datos de prueba
-        $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito2;
+        $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito2; // Debito
         $this->oPeticionCargo->monto = 223.00;
         $this->oPeticionCargo->descripcion = 'Prueba ' . $iPrueba . ' EGlobal BBVA';
         // Prepara mensaje
         $oInterredProxy = new InterredProxy();
-        $oResultado = $oInterredProxy->mensajeVenta($this->oPeticionCargo, true);
+        $oResultado = $oInterredProxy->mensajeVenta($this->oPeticionCargo, ['tipo' => 'compra'], true);
         // Regresa resultados
         return $oResultado;
     }
@@ -88,12 +88,12 @@ class BbvaTest
         $iPrueba = 3;
         echo "Prueba {$iPrueba}";
         // Datos de prueba
-        $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito2;
+        $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito2; // Debito
         $this->oPeticionCargo->monto = 532.00;
         $this->oPeticionCargo->descripcion = 'Prueba ' . $iPrueba . ' EGlobal BBVA';
         // Prepara mensaje
         $oInterredProxy = new InterredProxy();
-        $oResultado = $oInterredProxy->mensajeVenta($oPeticionCargo, true);
+        $oResultado = $oInterredProxy->mensajeVenta($this->oPeticionCargo, ['tipo' => 'compra'], true);
         // Regresa resultados
         return $oResultado;
     }
@@ -103,19 +103,22 @@ class BbvaTest
         $iPrueba = 4;
         echo "Prueba {$iPrueba}";
         // Datos de prueba
+        $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1;
         $this->oPeticionCargo->monto = 728.00;
         $this->oPeticionCargo->descripcion = 'Prueba ' . $iPrueba . ' EGlobal BBVA';
         // Prepara mensaje
         $oInterredProxy = new InterredProxy();
-        $oResultado = $oInterredProxy->mensajeVenta($oPeticionCargo, true);
+        $oResultado = $oInterredProxy->mensajeVenta($this->oPeticionCargo, ['tipo' => 'puntos_compra'], true);
         // Regresa resultados
         return $oResultado;
     }
 
+    // VALIDACIÓN DE CVV2
+
     public function prueba5()
     {
         $iPrueba = 5;
-        echo "Prueba {$iPrueba}";
+        echo "Prueba {$iPrueba}: VALIDACIÓN DE CVV2";
         // Datos de prueba
         $this->oTarjetaCredito1->cvv2 = '123';
         $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1;
@@ -123,10 +126,125 @@ class BbvaTest
         $this->oPeticionCargo->descripcion = 'Prueba ' . $iPrueba . ' EGlobal BBVA';
         // Prepara mensaje
         $oInterredProxy = new InterredProxy();
-        $oResultado = $oInterredProxy->mensajeVenta($oPeticionCargo, true);
+        $oResultado = $oInterredProxy->mensajeVenta($this->oPeticionCargo, ['tipo' => 'puntos_compra'], true);
         // Regresa resultados
         return $oResultado;
     }
+
+    public function prueba6()
+    {
+        $iPrueba = 6;
+        echo "Prueba {$iPrueba}: VALIDACIÓN DE CVV2";
+        // Datos de prueba
+        $this->oTarjetaCredito2->cvv2 = '';
+        $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito2; // Debito
+        $this->oPeticionCargo->monto = 378.70;
+        $this->oPeticionCargo->descripcion = 'Prueba ' . $iPrueba . ' EGlobal BBVA';
+        // Prepara mensaje
+        $oInterredProxy = new InterredProxy();
+        $oResultado = $oInterredProxy->mensajeVenta($this->oPeticionCargo, ['tipo' => 'compra'], true);
+        // Regresa resultados
+        return $oResultado;
+    }
+
+    public function prueba7()
+    {
+        $iPrueba = 7;
+        echo "Prueba {$iPrueba}: VALIDACIÓN DE CVV2";
+        // Datos de prueba
+        $this->oTarjetaCredito2->cvv2 = '456';
+        $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito2; // Debito
+        $this->oPeticionCargo->monto = 812.00;
+        $this->oPeticionCargo->descripcion = 'Prueba ' . $iPrueba . ' EGlobal BBVA';
+        // Prepara mensaje
+        $oInterredProxy = new InterredProxy();
+        $oResultado = $oInterredProxy->mensajeVenta($this->oPeticionCargo, ['tipo' => 'compra'], true);
+        // Regresa resultados
+        return $oResultado;
+    }
+
+    public function prueba8()
+    {
+        $iPrueba = 8;
+        echo "Prueba {$iPrueba}: VALIDACIÓN DE CVV2";
+        // Datos de prueba
+        $this->oTarjetaCredito1->cvv2 = '';
+        $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
+        $this->oPeticionCargo->monto = 830.00;
+        $this->oPeticionCargo->descripcion = 'Prueba ' . $iPrueba . ' EGlobal BBVA';
+        // Prepara mensaje
+        $oInterredProxy = new InterredProxy();
+        $oResultado = $oInterredProxy->mensajeVenta($this->oPeticionCargo, ['tipo' => 'puntos_compra'], true);
+        // Regresa resultados
+        return $oResultado;
+    }
+
+    // VENTAS CON PUNTOS
+
+    public function prueba9()
+    {
+        $iPrueba = 9;
+        echo "Prueba {$iPrueba}: VENTAS CON PUNTOS - Consulta de Puntos";
+        // Datos de prueba
+        $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
+        $this->oPeticionCargo->monto = 0.00;
+        $this->oPeticionCargo->descripcion = 'Prueba ' . $iPrueba . ' EGlobal BBVA: VENTAS CON PUNTOS - Consulta de Puntos';
+        // Prepara mensaje
+        $oInterredProxy = new InterredProxy();
+        $oResultado = $oInterredProxy->mensajeVenta($this->oPeticionCargo, ['tipo' => 'puntos_consulta'], true);
+        // Regresa resultados
+        return $oResultado;
+    }
+
+    public function prueba10()
+    {
+        $iPrueba = 10;
+        echo "Prueba {$iPrueba}: VENTAS CON PUNTOS - Venta con Puntos";
+        // Datos de prueba
+        $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
+        $this->oPeticionCargo->monto = 0.00;
+        $this->oPeticionCargo->puntos = 360;
+        $this->oPeticionCargo->descripcion = 'Prueba ' . $iPrueba . ' EGlobal BBVA: VENTAS CON PUNTOS - Consulta de Puntos';
+        // Prepara mensaje
+        $oInterredProxy = new InterredProxy();
+        $oResultado = $oInterredProxy->mensajeVenta($this->oPeticionCargo, ['tipo' => 'puntos_compra'], true);
+        // Regresa resultados
+        return $oResultado;
+    }
+
+    public function prueba11()
+    {
+        $iPrueba = 11;
+        echo "Prueba {$iPrueba}: VENTAS CON PUNTOS - Venta Con Puntos Mixta";
+        // Datos de prueba
+        $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
+        $this->oPeticionCargo->monto = 0.05;
+        $this->oPeticionCargo->puntos = 1362.50;
+        $this->oPeticionCargo->descripcion = 'Prueba ' . $iPrueba . ' EGlobal BBVA: VENTAS CON PUNTOS - Venta Con Puntos Mixta';
+        // Prepara mensaje
+        $oInterredProxy = new InterredProxy();
+        $oResultado = $oInterredProxy->mensajeVenta($this->oPeticionCargo, ['tipo' => 'puntos_compra'], true);
+        // Regresa resultados
+        return $oResultado;
+    }
+
+    public function prueba12()
+    {
+        $iPrueba = 12;
+        echo "Prueba {$iPrueba}: VENTAS CON PUNTOS - Venta Con Puntos";
+        // Datos de prueba
+        $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
+        $this->oPeticionCargo->monto = 0.05;
+        $this->oPeticionCargo->puntos = 1362.50;
+        $this->oPeticionCargo->descripcion = 'Prueba ' . $iPrueba . ' EGlobal BBVA: VENTAS CON PUNTOS - Venta Con Puntos';
+        // Prepara mensaje
+        $oInterredProxy = new InterredProxy();
+        $oResultado = $oInterredProxy->mensajeVenta($this->oPeticionCargo, ['tipo' => 'puntos_compra'], true);
+        // Regresa resultados
+        return $oResultado;
+    }
+
+
 
 }
 
@@ -142,10 +260,64 @@ class InterredProxy
 			'ip' => '127.0.0.1', // '172.26.202.4'
 			'port' => 8300, // 8315
 			'proxy' => true,
-			'timeout' => 5,
+			'timeout' => 25,
 		],
 		'afiliacion' => '5462742',
 	];
+
+    private $aCatalogoRespuestas = [
+        '00' => 'Aprobada',
+        '01' => 'Referida',
+        '03' => 'Negocio Inválido',
+        '04' => 'Recoger Tarjeta',
+        '05' => 'Rechazada',
+        '12' => 'Transacciòn inválida (FallBack)',
+        '13' => 'Monto Inválido',
+        '14' => 'Tarjeta Inválida (Invalid card number)',
+        '30' => 'Error de formato',
+        '40' => 'Función no soportada',
+        '41' => 'Recoger Tarjeta (Lost Card)',
+        '43' => 'Recoger Tarjeta (Stolen Card)',
+        '45' => 'Promoción no permitida',
+        '46' => 'Monto inferior mín promo',
+        '47' => 'Transacción no realizada por haber excedido su límite permitido. Acuda a una sucursal bancaria.',
+        '48' => 'CV2 Requerido',
+        '49' => 'CV2 Inválido',
+        '50' => 'Ha superado el número de transacciones rechazadas.',
+        '51' => 'Saldo insuficiente',
+        '53' => 'Cuenta inexistente',
+        '54' => 'Tarjeta Expirada',
+        '55' => 'NIP incorrecto',
+        '57' => 'Comercio No Marcado / Marca De Cash Back O Advance No Permitida',
+        '61' => 'Excede límite de monto de retiro',
+        '62' => 'Bin De Tarjeta No Permitido',
+        '65' => 'Intentos De Retiros Excedido',
+        '69' => 'Número Celular no Asociado a Cuenta Express.',
+        '70' => 'Error descifrando Track2',
+        '71' => 'Debe inicializar llaves',
+        '72' => 'Problema inicializando Llaves',
+        '73' => 'Error en CRC',
+        '75' => 'Número de intentos de NIP excedidos',
+        '76' => 'Cuenta bloqueada',
+        '82' => 'CVV/CVV2 incorrecto',
+        '83' => 'Rechazada',
+        '93' => 'Operación no disponible',
+        'A3' => 'Límite de saldo superado con depósito',
+        'A4' => 'Con este depósito excede el límite permitido para este producto por mes',
+        'B1' => 'Transacción con datos de Campaña',
+        'B2' => 'Servicio No Disponible. Promociones Especiales',
+        'C1' => 'Producto no definido',
+        'C2' => 'Producto vendido',
+        'C3' => 'Producto invalido para venta',
+        'C4' => 'Promoción Finalizada',
+        'C5' => 'Sin autorización de venta',
+        'C6' => 'Venta no permitida de producto',
+        'C7' => 'Venta no permitida por tipo de transacción',
+        'C8' => 'Plazos no definidos',
+        'C9' => 'Número máximo de venta',
+        'CA' => 'Monto de transacción invalido',
+        'CB' => 'Producto no puede ser devuelto',
+    ];
 
 	// ********************************************************************************************************************
 
@@ -164,6 +336,7 @@ class InterredProxy
 	private function isoTipoCompra(PeticionCargo $oPeticionCargo, array $aTipo = [])
 	{
 		// Define campos
+		#$oMensaje = new MensajeEglobal();
 		$oMensaje = new Mensaje();
 		$oMensaje->setMTI('0200');
 		$oMensaje->setData(3, $oMensaje->formateaCampo3($aTipo)); // Processing Code
@@ -178,17 +351,16 @@ class InterredProxy
 		$oMensaje->setData(25, '59'); // Point of Service Condition Code - 59 = Comercio Electrónico
 		$oMensaje->setData(32, '12'); // Acquiring Institution Identification Code
 		$oMensaje->setData(35, $oMensaje->formateaCampo35($oPeticionCargo->tarjeta)); // Track 2 Data
-		$oMensaje->setData(37, '000000123401'); // Retrieval Reference Number
+		$oMensaje->setData(37, date('ymdhis')); // Retrieval Reference Number
+        // @todo: Cambiar por número único. Puede ser consecutivo o random
 		$oMensaje->setData(41, '0000CP01        '); // Card Acceptor Terminal Identification
 		//$oMensaje->setData(43, 'Radiomovil DIPSA SA CVCMXCMXMX'); //  Card Acceptor Name/Location
 		$oMensaje->setData(48, '5462742            00000000'); // Additional DataRetailer Data - Define la afiliación del Establecimiento
 		$oMensaje->setData(49, '484'); // Transaction Currency Code.
         if (!empty($aTipo['tipo']) && $aTipo['tipo'] == 'puntos_compra') {
     		$oMensaje->setData(58, $oMensaje->formateaCampo58([
-                //'numero' => str_random(8), // No necesario
-                //'numero' => $this->ascii2hex('        ', false),
                 'importe' => $oPeticionCargo->puntos,
-            ])); //
+            ]));
         }
 		//$oMensaje->setData(54, '000000000000')); // Additional Amounts - Monto del cash advance/back con centavos
 		#$oMensaje->setData(55, ''); //
@@ -199,7 +371,8 @@ class InterredProxy
             'parcialidades' => $oPeticionCargo->parcialidades,
             'diferimiento' => $oPeticionCargo->diferido,
             'cvv2' => $oPeticionCargo->tarjeta->cvv2,
-            'indicador_cvv2' => $oPeticionCargo->tarjeta->cvv2 ? 'presente' : 'no',
+            'indicador_cvv2' => $oPeticionCargo->tarjeta->cvv2 ? 'presente' : 'no_presente',
+            // @todo: 'indicador_cvv2' => $aTipo['indicador_cvv2'] ?? $oPeticionCargo->tarjeta->cvv2 ? 'presente' : 'no_presente',
         ])); // POS Additional Data
 		#$oMensaje->setData(103, ''); //
 		echo "<pre>" . print_r($oMensaje->getDataArray(), true) . "</pre>";
@@ -208,13 +381,15 @@ class InterredProxy
 
 	// ********************************************************************************************************************
 
-	public function mensajeVenta(PeticionCargo $oPeticionCargo, $bEnvia = false, $bEcho = true)
+	public function mensajeVenta(PeticionCargo $oPeticionCargo, array $aOpciones = [], $bEnvia = false, $bEcho = true)
 	{
 		if ($bEcho) {
 			echo "<br>Preparando mensaje de Venta...";
 		}
+        // Actualiza opciones con default
+        $aOpciones = array_merge(['tipo' => 'puntos_compra'], $aOpciones);
 		// Define campos
-		$sIso = $this->isoTipoCompra($oPeticionCargo, ['tipo' => 'puntos_compra']);
+		$sIso = $this->isoTipoCompra($oPeticionCargo, $aOpciones);
 		$sMensaje = $this->preparaMensaje($sIso, $bEcho);
         // Evalua retorno
         if ($bEnvia) {
@@ -294,10 +469,15 @@ class InterredProxy
                     dump($sRespuesta);
                     $oInterred = new BBVAInterred();
                     $aMensajeISO = $oInterred->procesaMensaje($sRespuesta);
+                    echo "<br>Respuesta recibida (iso): <pre>" . print_r($aMensajeISO['iso_parsed'], true) . "</pre>";
                     #dump($aMensajeISO);
                     $jMensajeISO = json_encode($aMensajeISO['iso_parsed']);
-                    dump($jMensajeISO);
-                    echo "<br>Respuesta recibida (iso): {$jMensajeISO} \n";
+                    #dump($jMensajeISO);
+                    #echo "<br>Respuesta recibida (iso): {$jMensajeISO} \n";
+                    // Evalua resultado
+                    if (isset($aMensajeISO['iso_parsed'][39]) && isset($this->aCatalogoRespuestas[$aMensajeISO['iso_parsed'][39]])) {
+                        echo "<br><h3>Resutado: " . $this->aCatalogoRespuestas[$aMensajeISO['iso_parsed'][39]] . " (" . $aMensajeISO['iso_parsed'][39] . ") </h3>\n";
+                    }
                 } catch (\Exception $e) {
                     $jMensajeISO = "{}";
                 }
@@ -369,4 +549,5 @@ class InterredProxy
 	}
 
 }
+
 

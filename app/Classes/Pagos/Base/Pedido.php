@@ -57,6 +57,28 @@ class Pedido extends Model
 
     // }}}
 
+    /**
+     * --------------------------------------------------------------------------------------------------------
+     * Métodos públicos
+     * --------------------------------------------------------------------------------------------------------
+     */
+    // {{{ public functions
+
+    /**
+     * Constructor
+     */
+    public function __construct($aAttributes)
+    {
+        // Define fecha de creación
+        $this->attributes['creacion'] = Carbon::now();
+        $this->attributes['created_at'] = Carbon::now();
+        // Valida entradas
+        //$this->valida($aAttributes);
+        // Ejecuta constructor padre
+        parent::__construct($aAttributes);
+    }
+
+
     /*
      * Accessor & Mutators
      */

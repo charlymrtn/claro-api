@@ -842,18 +842,18 @@ class iso8583_1987
      */
     public function setData(int $bit, string $data, bool $bRaw = false): bool
     {
-echo "\n<br>Setting data [{$bit}]: '" . $data . "' [" . strlen($data) . "]";
+#echo "\n<br>Setting data [{$bit}]: '" . $data . "' [" . strlen($data) . "]";
         // Valida bit proporcionado
         if ($bit > 1 && array_key_exists($bit, $this->DATA_ELEMENT) && !in_array($bit, $this->BLOCKED_DATA_ELEMENT)) {
-echo "\n<br>Primera validación OK [{$bit}]";
+#echo "\n<br>Primera validación OK [{$bit}]";
             // Verifica si no es raw
             if (!$bRaw) {
                 // Valida data
                 try {
-echo "\n<br>Validando data [{$bit}]: '" . $data . "' [" . strlen($data) . "]";
+#echo "\n<br>Validando data [{$bit}]: '" . $data . "' [" . strlen($data) . "]";
                     $this->_validaData($data, $this->DATA_ELEMENT[$bit]);
                 } catch(\Exception $e) {
-echo "\n<br>Error al definir el campo [{$bit}]: " . $e->getMessage();
+#echo "\n<br>Error al definir el campo [{$bit}]: " . $e->getMessage();
                     throw new \Exception("Error al definir el campo [{$bit}]: " . $e->getMessage());
                 }
                 // Formatea data
@@ -861,13 +861,13 @@ echo "\n<br>Error al definir el campo [{$bit}]: " . $e->getMessage();
                     $data = $this->_formateaData($data, $this->DATA_ELEMENT[$bit]);
                 }
             }
-echo "\n<br>Codificando valor [{$bit}] => '{$data}'";
+#echo "\n<br>Codificando valor [{$bit}] => '{$data}'";
             // Codifica data
             $this->_packElement($bit, $data, $bRaw);
-echo "\n<br>calculando bitmaps";
+#echo "\n<br>calculando bitmaps";
             // Calcula bitmaps
             $this->_calculateBitmaps();
-echo "\n<br>bitmaps calculados";
+#echo "\n<br>bitmaps calculados";
 #echo " --> '" . $this->_data[$bit] . "' [" . strlen($this->_data[$bit]) . "] --> {" . $this->_data_encoded[$bit] . "}";
             return true;
         }

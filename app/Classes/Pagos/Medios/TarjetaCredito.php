@@ -250,7 +250,7 @@ class TarjetaCredito extends Model
             throw new Exception('Número de tarjeta inválida.', 400);
         }
         if (!$this->esLuhnValido($iPan)) {
-            throw new Exception('Número de tarjeta inválida.', 400);
+            throw new Exception('Número de tarjeta inválida!', 400);
         }
         // Asigna Issuer Identification Number
         $this->attributes['iin'] = substr($iPan, 0, 6);
