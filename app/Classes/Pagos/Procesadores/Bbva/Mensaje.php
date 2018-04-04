@@ -396,10 +396,14 @@ class Mensaje extends iso8583_1987
         // 4 Autorizado off-line por el negocio, archivo negativo.
         // 5 Transacción forzada o de ajuste, 0220/0221.
         // 9 Situación desconocida.
-        if ($aData['mti'] == '0220') {
-            $sResultado .= '5 ';
-        } else {
+        if (empty($aData['autorizacion_modo'])) {
+            $sResultado .= '9 ';
+        } else if ($aData['autorizacion_modo'] == 'offline') {
             $sResultado .= '4 ';
+        } else if ($aData['autorizacion_modo'] == 'forzado' || $aData['mti'] == '0220') {
+            $sResultado .= '5 ';
+        } else if ($aData['autorizacion_modo'] == 'desconocido') {
+            $sResultado .= '9 ';
         }
 
         // Q2
@@ -432,20 +436,19 @@ class Mensaje extends iso8583_1987
         }
 
         // Q6
-		if (!empty($aData['diferimiento']) && !empty($aData['parcialidades'])) {
+		if (!empty($aData['diferimiento']) || !empty($aData['parcialidades'])) {
 			$iTokens += 1;
 			$sResultado .= '! Q600006 ';
 			$sResultado .= sprintf("%02s", $aData['diferimiento'] ?? '00');
 			$sResultado .= sprintf("%02s", $aData['parcialidades'] ?? '00');
-			$sResultado .= sprintf("%02s", $aData['parcialidades'] ?? '00');
 			if (empty($aData['plan'])) {
 				// Default
 				$sResultado .= '00';
-			} else if ($aData['plan'] == 'sinintereses') {
+			} else if ($aData['plan'] == 'msi') { // Meses Sin Intereses | Diferido com MSI
 				$sResultado .= '03';
-			} else if ($aData['plan'] == 'conintereses') {
+			} else if ($aData['plan'] == 'mci') { // Meses Con Intereses | Diferido com MCI
 				$sResultado .= '05';
-			} else if ($aData['plan'] == 'diferido') {
+			} else if ($aData['plan'] == 'diferido') { // Diferido pago total
 				$sResultado .= '07';
 			}
 		}

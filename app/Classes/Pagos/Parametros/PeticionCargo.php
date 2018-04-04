@@ -35,6 +35,7 @@ class PeticionCargo extends Model
         'cliente', // Objeto tipo Contacto
         'parcialidades',
         'diferido', // Número de meses de diferimiento del pago
+        'plan', // Tipo de plan de pagos
         'direccion_cargo', // Objeto tipo Direccion
         'comercio_uuid',
     ];

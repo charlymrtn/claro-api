@@ -218,7 +218,7 @@ class BbvaTest
         echo "Prueba {$iPrueba}: VENTAS CON PUNTOS - Venta Con Puntos Mixta";
         // Datos de prueba
         $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
-        $this->oPeticionCargo->monto = 0.05;
+        $this->oPeticionCargo->monto = 1362.55;
         $this->oPeticionCargo->puntos = 1362.50;
         $this->oPeticionCargo->descripcion = 'Prueba ' . $iPrueba . ' EGlobal BBVA: VENTAS CON PUNTOS - Venta Con Puntos Mixta';
         // Prepara mensaje
@@ -244,6 +244,24 @@ class BbvaTest
         return $oResultado;
     }
 
+    // VENTA CON PROMOCIÓN
+
+    public function prueba13()
+    {
+        $iPrueba = 13;
+        echo "Prueba {$iPrueba}: VENTA CON PROMOCIÓN - Venta 3 MSI";
+        // Datos de prueba
+        $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
+        $this->oPeticionCargo->monto = 4100.00;
+        $this->oPeticionCargo->parcialidades = 3;
+        $this->oPeticionCargo->plan = 'msi';
+        $this->oPeticionCargo->descripcion = 'Prueba ' . $iPrueba . ' EGlobal BBVA: VENTA CON PROMOCIÓN - Venta 3 MSI';
+        // Prepara mensaje
+        $oInterredProxy = new InterredProxy();
+        $oResultado = $oInterredProxy->mensajeVenta($this->oPeticionCargo, ['tipo' => 'puntos_compra'], true);
+        // Regresa resultados
+        return $oResultado;
+    }
 
 
 }
@@ -358,7 +376,7 @@ class InterredProxy
 		$oMensaje->setData(49, '484'); // Transaction Currency Code.
         if (!empty($aTipo['tipo']) && $aTipo['tipo'] == 'puntos_compra' && !empty($oPeticionCargo->puntos)) {
     		$oMensaje->setData(58, $oMensaje->formateaCampo58([
-                'importe_total' => $oPeticionCargo->monto,
+                'importe_total' => $oMensaje->formateaCampo4($oPeticionCargo->monto),
                 //'importe_puntos' => $oPeticionCargo->puntos, // Cantidad de puntos debe enviarse con ceros a petición de EGlobal y BBVA
                 'importe_puntos' => 0,
             ]));
@@ -369,11 +387,13 @@ class InterredProxy
 		$oMensaje->setData(60, 'CLPGTES1+0000000'); // POS Terminal Data
 		$oMensaje->setData(63, $oMensaje->formateaCampo63([
             'mti' => '0200',
-            'parcialidades' => $oPeticionCargo->parcialidades,
-            'diferimiento' => $oPeticionCargo->diferido,
+            // C0
             'cvv2' => $oPeticionCargo->tarjeta->cvv2,
             'indicador_cvv2' => $oPeticionCargo->tarjeta->cvv2 ? 'presente' : 'no_presente',
-            // @todo: 'indicador_cvv2' => $aTipo['indicador_cvv2'] ?? $oPeticionCargo->tarjeta->cvv2 ? 'presente' : 'no_presente',
+            // Q6
+            'parcialidades' => $oPeticionCargo->parcialidades,
+            'diferimiento' => $oPeticionCargo->diferido,
+            'plan' => $oPeticionCargo->plan,
         ])); // POS Additional Data
 		#$oMensaje->setData(103, ''); //
 		echo "<pre>" . print_r($oMensaje->getDataArray(), true) . "</pre>";
