@@ -25,6 +25,7 @@ class TarjetaCredito extends Model
      */
     protected $fillable = [
         'pan', // Número de tarjeta sanitizado
+        'terminacion', // Terminación o últimos cuatro dígitos
         'nombre', // Nombre como aparece en la tarjeta
         'cvv2', // Código de seguridad de la tarjeta cvv2, cvc
         'nip', // Código nip de la tarjeta
@@ -44,6 +45,7 @@ class TarjetaCredito extends Model
     protected $guarded = [
         'iin', // Issuer Identification Number (bin)
         'marca', // Marca de la tarjeta: visa, mastercard, carnet or american express.
+        'terminacion', // Terminación o últimos cuatro dígitos
         'pan_hash', // Identificador de la tarjeta
         'created_at', // Fecha de creación del objeto tipo Carbon
         'updated_at', // Fecha de actualización del objeto tipo Carbon
@@ -254,8 +256,10 @@ class TarjetaCredito extends Model
         }
         // Asigna Issuer Identification Number
         $this->attributes['iin'] = substr($iPan, 0, 6);
+        // Asigna terminación
+        $this->attributes['terminacion'] = substr($iPan, -4);
         // Asigna versión sanitizada
-        $this->attributes['pan'] = $this->attributes['iin'] . str_repeat('*', ($iPanLength - 10)) . substr($iPan, -4);
+        $this->attributes['pan'] = $this->attributes['iin'] . str_repeat('*', ($iPanLength - 10)) . $this->attributes['terminacion'];
         // Asigna hash/fingerprint
         $this->attributes['pan_hash'] = hash('sha256', $iPan . 'e14626acd3aad61fe5c196f68bea80adaaea6655a9b033af913a1535973f2d57');
         // Asigna pan
