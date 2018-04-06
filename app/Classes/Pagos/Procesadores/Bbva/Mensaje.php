@@ -612,8 +612,12 @@ class Mensaje extends iso8583_1987
 		}
 
         // 04
-		$iTokens += 1;
-        $sResultado .= '! 0400020                     ';
+        if (!empty($aTipo['tipo']) && $aTipo['tipo'] == 'devolucion') {
+            // No lleva campo 04
+        } else {
+            $iTokens += 1;
+            $sResultado .= '! 0400020                     ';
+        }
 
         // C0
         if (!empty($aTipo['tipo']) && $aTipo['tipo'] == 'devolucion') {
@@ -685,61 +689,57 @@ class Mensaje extends iso8583_1987
         }
 
         // C4
-        if (!empty($aTipo['tipo']) && $aTipo['tipo'] == 'devolucion') {
-            // No lleva campo C4
-        } else {
-            $iTokens += 1;
-            $sResultado .= '! C400012 102';
-            // Indicador de presencia del tarjetahabiente:
-            // 0 El tarjetahabiente está presente
-            // 1 El tarjetahabiente no está presente (no se especifica razón)
-            // 2 El tarjetahabiente no está presente (transacción iniciada por correo o fax)
-            // 3 El tarjetahabiente no está presente (autorización por voz, MO/TO)
-            // 4 El tarjetahabiente no está presente (transacción recurrente)
-            // 5 El tarjetahabiente no está presente (orden electrónica desde una PC o internet)
-            if (empty($aData['tarjetahabiente'])) {
-                // Default
-                $sResultado .= '5';
-            } else if ($aData['tarjetahabiente'] == 'presente') {
-                $sResultado .= '0';
-            } else if ($aData['tarjetahabiente'] == 'no_presente') {
-                $sResultado .= '2';
-            } else if ($aData['tarjetahabiente'] == 'voz') {
-                $sResultado .= '3';
-            } else if ($aData['tarjetahabiente'] == 'recurrente') {
-                $sResultado .= '4';
-            } else if ($aData['tarjetahabiente'] == 'internet') {
-                $sResultado .= '5';
-            }
-            // Indicador de presencia de tarjeta
-            if (empty($aData['tarjeta'])) {
-                // Default
-                $sResultado .= '1';
-            } else if ($aData['tarjeta'] == 'presente') {
-                $sResultado .= '0';
-            } else if ($aData['tarjeta'] == 'no_presente') {
-                $sResultado .= '1';
-            }
-            // Indicador de capacidad de captura de tarjetas
+        $iTokens += 1;
+        $sResultado .= '! C400012 102';
+        // Indicador de presencia del tarjetahabiente:
+        // 0 El tarjetahabiente está presente
+        // 1 El tarjetahabiente no está presente (no se especifica razón)
+        // 2 El tarjetahabiente no está presente (transacción iniciada por correo o fax)
+        // 3 El tarjetahabiente no está presente (autorización por voz, MO/TO)
+        // 4 El tarjetahabiente no está presente (transacción recurrente)
+        // 5 El tarjetahabiente no está presente (orden electrónica desde una PC o internet)
+        if (empty($aData['tarjetahabiente'])) {
+            // Default
+            $sResultado .= '5';
+        } else if ($aData['tarjetahabiente'] == 'presente') {
             $sResultado .= '0';
-            // Indicador de status
-            if (empty($aData['status'])) {
-                // Default
-                $sResultado .= '0';
-            } else if ($aData['status'] == 'normal') {
-                $sResultado .= '0';
-            } else if ($aData['status'] == 'preautorizado') {
-                $sResultado .= '4';
-            }
-            // Nivel de seguridad del adquiriente + Routing indicator
-            $sResultado .= '03';
-            // Activación de la terminal por el tarjetahabiente
-            $sResultado .= '6';
-            // Indicador de capacidad para transferir datos de la tarjeta a la terminal
-            $sResultado .= '0';
-            // Método de Identificación del Tarjetahabiente
-            $sResultado .= '0';
+        } else if ($aData['tarjetahabiente'] == 'no_presente') {
+            $sResultado .= '2';
+        } else if ($aData['tarjetahabiente'] == 'voz') {
+            $sResultado .= '3';
+        } else if ($aData['tarjetahabiente'] == 'recurrente') {
+            $sResultado .= '4';
+        } else if ($aData['tarjetahabiente'] == 'internet') {
+            $sResultado .= '5';
         }
+        // Indicador de presencia de tarjeta
+        if (empty($aData['tarjeta'])) {
+            // Default
+            $sResultado .= '1';
+        } else if ($aData['tarjeta'] == 'presente') {
+            $sResultado .= '0';
+        } else if ($aData['tarjeta'] == 'no_presente') {
+            $sResultado .= '1';
+        }
+        // Indicador de capacidad de captura de tarjetas
+        $sResultado .= '0';
+        // Indicador de status
+        if (empty($aData['status'])) {
+            // Default
+            $sResultado .= '0';
+        } else if ($aData['status'] == 'normal') {
+            $sResultado .= '0';
+        } else if ($aData['status'] == 'preautorizado') {
+            $sResultado .= '4';
+        }
+        // Nivel de seguridad del adquiriente + Routing indicator
+        $sResultado .= '03';
+        // Activación de la terminal por el tarjetahabiente
+        $sResultado .= '6';
+        // Indicador de capacidad para transferir datos de la tarjeta a la terminal
+        $sResultado .= '0';
+        // Método de Identificación del Tarjetahabiente
+        $sResultado .= '0';
 
 
         // C5 - Multipagos

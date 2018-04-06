@@ -398,8 +398,8 @@ class BbvaTest
         $oInterredProxy = new InterredProxy();
         $oResultado = $oInterredProxy->mensajeVenta($this->oPeticionCargo, [
             'tipo' => 'devolucion',
-            'referencia' => '180403103827', // CAMPO 37 de la respuesta
-            'autorizacion' => '225140', // CAMPO 38 de la respuesta
+            //'referencia' => '180403103827', // CAMPO 37 de la respuesta
+            //'autorizacion' => '225140', // CAMPO 38 de la respuesta
             ], true);
         // Regresa resultados
         return $oResultado;
@@ -418,8 +418,8 @@ class BbvaTest
         $oInterredProxy = new InterredProxy();
         $oResultado = $oInterredProxy->mensajeVenta($this->oPeticionCargo, [
             'tipo' => 'devolucion',
-            'referencia' => '180406032821', // CAMPO 37 de la respuesta
-            'autorizacion' => '550235', // CAMPO 38 de la respuesta
+            //'referencia' => '180404114555', // CAMPO 37 de la respuesta
+            //'autorizacion' => '250251', // CAMPO 38 de la respuesta
             ], true);
         // Regresa resultados
         return $oResultado;
