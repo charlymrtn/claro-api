@@ -72,11 +72,16 @@ return [
         // Configuración de procesadores de pago
         'procesadores_pago' => [
             'amex' => [
+                // Producción
+//                'api_url' => 'https://www206.americanexpress.com/IPPayments/inter/CardAuthorization.do',
+//                'rtind' => '035',
+                // Sandbox
                 'api_url' => 'https://qwww318.americanexpress.com/IPPayments/inter/CardAuthorization.do',
+                'rtind' => '050',
+                // Común
                 'origin' => 'AMERICAMOVIL-28705',
                 'country' => '484',
                 'region' => 'LAC',
-                'rtind' => '050',
             ],
             'eglobal' => [
                 // Proxy
@@ -95,7 +100,6 @@ return [
                 'afiliacion' => '5462742',
             ],
         ],
-
     ],
 
     'dev' => [

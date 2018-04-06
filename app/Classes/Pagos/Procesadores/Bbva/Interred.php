@@ -182,6 +182,7 @@ class Interred
             'iso_string' => $sMensajeIso,
             'iso_mti' => $oParsedIso->getMTI(),
             'iso_parsed' => $oParsedIso->getDataArray(),
+            'iso_validation' => $oParsedIso->getIsoValidation(),
         ];
         return $aResultado;
     }

@@ -384,6 +384,46 @@ class BbvaTest
         return $oResultado;
     }
 
+    // DEVOLUCIONES
+
+    public function prueba21()
+    {
+        $iPrueba = 21;
+        echo "\n<br><h3>Prueba {$iPrueba}: DEVOLUCIONES - Devolución del caso 2</h3>";
+        // Datos de prueba
+        $this->oPeticionCargo->tarjeta = $this->oTarjetaDebito1; // Debito
+        $this->oPeticionCargo->monto = 223.00;
+        $this->oPeticionCargo->descripcion = 'Prueba ' . $iPrueba . ' EGlobal BBVA: DEVOLUCIONES - Devolución del caso 2';
+        // Prepara mensaje
+        $oInterredProxy = new InterredProxy();
+        $oResultado = $oInterredProxy->mensajeVenta($this->oPeticionCargo, [
+            'tipo' => 'devolucion',
+            'referencia' => '180403103827', // CAMPO 37 de la respuesta
+            'autorizacion' => '225140', // CAMPO 38 de la respuesta
+            ], true);
+        // Regresa resultados
+        return $oResultado;
+    }
+
+    public function prueba22()
+    {
+        $iPrueba = 22;
+        echo "\n<br><h3>Prueba {$iPrueba}: DEVOLUCIONES - Devolución del caso 10</h3>";
+        // Datos de prueba
+        $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
+        $this->oPeticionCargo->monto = 360;
+        $this->oPeticionCargo->puntos = 360;
+        $this->oPeticionCargo->descripcion = 'Prueba ' . $iPrueba . ' EGlobal BBVA: DEVOLUCIONES - Devolución del caso 12';
+        // Prepara mensaje
+        $oInterredProxy = new InterredProxy();
+        $oResultado = $oInterredProxy->mensajeVenta($this->oPeticionCargo, [
+            'tipo' => 'devolucion',
+            'referencia' => '180406032821', // CAMPO 37 de la respuesta
+            'autorizacion' => '550235', // CAMPO 38 de la respuesta
+            ], true);
+        // Regresa resultados
+        return $oResultado;
+    }
 
 
 
@@ -496,8 +536,16 @@ class InterredProxy
         }
 		$oMensaje->setData(32, '12'); // Acquiring Institution Identification Code
 		$oMensaje->setData(35, $oMensaje->formateaCampo35($oPeticionCargo->tarjeta)); // Track 2 Data
-		$oMensaje->setData(37, date('ymdhis')); // Retrieval Reference Number
-        // @todo: Cambiar por número único. Puede ser consecutivo o random
+        if (!empty($aTipo['tipo']) && $aTipo['tipo'] == 'reverso' && !empty($aTipo['referencia'])) {
+            $oMensaje->setData(37, $aTipo['referencia']); // Retrieval Reference Number
+        } else {
+            $oMensaje->setData(37, date('ymdhis')); // Retrieval Reference Number
+            // @todo: Cambiar por número único. Puede ser consecutivo o random
+        }
+// A petición de eglobal
+//        if (!empty($aTipo['tipo']) && $aTipo['tipo'] == 'devolucion' && !empty($aTipo['autorizacion'])) {
+//            $oMensaje->setData(38, $aTipo['autorizacion']); // Authorization Identification Response
+//        }
 		$oMensaje->setData(41, '0000CP01        '); // Card Acceptor Terminal Identification
 		//$oMensaje->setData(43, 'Radiomovil DIPSA SA CVCMXCMXMX'); //  Card Acceptor Name/Location
 		$oMensaje->setData(48, '5462742            00000000'); // Additional DataRetailer Data - Define la afiliación del Establecimiento
@@ -526,10 +574,11 @@ class InterredProxy
             'parcialidades' => $oPeticionCargo->parcialidades,
             'diferimiento' => $oPeticionCargo->diferido,
             'plan' => $oPeticionCargo->plan,
-        ])); // POS Additional Data
+        ], $aTipo)); // POS Additional Data
 		#$oMensaje->setData(103, ''); //
-		echo "<pre>" . print_r($oMensaje->getIsoValidation(), true) . "</pre>";
 		echo "<pre>" . print_r($oMensaje->getDataArray(), true) . "</pre>";
+        dump($oMensaje->getIsoValidation());
+
 		return $oMensaje->getISO(false);
 	}
 
@@ -624,7 +673,7 @@ class InterredProxy
                     $oInterred = new BBVAInterred();
                     $aMensajeISO = $oInterred->procesaMensaje($sRespuesta);
                     echo "<br>Respuesta recibida (iso): <pre>" . print_r($aMensajeISO['iso_parsed'], true) . "</pre>";
-                    #dump($aMensajeISO);
+                    #dump($aMensajeISO['iso_validation']);
                     $jMensajeISO = json_encode($aMensajeISO['iso_parsed']);
                     #dump($jMensajeISO);
                     #echo "<br>Respuesta recibida (iso): {$jMensajeISO} \n";

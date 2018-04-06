@@ -38,6 +38,10 @@ class VentaManualService
         // Define si es prueba
         $this->bPrueba = $prueba;
 
+// Producción
+$prueba = false;
+$this->bPrueba = false;
+
         // Datos de prueba
         if ($prueba){
             $this->merchantId = "0000000000000012";

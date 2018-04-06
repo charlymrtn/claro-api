@@ -544,7 +544,7 @@ class Mensaje extends iso8583_1987
     /**
      * Campo 63 - POS Additional Data
      */
-    public function formateaCampo63(array $aData = []): string
+    public function formateaCampo63(array $aData = [], array $aTipo = []): string
     {
 		$iTokens = 0;
         $sResultado = '';
@@ -616,122 +616,131 @@ class Mensaje extends iso8583_1987
         $sResultado .= '! 0400020                     ';
 
         // C0
-		$iTokens += 1;
-        $sResultado .= '! C000026 ';
-        // Código de validación 2: CVV2 para VISA CVC2 para MasterCard 4DBC para American Express Los datos deben de estar justificados a la izquierda. “ ” Código de validación 2 no presente
-        $sResultado .= sprintf("%- 4s", $aData['cvv2'] ?? ' ');
-        $sResultado .= ' 001          ';
-        // Comercio Electrónico:
-        // 0 No es transacción de Comercio Electrónico.
-        // 1 Ventas por Correo/Teléfono (MO/TO).
-        // 5 Comercio Electrónico Seguro, Titular autenticado
-        // 6 Comercio Electrónico seguro, Titular no autenticado
-        // 7 Comercio Electrónico Canal Seguro (SSL).
-        if (empty($aData['ecommerce'])) {
-            // Default
-            $sResultado .= '7';
-        } else if ($aData['ecommerce'] == 'no') {
+        if (!empty($aTipo['tipo']) && $aTipo['tipo'] == 'devolucion') {
+            // No lleva campo C0
+        } else {
+            $iTokens += 1;
+            $sResultado .= '! C000026 ';
+            // Código de validación 2: CVV2 para VISA CVC2 para MasterCard 4DBC para American Express Los datos deben de estar justificados a la izquierda. “ ” Código de validación 2 no presente
+            $sResultado .= sprintf("%- 4s", $aData['cvv2'] ?? ' ');
+            $sResultado .= ' 001          ';
+            // Comercio Electrónico:
+            // 0 No es transacción de Comercio Electrónico.
+            // 1 Ventas por Correo/Teléfono (MO/TO).
+            // 5 Comercio Electrónico Seguro, Titular autenticado
+            // 6 Comercio Electrónico seguro, Titular no autenticado
+            // 7 Comercio Electrónico Canal Seguro (SSL).
+            if (empty($aData['ecommerce'])) {
+                // Default
+                $sResultado .= '7';
+            } else if ($aData['ecommerce'] == 'no') {
+                $sResultado .= '0';
+            } else if ($aData['ecommerce'] == 'telefono') {
+                $sResultado .= '1';
+            } else if ($aData['ecommerce'] == 'autenticado') {
+                $sResultado .= '5';
+            } else if ($aData['ecommerce'] == 'no_autenticado') {
+                $sResultado .= '6';
+            } else if ($aData['ecommerce'] == 'ssl') {
+                $sResultado .= '7';
+            }
+            $sResultado .= '  ';
+            // Indicador de CV2:
+            // 0 El CV2 no fue incluido deliberadamente o no proporcionado
+            // 1 El CV2 está presente
+            // 2 El CV2 está impreso en la tarjeta pero es ilegible
+            // 9 El CV2 no está impreso en la tarjeta
+            if (empty($aData['indicador_cvv2'])) {
+                // Default
+                $sResultado .= '0';
+            } else if ($aData['indicador_cvv2'] == 'no') {
+                $sResultado .= '0';
+            } else if ($aData['indicador_cvv2'] == 'presente') {
+                $sResultado .= '1';
+            } else if ($aData['indicador_cvv2'] == 'ilegible') {
+                $sResultado .= '2';
+            } else if ($aData['indicador_cvv2'] == 'no_presente') {
+                $sResultado .= '9';
+            }
+            $sResultado .= ' ';
+            // Authentication Collector Indicator.
+            // 0 = UCAF no soportado por el Comercio
+            // 1 = UCAF es soportado por el Comercio pero los datos de autenticación no fueron capturados.
+            // 2 = UCAF es soportado por el Comercio y sí contiene datos de autenticación.
+            // Los valores ‘1’ y ‘2’ sólo aplican a transacciones de Comercio Electrónico realizadas con tarjetas marca MasterCard. En cualquier otro caso, deberá contener el valor ‘0’.
             $sResultado .= '0';
-        } else if ($aData['ecommerce'] == 'telefono') {
-            $sResultado .= '1';
-        } else if ($aData['ecommerce'] == 'autenticado') {
-            $sResultado .= '5';
-        } else if ($aData['ecommerce'] == 'no_autenticado') {
-            $sResultado .= '6';
-        } else if ($aData['ecommerce'] == 'ssl') {
-            $sResultado .= '7';
+            $sResultado .= ' ';
+            // Resultado de la validación del CAVV - Resultado de la Validación CAVV (Tarjetas marca VISA) / UCAF-AAV (Tarjetas marca MasterCard).
+            // Aplica a transacciones de Comercio Electrónico Seguro.
+            // “ ”=No es Comercio Electrónico Seguro
+            // 0 = No se realizó la Validación por error en la recepción de datos
+            // 1 = Falló Validación
+            // 2 = Pasó Validación
+            // 3 = No se realizó la Validación pues no existe información en el EAF
+            // 4 = La Validación no se realizó por error del sistema (EAF corrupto)
+            // 5 = El Adquirente participa en Autenticación pero el Emisor no participa
+            // 6 = El BIN Emisor participa en Autenticación pero no en Validación
+            // 7 = CAVV/AAV duplicado
+            $sResultado .= ' ';
         }
-        $sResultado .= '  ';
-        // Indicador de CV2:
-        // 0 El CV2 no fue incluido deliberadamente o no proporcionado
-        // 1 El CV2 está presente
-        // 2 El CV2 está impreso en la tarjeta pero es ilegible
-        // 9 El CV2 no está impreso en la tarjeta
-        if (empty($aData['indicador_cvv2'])) {
-            // Default
-            $sResultado .= '0';
-        } else if ($aData['indicador_cvv2'] == 'no') {
-            $sResultado .= '0';
-        } else if ($aData['indicador_cvv2'] == 'presente') {
-            $sResultado .= '1';
-        } else if ($aData['indicador_cvv2'] == 'ilegible') {
-            $sResultado .= '2';
-        } else if ($aData['indicador_cvv2'] == 'no_presente') {
-            $sResultado .= '9';
-        }
-        $sResultado .= ' ';
-        // Authentication Collector Indicator.
-        // 0 = UCAF no soportado por el Comercio
-        // 1 = UCAF es soportado por el Comercio pero los datos de autenticación no fueron capturados.
-        // 2 = UCAF es soportado por el Comercio y sí contiene datos de autenticación.
-        // Los valores ‘1’ y ‘2’ sólo aplican a transacciones de Comercio Electrónico realizadas con tarjetas marca MasterCard. En cualquier otro caso, deberá contener el valor ‘0’.
-        $sResultado .= '0';
-        $sResultado .= ' ';
-        // Resultado de la validación del CAVV - Resultado de la Validación CAVV (Tarjetas marca VISA) / UCAF-AAV (Tarjetas marca MasterCard).
-        // Aplica a transacciones de Comercio Electrónico Seguro.
-        // “ ”=No es Comercio Electrónico Seguro
-        // 0 = No se realizó la Validación por error en la recepción de datos
-        // 1 = Falló Validación
-        // 2 = Pasó Validación
-        // 3 = No se realizó la Validación pues no existe información en el EAF
-        // 4 = La Validación no se realizó por error del sistema (EAF corrupto)
-        // 5 = El Adquirente participa en Autenticación pero el Emisor no participa
-        // 6 = El BIN Emisor participa en Autenticación pero no en Validación
-        // 7 = CAVV/AAV duplicado
-        $sResultado .= ' ';
 
         // C4
-		$iTokens += 1;
-        $sResultado .= '! C400012 102';
-        // Indicador de presencia del tarjetahabiente:
-        // 0 El tarjetahabiente está presente
-        // 1 El tarjetahabiente no está presente (no se especifica razón)
-        // 2 El tarjetahabiente no está presente (transacción iniciada por correo o fax)
-        // 3 El tarjetahabiente no está presente (autorización por voz, MO/TO)
-        // 4 El tarjetahabiente no está presente (transacción recurrente)
-        // 5 El tarjetahabiente no está presente (orden electrónica desde una PC o internet)
-        if (empty($aData['tarjetahabiente'])) {
-            // Default
-            $sResultado .= '5';
-        } else if ($aData['tarjetahabiente'] == 'presente') {
+        if (!empty($aTipo['tipo']) && $aTipo['tipo'] == 'devolucion') {
+            // No lleva campo C4
+        } else {
+            $iTokens += 1;
+            $sResultado .= '! C400012 102';
+            // Indicador de presencia del tarjetahabiente:
+            // 0 El tarjetahabiente está presente
+            // 1 El tarjetahabiente no está presente (no se especifica razón)
+            // 2 El tarjetahabiente no está presente (transacción iniciada por correo o fax)
+            // 3 El tarjetahabiente no está presente (autorización por voz, MO/TO)
+            // 4 El tarjetahabiente no está presente (transacción recurrente)
+            // 5 El tarjetahabiente no está presente (orden electrónica desde una PC o internet)
+            if (empty($aData['tarjetahabiente'])) {
+                // Default
+                $sResultado .= '5';
+            } else if ($aData['tarjetahabiente'] == 'presente') {
+                $sResultado .= '0';
+            } else if ($aData['tarjetahabiente'] == 'no_presente') {
+                $sResultado .= '2';
+            } else if ($aData['tarjetahabiente'] == 'voz') {
+                $sResultado .= '3';
+            } else if ($aData['tarjetahabiente'] == 'recurrente') {
+                $sResultado .= '4';
+            } else if ($aData['tarjetahabiente'] == 'internet') {
+                $sResultado .= '5';
+            }
+            // Indicador de presencia de tarjeta
+            if (empty($aData['tarjeta'])) {
+                // Default
+                $sResultado .= '1';
+            } else if ($aData['tarjeta'] == 'presente') {
+                $sResultado .= '0';
+            } else if ($aData['tarjeta'] == 'no_presente') {
+                $sResultado .= '1';
+            }
+            // Indicador de capacidad de captura de tarjetas
             $sResultado .= '0';
-        } else if ($aData['tarjetahabiente'] == 'no_presente') {
-            $sResultado .= '2';
-        } else if ($aData['tarjetahabiente'] == 'voz') {
-            $sResultado .= '3';
-        } else if ($aData['tarjetahabiente'] == 'recurrente') {
-            $sResultado .= '4';
-        } else if ($aData['tarjetahabiente'] == 'internet') {
-            $sResultado .= '5';
+            // Indicador de status
+            if (empty($aData['status'])) {
+                // Default
+                $sResultado .= '0';
+            } else if ($aData['status'] == 'normal') {
+                $sResultado .= '0';
+            } else if ($aData['status'] == 'preautorizado') {
+                $sResultado .= '4';
+            }
+            // Nivel de seguridad del adquiriente + Routing indicator
+            $sResultado .= '03';
+            // Activación de la terminal por el tarjetahabiente
+            $sResultado .= '6';
+            // Indicador de capacidad para transferir datos de la tarjeta a la terminal
+            $sResultado .= '0';
+            // Método de Identificación del Tarjetahabiente
+            $sResultado .= '0';
         }
-        // Indicador de presencia de tarjeta
-        if (empty($aData['tarjeta'])) {
-            // Default
-            $sResultado .= '1';
-        } else if ($aData['tarjeta'] == 'presente') {
-            $sResultado .= '0';
-        } else if ($aData['tarjeta'] == 'no_presente') {
-            $sResultado .= '1';
-        }
-        // Indicador de capacidad de captura de tarjetas
-        $sResultado .= '0';
-        // Indicador de status
-        if (empty($aData['status'])) {
-            // Default
-            $sResultado .= '0';
-        } else if ($aData['status'] == 'normal') {
-            $sResultado .= '0';
-        } else if ($aData['status'] == 'preautorizado') {
-            $sResultado .= '4';
-        }
-        // Nivel de seguridad del adquiriente + Routing indicator
-        $sResultado .= '03';
-        // Activación de la terminal por el tarjetahabiente
-        $sResultado .= '6';
-        // Indicador de capacidad para transferir datos de la tarjeta a la terminal
-        $sResultado .= '0';
-        // Método de Identificación del Tarjetahabiente
-        $sResultado .= '0';
+
 
         // C5 - Multipagos
         if (!empty($aData['multipagos'])) {
