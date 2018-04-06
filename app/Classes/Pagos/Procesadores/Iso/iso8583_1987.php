@@ -319,11 +319,12 @@ class iso8583_1987
                 // Tamaño
                 if ($this->DATA_ELEMENT[$bit]['fixed']) {
                     // Fijo
-                    if (isset($this->DATA_ELEMENT[$bit]['justify']) && $this->DATA_ELEMENT[$bit]['justify'] == 'left') {
-                        $this->_data[$bit] = sprintf("%- " . $this->DATA_ELEMENT[$bit]['size'] . "s", $data);
-                    } else {
-                        $this->_data[$bit] = sprintf("% " . $this->DATA_ELEMENT[$bit]['size'] . "s", $data);
-                    }
+                    $sPadType = $this->DATA_ELEMENT[$bit]['format']['pad_type'] ?? 'left';
+                    $this->_data[$bit] = sprintf("%"
+                        . ($sPadType == 'right' ? '-' : '')
+                        . ($this->DATA_ELEMENT[$bit]['format']['pad_string'] ?? ' ')
+                        . $this->DATA_ELEMENT[$bit]['size']
+                        . "s", $data);
                 } else {
                     // Variable
                     if (strlen($data) <= $this->DATA_ELEMENT[$bit]['size']) {
@@ -791,6 +792,125 @@ class iso8583_1987
         return $sString;
     }
 
+    /**
+     * Evalúa el contenido del campo.
+     * Nota: No se utiliza el contenido o la definición del $iBit por ser recursivo para subcampos.
+     *
+     * @param int $iBit Posición de elemento de datos.
+     * @param string $sContenido Valor del dato.
+     * @param array $aDef Arreglo de definición del campo.
+     *
+     * @return string String en ascii
+     */
+    protected function _evaluaData(int $iBit, string $sContenido, array $aDef) {
+        // Variables
+        $aTipos = [
+            'n' => 'N - Numérico',
+            'a' => 'A - Caracteres alfabéticos',
+            'an' => 'AN - Alfanuméricos',
+            'anp' => 'ANP - Alfanuméricos y/o espacios',
+            'as' => 'AS - Caracteres alfabéticos y/o especiales',
+            'ans' => 'ANS - Alfanuméricos y/o especiales',
+            'ansb' => 'ANSB - Alfanuméricos y/o especiales y/o binarios',
+            's' => 'S - Caracteres especiales ASCII character set 32 - 126',
+            'ns' => 'NS - Caracteres numéricos y/o especiales',
+            'b' => 'B - Binario',
+            'z' => 'Z - Tracks 2 y 3 code set como se define en la ISO 4909 y en ISO 7813',
+        ];
+        $aFormato = [
+            'alineado' => [
+                'right' => 'Derecha',
+                'left' => 'Izquierda',
+            ],
+        ];
+        // Evalua campo
+        $aResultado = [
+            'tipo' => $aTipos[$aDef['type']] ?? $aDef['type'],
+            'tamanio' => $aDef['fixed'] ? 'Fijo' : 'Variable',
+            'tamanio_max' => $aDef['size'] ?? 'N/A',
+            'tamanio_real' => strlen($sContenido),
+            'tamanio_posiciones' => $aDef['fixed'] ? 0 : strlen($aDef['sizepos'] ?? ''),
+            'mandatorio' => $aDef['mandatory'] ? 'Obligatorio' : 'Opcional',
+            'descripcion' => $aDef['usage'] ?? 'Indeterminado',
+            'encoding' => $aDef['encoding'] ?? 'hex',
+            'charset' => $aDef['charset'] ?? 'EBCDIC',
+            'formato' => [
+                'relleno' => $aDef['format']['pad_string'] ?? ($aDef['type'] == 'n' ? '0' : ' '),
+                'alineado' => $aFormato['alineado'][$aDef['format']['pad_type'] ?? 'left'],
+            ],
+            'contenido' => [],
+        ];
+        // Procesa contenido
+        $aResultado['contenido']['raw'] = $sContenido;
+        if ($aDef['fixed']) {
+            $aResultado['contenido']['valor'] = $sContenido;
+            $aResultado['contenido']['tamanio'] = $aDef['size'];
+        } else {
+            $aResultado['contenido']['valor'] = substr($sContenido, $aResultado['tamanio_posiciones']);
+            $aResultado['contenido']['tamanio'] = (int) substr($sContenido, 0, $aResultado['tamanio_posiciones']);
+        }
+        $aResultado['contenido']['tamanio_real'] = strlen($aResultado['contenido']['valor']);
+        if ($aDef['format']['pad_type'] ?? 'left' == 'left') {
+            $aResultado['contenido']['valor_sin_formato'] = ltrim($aResultado['contenido']['valor'], $aResultado['formato']['relleno']);
+        } else {
+            $aResultado['contenido']['valor_sin_formato'] = rtrim($aResultado['contenido']['valor'], $aResultado['formato']['relleno']);
+        }
+        // Evalua alidez del contenido
+        if (!empty($aDef['values']) && is_array($aDef['values'])) {
+            if (array_key_exists($aResultado['contenido']['valor'], $aDef['values'])) {
+                $aResultado['contenido']['valido'] = true;
+                $aResultado['contenido']['descripcion'] = $aDef['values'][$aResultado['contenido']['valor']]['usage'] ?? 'No determinado';
+            } else {
+                $aResultado['contenido']['valido'] = false;
+                $aResultado['contenido']['error'] = 'ERROR: Valor no válido.';
+            }
+            $aResultado['contenido']['opciones'] = json_encode(array_keys($aDef['values']));
+        }
+        if ($aDef['mandatory'] ?? false) {
+            if ($aResultado['contenido']['valor'] == '') {
+                $aResultado['contenido']['valido'] = false;
+                $aResultado['contenido']['error'] = 'Campo mandatorio vacío.';
+            }
+        }
+        // Evalúa subcampos
+        if (!empty($aDef['subfields'])) {
+            $aResultado['subcampos'] = [];
+            $sContenidoRestante = $aResultado['contenido']['valor'];
+            foreach($aDef['subfields'] as $iSubBit => $aSubDef) {
+                // Valores por default
+                $aSubDef['type'] = $aSubDef['type'] ?? $aDef['type'];
+                $aSubDef['fixed'] = $aSubDef['fixed'] ?? $aDef['fixed'];
+                $aSubDef['encoding'] = $aSubDef['encoding'] ?? $aResultado['encoding'];
+                $aSubDef['charset'] = $aSubDef['charset'] ?? $aResultado['charset'];
+                $aSubDef['formato']['pad_string'] = $aSubDef['formato']['pad_string'] ?? $aResultado['formato']['relleno'];
+                $aSubDef['formato']['pad_type'] = $aSubDef['formato']['pad_type'] ?? ($aDef['format']['pad_type'] ?? 'left');
+                // Contenido
+                if ($aSubDef['fixed']) {
+                    $sSubContenido = substr($sContenidoRestante, 0, $aSubDef['size']);
+                    $sContenidoRestante = substr($sContenidoRestante, $aSubDef['size']);
+                } else {
+                    if (!empty($aDef['subfields_separator'])) {
+                        $iSepPos = strpos($sContenidoRestante, $aDef['subfields_separator']);
+                        if ($iSepPos !== false) {
+                            $sSubContenido = substr($sContenidoRestante, 0, $iSepPos);
+                            $sContenidoRestante = substr($sContenidoRestante, $iSepPos + 1);
+                        } else {
+                            $sSubContenido = $sContenidoRestante;
+                        }
+                    } else {
+                        $sSubContenido = $sContenidoRestante;
+                    }
+                }
+                // Resultado de evaluación
+                $aSubResultado = $this->_evaluaData($iSubBit, $sSubContenido, $aSubDef);
+                // Regresa resultado
+                $aResultado['subcampos'][$iSubBit] = $aSubResultado;
+            }
+        }
+        // Regresa resultados
+        return $aResultado;
+    }
+
     // }}}
 
     /**
@@ -1004,6 +1124,47 @@ class iso8583_1987
             return $this->DATA_ELEMENT[$bit];
         }
     }
+
+    /**
+     * Obtiene la interpretación del contenido del campo $iBit
+     *
+     * @param int $bit Posición de elemento de datos.
+     * @param string $sContenido (opcional) Contenido a interpretar. Si no se proporciona utiliza el asignado al campo.
+     *
+     * @return array
+     */
+    public function getDataElementValidation(int $iBit, string $sContenido = null)
+    {
+        // Obtiene definición
+        $aDataDefinition = $this->getDataElementDefinition($iBit);
+        // Obtiene contenido
+        if ($sContenido === null) {
+            $sContenido = $this->getValue($iBit);
+        }
+        // Evalua
+        return $this->_evaluaData($iBit, $sContenido, $aDataDefinition);
+    }
+
+    /**
+     * Obtiene la interpretación de todos los valores asignados al ISO
+     *
+     * @param int $bit Posición de elemento de datos.
+     * @param string $sContenido (opcional) Contenido a interpretar. Si no se proporciona utiliza el asignado al campo.
+     *
+     * @return array
+     */
+    public function getIsoValidation()
+    {
+        // Variables
+        $aResultado = [];
+        // Evalua
+        foreach($this->_data as $iKey => $sValue) {
+            $aResultado[$iKey] = $this->getDataElementValidation($iKey, $sValue);
+        }
+        // Regresa resultado
+        return $aResultado;
+    }
+
 
     // }}}
 }
