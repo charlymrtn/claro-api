@@ -104,144 +104,150 @@ class BbvaTest
             $this->oPeticionCargo->monto = 830.00;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VALIDACIÓN DE CVV2';
             $aOpciones = ['tipo' => 'puntos_compra'];
-        } else if ($sPrueba == '9') {
+        } else if ($sPrueba == '9o') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
             $this->oPeticionCargo->monto = 0.00;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VENTAS CON PUNTOS - Consulta de Puntos';
             $aOpciones = ['tipo' => 'puntos_consulta'];
-        } else if ($sPrueba == '10') {
+        } else if ($sPrueba == '9') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
             $this->oPeticionCargo->monto = 360;
             $this->oPeticionCargo->puntos = 360;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VENTAS CON PUNTOS - Venta con Puntos';
             $aOpciones = ['tipo' => 'puntos_compra'];
-        } else if ($sPrueba == '11') {
+        } else if ($sPrueba == '10') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
             $this->oPeticionCargo->monto = 1362.55;
             $this->oPeticionCargo->puntos = 1362.50;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VENTAS CON PUNTOS - Venta Con Puntos Mixta';
             $aOpciones = ['tipo' => 'puntos_compra'];
-        } else if ($sPrueba == '12') {
+        } else if ($sPrueba == '11') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaDebito1; // Débito
             $this->oPeticionCargo->monto = 872.00;
             $this->oPeticionCargo->puntos = 0;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VENTAS CON PUNTOS - Venta con Puntos';
             $aOpciones = ['tipo' => 'compra'];
-        } else if ($sPrueba == '13') {
-            $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
-            $this->oPeticionCargo->monto = 4100.00;
-            $this->oPeticionCargo->parcialidades = 3;
-            $this->oPeticionCargo->plan = 'msi';
-            $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VENTA CON PROMOCIÓN - Venta 3 MSI';
-            $aOpciones = ['tipo' => 'puntos_compra'];
-        } else if ($sPrueba == '14') {
+        } else if ($sPrueba == '12') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
             $this->oPeticionCargo->monto = 508.00;
             $this->oPeticionCargo->parcialidades = 6;
             $this->oPeticionCargo->plan = 'msi';
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VENTA CON PROMOCIÓN - Venta 6 MSI';
             $aOpciones = ['tipo' => 'puntos_compra'];
-        } else if ($sPrueba == '15') {
-            $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
-            $this->oPeticionCargo->monto = 1154.00;
-            $this->oPeticionCargo->parcialidades = 9;
-            $this->oPeticionCargo->plan = 'msi';
-            $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VENTA CON PROMOCIÓN - Venta 9 MSI';
-            $aOpciones = ['tipo' => 'puntos_compra'];
-        } else if ($sPrueba == '16') {
+        } else if ($sPrueba == '13') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
             $this->oPeticionCargo->monto = 834.80;
             $this->oPeticionCargo->parcialidades = 12;
             $this->oPeticionCargo->plan = 'msi';
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VENTA CON PROMOCIÓN - Venta 12 MSI';
             $aOpciones = ['tipo' => 'puntos_compra'];
-        } else if ($sPrueba == '17') {
-            $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
-            $this->oPeticionCargo->monto = 2500.00;
-            $this->oPeticionCargo->parcialidades = 15;
-            $this->oPeticionCargo->plan = 'msi';
-            $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VENTA CON PROMOCIÓN - Venta 15 MSI';
-            $aOpciones = ['tipo' => 'puntos_compra'];
-        } else if ($sPrueba == '18') {
+        } else if ($sPrueba == '14') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
             $this->oPeticionCargo->monto = 935.00;
             $this->oPeticionCargo->parcialidades = 18;
             $this->oPeticionCargo->plan = 'msi';
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VENTA CON PROMOCIÓN - Venta 18 MSI';
             $aOpciones = ['tipo' => 'puntos_compra'];
-        } else if ($sPrueba == '19') {
+        } else if ($sPrueba == '15') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
             $this->oPeticionCargo->monto = 82.00;
             $this->oPeticionCargo->parcialidades = 6;
             $this->oPeticionCargo->plan = 'msi';
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VENTA CON PROMOCIÓN - 6 MSI - Declinada';
             $aOpciones = ['tipo' => 'puntos_compra'];
-        } else if ($sPrueba == '20') {
+        } else if ($sPrueba == '16') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaDebito1;
             $this->oPeticionCargo->monto = 2542.00;
             $this->oPeticionCargo->parcialidades = 6;
             $this->oPeticionCargo->plan = 'msi';
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VENTA CON PROMOCIÓN - 6 MSI - Declinada Débito';
             $aOpciones = ['tipo' => 'compra'];
-        } else if ($sPrueba == '21') {
+        } else if ($sPrueba == '17') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaDebito1;
             $this->oPeticionCargo->monto = 223.00;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' DEVOLUCIONES - Devolución del caso 2';
             $aOpciones = ['tipo' => 'devolucion'];
-            //'referencia' => '180403103827', // CAMPO 37 de la respuesta
-            //'autorizacion' => '225140', // CAMPO 38 de la respuesta
-        } else if ($sPrueba == '22') {
+        } else if ($sPrueba == '18') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
-            $this->oPeticionCargo->monto = 360;
-            $this->oPeticionCargo->puntos = 360;
+            $this->oPeticionCargo->monto = 1362.55;
+            //$this->oPeticionCargo->puntos = 1362.50;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' DEVOLUCIONES - Devolución del caso 10';
             $aOpciones = ['tipo' => 'devolucion'];
-            //'referencia' => '180403103827', // CAMPO 37 de la respuesta
-            //'autorizacion' => '225140', // CAMPO 38 de la respuesta
+        } else if ($sPrueba == '19') {
+            $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
+            $this->oPeticionCargo->monto = 834.80;
+            $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' DEVOLUCIONES - Devolución del caso 12?';
+            $aOpciones = ['tipo' => 'devolucion'];
+        } else if ($sPrueba == '20') {
+            $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
+            $this->oPeticionCargo->monto = 350;
+            $this->oPeticionCargo->puntos = 350;
+            $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' CANCELACIONES - Venta Con Puntos';
+            $aOpciones = ['tipo' => 'puntos_compra'];
+        } else if ($sPrueba == '20c') {
+            $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
+            $this->oPeticionCargo->monto = 350;
+            $this->oPeticionCargo->puntos = 350;
+            $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' CANCELACIONES - Venta Con Puntos - Cancelaión';
+            $aOpciones = [
+                'tipo' => 'cancelacion',
+                'referencia' => '180410114851', // CAMPO 37 de la respuesta
+                'autorizacion' => '210779', // CAMPO 38 de la respuesta
+                'mti_original' => '0200', // ?  Id de mensaje ISO de la transacción original
+                'fecha_original' => '0410', // CAMPO 13 de la respuesta
+                'hora_original' => '042307', // CAMPO 12 de la respuesta
+                'fecha_captura_original' => '0410', // CAMPO 17 de la respuesta
+            ];
         } else {
             throw new \Exception("Prueba no encontrada", 404);
         }
 
-
-        // Prepara mensaje
-        $oInterredProxy = new InterredProxy();
-
         // Verifica tipo de prueba
+        $bEnvio = false;
+        $bEcho = false;
         if ($sTipo == 'datos_json') {
-            $oResultado = $oInterredProxy->mensajeVenta($this->oPeticionCargo, $aOpciones, false, false);
-            // Prepara resultado
-            $aResultado = [
-                'peticion' => [
-                    'mensaje_json' => $this->oPeticionCargo,
-                    'mensaje_b64' => base64_encode($oResultado->mensaje),
-                    'mensaje_hex' => $oResultado->mensaje_hex,
-                    'iso_parsed' => $oResultado->iso->getDataArray(),
-                    'iso_validation' => $oResultado->iso->getIsoValidation(),
-                ],
-            ];
-            return $aResultado;
+            $bEnvio = false;
+            $bEcho = false;
+        } else if ($sTipo == 'datos_online') {
+            $bEnvio = false;
+            $bEcho = true;
         } else if ($sTipo == 'envio_json') {
-            $oResultado = $oInterredProxy->mensajeVenta($this->oPeticionCargo, $aOpciones, true, false);
-            // Prepara resultado
-            $aResultado = [
-                'peticion' => [
-                    'mensaje_json' => $this->oPeticionCargo,
-                    'mensaje_b64' => base64_encode($oResultado->mensaje),
-                    'mensaje_hex' => $oResultado->mensaje_hex,
-                    'iso_parsed' => $oResultado->iso->getDataArray(),
-                    'iso_validation' => $oResultado->iso->getIsoValidation(),
-                ],
-            ];
-            if (isset($oResultado->respuesta)) {
-                $aResultado['respuesta'] = $oResultado->respuesta;
-            }
-            return $aResultado;
+            $bEnvio = true;
+            $bEcho = false;
         } else if ($sTipo == 'envio_online') {
-            echo "\n<h1>" . $this->oPeticionCargo->descripcion . "</h1>";
-            $oResultado = $oInterredProxy->mensajeVenta($this->oPeticionCargo, $aOpciones, true);
-            // Regresa resultados
-            return $oResultado;
+            $bEnvio = true;
+            $bEcho = true;
         }
+        // Prepara tipo de mensaje
+        if (in_array($aOpciones['tipo'], ['compra', 'puntos_compra', 'devolucion'])) {
+            $sTipoMensaje = 'mensajeVenta';
+        } else if (in_array($aOpciones['tipo'], ['cancelacion', 'reverso'])) {
+            $sTipoMensaje = 'mensajeCancelacion';
+        } else {
+            throw new \Exception("Tipo de mensaje desconocido: {$aOpciones['tipo']}", 404);
+        }
+        if ($bEcho) {
+            echo "\n<br>TipoMensaje: {$sTipoMensaje}";
+        }
+        // Prepara mensaje y envía
+        $oInterredProxy = new InterredProxy();
+        $oResultado = $oInterredProxy->$sTipoMensaje($this->oPeticionCargo, $aOpciones, $bEnvio, $bEcho);
+        // Prepara resultado
+        $aResultado = [
+            'peticion' => [
+                'mensaje_json' => $this->oPeticionCargo,
+                'mensaje_b64' => base64_encode($oResultado->mensaje),
+                'mensaje_hex' => $oResultado->mensaje_hex,
+                'iso_mti' => $oResultado->iso->getMTI(),
+                'iso_parsed' => $oResultado->iso->getDataArray(),
+                'iso_validation' => $oResultado->iso->getIsoValidation(),
+            ],
+        ];
+        // Prepara respuesta si fue enviado el mensaje
+        if (isset($oResultado->respuesta)) {
+            $aResultado['respuesta'] = $oResultado->respuesta;
+        }
+        return $aResultado;
     }
 
 }
@@ -314,7 +320,7 @@ class InterredProxy
 
     // ********************************************************************************************************************
 
-    private function preparaMensaje($sIso, $bEcho = true)
+    private function preparaMensaje($sIso, $bEcho = false)
     {
         $sMensaje = 'ISO023400070' . $sIso;
         return $this->isoLength(strlen('00' . $sMensaje)) . $sMensaje;
@@ -347,16 +353,11 @@ class InterredProxy
         }
         $oMensaje->setData(32, '12'); // Acquiring Institution Identification Code
         $oMensaje->setData(35, $oMensaje->formateaCampo35($oPeticionCargo->tarjeta)); // Track 2 Data
-        if (!empty($aTipo['tipo']) && $aTipo['tipo'] == 'reverso' && !empty($aTipo['referencia'])) {
-            $oMensaje->setData(37, $aTipo['referencia']); // Retrieval Reference Number
-        } else {
-            $oMensaje->setData(37, date('ymdhis')); // Retrieval Reference Number
-            // @todo: Cambiar por número único. Puede ser consecutivo o random
-        }
-// A petición de eglobal
-//        if (!empty($aTipo['tipo']) && $aTipo['tipo'] == 'devolucion' && !empty($aTipo['autorizacion'])) {
-//            $oMensaje->setData(38, $aTipo['autorizacion']); // Authorization Identification Response
-//        }
+        $oMensaje->setData(37, date('ymdhis')); // Retrieval Reference Number
+        // A petición de eglobal
+        //if (!empty($aTipo['tipo']) && $aTipo['tipo'] == 'devolucion' && !empty($aTipo['autorizacion'])) {
+        //    $oMensaje->setData(38, $aTipo['autorizacion']); // Authorization Identification Response
+        //}
         $oMensaje->setData(41, '0000CP01        '); // Card Acceptor Terminal Identification
         //$oMensaje->setData(43, 'Radiomovil DIPSA SA CVCMXCMXMX'); //  Card Acceptor Name/Location
         $oMensaje->setData(48, '5462742            00000000'); // Additional DataRetailer Data - Define la afiliación del Establecimiento
@@ -388,6 +389,59 @@ class InterredProxy
             'diferimiento' => $oPeticionCargo->diferido,
             'plan' => $oPeticionCargo->plan,
         ], $aTipo)); // POS Additional Data
+        #$oMensaje->setData(103, ''); //
+        if ($bEcho) {
+            echo "<pre>" . print_r($oMensaje->getDataArray(), true) . "</pre>";
+        }
+
+        return $oMensaje;
+    }
+
+    private function isoTipoCancelacion(PeticionCargo $oPeticionCargo, array $aTipo = [], $bEcho = false)
+    {
+        // Define campos
+        $oMensaje = new Mensaje();
+        $oMensaje->setMTI('0420');
+        $oMensaje->setData(3, $oMensaje->formateaCampo3($aTipo)); // Processing Code
+        $oMensaje->setData(4, $oMensaje->formateaCampo4($oPeticionCargo->monto)); // Transaction Amount - Monto de la transacción con centavos
+        $oMensaje->setData(7, gmdate('mdHis')); // Date & time
+        $oMensaje->setData(11, $oMensaje->generateSystemsTraceAuditNumber()); // Systems Trace Audit Number
+        $oMensaje->setData(12, date('his')); // Hora local de la transacción
+        $oMensaje->setData(13, date('md')); // Date & time - Día local de la transacción
+        $oMensaje->setData(15, date('md')); // Settlement Date: MMDD - Día en el cual se esta contabilizando la transacción
+        $oMensaje->setData(17, date('md')); //  Capture Date: MMDD - Día en el cual la transacción es registrada por el Adquirente
+        $oMensaje->setData(22, '012'); // PoS Entry Mode
+        if (in_array($oPeticionCargo->plan, ['msi', 'mci', 'diferido'])) {
+            // Deaparece el campo 25... Puff! Motivo: Pos nomas.
+        } else {
+            $oMensaje->setData(25, '59'); // Point of Service Condition Code - 59 = Comercio Electrónico
+        }
+        $oMensaje->setData(32, '12'); // Acquiring Institution Identification Code
+        $oMensaje->setData(35, $oMensaje->formateaCampo35($oPeticionCargo->tarjeta)); // Track 2 Data
+        $oMensaje->setData(37, $aTipo['referencia']); // Retrieval Reference Number
+        $oMensaje->setData(38, $aTipo['autorizacion']); // Authorization Identification Response
+        $oMensaje->setData(39, $oMensaje->formateaCampo39($aTipo['cancelacion_motivo'] ?? 'cancelacion')); // Motivo cancelación
+        $oMensaje->setData(41, '0000CP01        '); // Card Acceptor Terminal Identification
+        $oMensaje->setData(48, '5462742            00000000'); // Additional DataRetailer Data - Define la afiliación del Establecimiento
+        $oMensaje->setData(49, '484'); // Transaction Currency Code.
+        #$oMensaje->setData(54, '000000000000')); // Additional Amounts - Monto del cash advance/back con centavos NO IMPLEMENTAOD
+        if (isset($aTipo['cancelacion_motivo']) && $aTipo['cancelacion_motivo'] == 'emv_fail') {
+            $oMensaje->setData(55, ''); // NO IMPLEMENTAOD
+        }
+        #$oMensaje->setData(59, ''); // NO IMPLEMENTAOD
+        $oMensaje->setData(60, 'CLPGTES1+0000000'); // POS Terminal Data
+        $oMensaje->setData(63,
+            $oMensaje->formateaCampo63([
+                'mti' => '0200',
+                // C0
+                'cvv2' => $oPeticionCargo->tarjeta->cvv2,
+                'indicador_cvv2' => $oPeticionCargo->tarjeta->cvv2 ? 'presente' : 'no_presente',
+                // Q6
+                'parcialidades' => $oPeticionCargo->parcialidades,
+                'diferimiento' => $oPeticionCargo->diferido,
+                'plan' => $oPeticionCargo->plan,
+            ], $aTipo)); // POS Additional Data
+        $oMensaje->setData(90, $oMensaje->formateaCampo90($aTipo['cancelacion_motivo'] ?? 'cancelacion')); // Motivo cancelación
         #$oMensaje->setData(103, ''); //
         if ($bEcho) {
             echo "<pre>" . print_r($oMensaje->getDataArray(), true) . "</pre>";
@@ -432,9 +486,42 @@ class InterredProxy
         return (object) $aResultado;
     }
 
-    public function enviaMensaje(string $sId, string $sStan, string $sMensaje, $bEcho = true): array
+    public function mensajeCancelacion(PeticionCargo $oPeticionCargo, array $aOpciones = [], $bEnvia = false, $bEcho = false)
     {
-$bEcho = true;
+        if ($bEcho) {
+            echo "<br>Preparando mensaje de Venta...";
+        }
+        // Actualiza opciones con default
+        $aOpciones = array_merge(['tipo' => 'puntos_compra'], $aOpciones);
+        // Define campos
+        $sIso = $this->isoTipoCancelacion($oPeticionCargo, $aOpciones, $bEcho);
+        $sMensaje = $this->preparaMensaje($sIso->getISO(false), $bEcho);
+        // Evalua retorno
+        $aResultado = [
+            'mensaje' => $sMensaje,
+            'mensaje_hex' => $this->ascii2hex($sMensaje),
+            'iso' => $sIso,
+        ];
+        if ($bEnvia) {
+            $aResultadoEnvio = $this->enviaMensaje($oPeticionCargo->id, $sIso->getValue(11), $sMensaje, $bEcho);
+            #dump($aResultadoEnvio);
+            if (!empty($aResultadoEnvio) && !empty($aResultadoEnvio['respuesta'])) {
+                $aResultado['respuesta'] = [
+                    'mensaje_b64' => $aResultadoEnvio['respuesta']->respuesta ?? 'ERROR',
+                    'mensaje_hex' => $this->ascii2hex($aResultadoEnvio['respuesta']->respuesta ?? 'ERROR'),
+                    'iso_header' => $aResultadoEnvio['respuesta_iso']['header'],
+                    'iso_mti' => $aResultadoEnvio['respuesta_iso']['iso_mti'],
+                    'iso_parsed' => $aResultadoEnvio['respuesta_iso']['iso_parsed'],
+                    'iso_validation' => $aResultadoEnvio['respuesta_iso']['iso_validation'],
+                ];
+            }
+        }
+        // Regresa resultado
+        return (object) $aResultado;
+    }
+
+    public function enviaMensaje(string $sId, string $sStan, string $sMensaje, $bEcho = false): array
+    {
         // Prepara resultado
         $aResponseResult = [
             'status' => 'fail',
@@ -565,7 +652,7 @@ $bEcho = true;
         return $aResponseResult;
     }
 
-    public function recibeEglobalProxy($bEcho = true)
+    public function recibeEglobalProxy($bEcho = false)
     {
         // Prepara variables
         $sMensaje = null;

@@ -284,7 +284,7 @@ class Mensaje extends iso8583_1987
         if (empty($aData['tipo'])) {
             // Default - compra
             $sResultado .= '00';
-        } else if (in_array($aData['tipo'], ['compra', 'checkin', 'reautorizacion'])) {
+        } else if (in_array($aData['tipo'], ['compra', 'checkin', 'reautorizacion', 'cancelacion', 'puntos_cancelacion'])) {
             // 00 = Compra, Check-in, Reautorización, Compra con Pre-Propina
             $sResultado .= '00';
         } else if ($aData['tipo'] == 'checkout') {
@@ -296,19 +296,20 @@ class Mensaje extends iso8583_1987
         } else if ($aData['tipo'] == 'devolucion') {
             // 20 = Devolución
             $sResultado .= '20';
-        } else if (in_array($aData['tipo'], ['cash_advance', 'cash_back'])) {
+        } else if (in_array($aData['tipo'], ['cash_advance', 'cash_back', 'cancelacion_cash_back', 'cancelacion_cash_advance'])) {
             // 09 = Cash advance/Compra con cash back
             $sResultado .= '09';
         } else if ($aData['tipo'] == 'puntos_consulta') {
             // 16 = Consulta de Puntos
             $sResultado .= '16';
+        } else if (in_array($aData['tipo'], ['puntos_compra', 'puntos_reverso'])) {
         } else if ($aData['tipo'] == 'puntos_compra') {
             // 18 = Compra con Puntos
             $sResultado .= '18';
         } else if ($aData['tipo'] == 'dineromovil') {
             // 17 = Dinero Móvil
             $sResultado .= '17';
-        } else if ($aData['tipo'] == 'pago_finanzia') {
+        } else if (in_array($aData['tipo'], ['pago_finanzia', 'cancelacion_pago_finanzia'])) {
             // 65 = Pago Finanzia
             $sResultado .= '65';
         } else if ($aData['tipo'] == 'pago_tarjeta') {
@@ -410,6 +411,28 @@ class Mensaje extends iso8583_1987
         $sResultado .= '=';
         $sResultado .= sprintf("%02s", $oTarjetaCredito->expiracion_anio);
         $sResultado .= sprintf("%02s", $oTarjetaCredito->expiracion_mes);
+        return $sResultado;
+    }
+
+    /**
+     * Campo 3 - Processing Code
+     */
+    public function formateaCampo39(string $sCancelacionMotivo = 'cancelacion'): string
+    {
+        // 22 = Cualquier motivo de reverso diferente a los anteriores (suspected malfunction)
+        $sResultado = '22';
+        // 1-2 Tipo de transacción
+        if ($sCancelacionMotivo == 'cancelacion') {
+            // Default - 17 = Cancelación
+            $sResultado = '17';
+        } else if ($sCancelacionMotivo == 'timeout') {
+            // 68 = Time Out/Late Reply
+            $sResultado = '68';
+        } else if ($sCancelacionMotivo == 'emv_fail') {
+            // 40 = Falla en el término del proceso EMV a nivel pin pad
+            $sResultado = '40';
+        }
+        // Regresa resultado
         return $sResultado;
     }
 
@@ -819,6 +842,31 @@ class Mensaje extends iso8583_1987
 
         return $sHeader . $sResultado;
     }
+
+    /**
+     * Campo 90 - Datos de Campaña
+     */
+    public function formateaCampo90(array $aData): string
+    {
+        $sResultado = '';
+        // 1-4  Id de mensaje ISO de la transacción original
+        $sResultado .= $aData['mti_original'];
+        // 5-16  Retrieval reference number de la transacción original (C37)
+        $sResultado .= $aData['referencia'];
+        // 17-20  Fecha local de la transacción original (C13)
+        $sResultado .= $aData['fecha_original'];
+        // 21-26  Hora local de la transacción original (C12)
+        $sResultado .= $aData['hora_original'];
+        // 27-28  ‘00’
+        $sResultado .= '00';
+        // 29-32  Fecha de captura de la transacción original (C17).
+        $sResultado .= $aData['fecha_captura_original'];
+        // 33-42  Espacios en blanco
+        $sResultado .= '          ';
+
+        return $sResultado;
+    }
+
 
     /**
      * Obtiene la lista de caracteres admitidos en el tipo de datos
