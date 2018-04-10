@@ -422,15 +422,26 @@ class SocketServerProxy implements MessageComponentInterface
         $jMensaje = json_decode($sMensaje);
         if (empty($jMensaje)) {
             $this->loguea("Mensaje desconocido de {$conn->resourceId}:" . $sMensaje, 'debug');
+        }        if ($oData->encoding == 'base64') {
+            $sRespuesta = base64_decode($oData->respuesta);
+        } else {
+            $sRespuesta = $oData->respuesta;
         }
+        // Revisa encoding
+        if ($jMensaje->encoding == 'base64') {
+            $sMensaje = base64_decode($jMensaje->mensaje_b64);
+        } else {
+            $sMensaje = $jMensaje->mensaje;
+        }
+
         // Revisa que tipo de operación va a realizar
         $this->aStats['transacciones'] += 1;
         $this->loguea("    Acción {$from->resourceId}: {$jMensaje->accion}", 'debug');
         if ($jMensaje->accion == 'send') {
             // Revisa si el mensaje a enviar es un ISO Adecuado
-            if (substr($jMensaje->mensaje, 2, 12) == 'ISO023400070') {
+            if (substr($sMensaje, 2, 12) == 'ISO023400070') {
                 // Envía mensaje
-                $bEnvioEglobal = $this->enviaEglobal($from, $jMensaje->transaccion_id, $jMensaje->stan, $jMensaje->mensaje);
+                $bEnvioEglobal = $this->enviaEglobal($from, $jMensaje->transaccion_id, $jMensaje->stan, $sMensaje);
                 // Regresa resultado de envío de mensaje
                 //$this->sendMessage($from, ['envio' => $bEnvioEglobal ? 'success' : 'fail', 'error' => $bEnvioEglobal ? '' : 'Conexión interrumpida']);
             } else {

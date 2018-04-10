@@ -231,8 +231,10 @@ class BbvaTest
                     'iso_parsed' => $oResultado->iso->getDataArray(),
                     'iso_validation' => $oResultado->iso->getIsoValidation(),
                 ],
-                'respuesta' => $oResultado->respuesta,
             ];
+            if (isset($oResultado->respuesta)) {
+                $aResultado['respuesta'] = $oResultado->respuesta;
+            }
             return $aResultado;
         } else if ($sTipo == 'envio_online') {
             echo "\n<h1>" . $this->oPeticionCargo->descripcion . "</h1>";
@@ -432,6 +434,7 @@ class InterredProxy
 
     public function enviaMensaje(string $sId, string $sStan, string $sMensaje, $bEcho = true): array
     {
+$bEcho = true;
         // Prepara resultado
         $aResponseResult = [
             'status' => 'fail',
@@ -441,7 +444,7 @@ class InterredProxy
         ];
 
         if ($bEcho) {
-            echo "<br>Enviando mensaje...";
+            echo "<br>Enviando mensaje: " . $sMensaje;
         }
 
         // Conecta
@@ -449,7 +452,7 @@ class InterredProxy
             $this->oEglobalProxyCliente = stream_socket_client('tcp://' . $this->config['proxy']['ip'] . ':' . $this->config['proxy']['port'], $aResponseResult['status_code'],
             $aResponseResult['status_message'], $this->config['proxy']['timeout'], STREAM_CLIENT_CONNECT);
             if ($this->oEglobalProxyCliente === false) {
-                throw new \Exception("Error al cerrar el socket: " . socket_strerror(socket_last_error()));
+                throw new \Exception("Error al crear el socket: " . socket_strerror(socket_last_error()));
             }
             // Define timeout
             stream_set_timeout($this->oEglobalProxyCliente, $this->config['proxy']['timeout']);
@@ -467,11 +470,26 @@ class InterredProxy
                 'accion' => 'send',
                 'transaccion_id' => $sId,
                 'stan' => $sStan,
-                'mensaje' => $sMensaje,
+                'encoding' => 'base64',
+                'mensaje_b64' => base64_encode($sMensaje),
             ];
             // Envía mensaje
+            if ($bEcho) {
+                echo "<br>Escribiendo en el socket: " . print_r($aRequest, true) . "\n";
+            }
             $jRequest = json_encode($aRequest);
             $size = strlen($jRequest);
+            if ($bEcho) {
+                echo "<br>Escribiendo en el socket: " . print_r($jRequest, true) . "\n";
+            }
+            if (empty($size)) {
+                if ($bEcho) {
+                    echo "<br>Error: Mensaje a enviar vacío!\n";
+                }
+                $aResponseResult['status_message'] = 'Error: Mensaje a enviar vacío';
+                $aResponseResult['status_code'] = 502;
+                return $aResponseResult;
+            }
             $bytes = fwrite($this->oEglobalProxyCliente, $jRequest, $size);
             if ($bytes === false || $bytes < $size) {
                 if ($bEcho) {
@@ -486,6 +504,7 @@ class InterredProxy
                 }
             }
             // Espera respuesta
+            $aMensajeISO = [];
             $oData = $this->recibeEglobalProxy($bEcho);
             // Procesa mensaje
             if (!empty($oData->respuesta)) {
@@ -504,7 +523,7 @@ class InterredProxy
                         echo "<br>Respuesta recibida (iso): <pre>" . print_r($aMensajeISO['iso_parsed'], true) . "</pre>";
                     }
                     #dump($aMensajeISO['iso_validation']);
-                    $jMensajeISO = json_encode($aMensajeISO['iso_parsed']);
+                    #$jMensajeISO = json_encode($aMensajeISO['iso_parsed']);
                     #dump($jMensajeISO);
                     #echo "<br>Respuesta recibida (iso): {$jMensajeISO} \n";
                     // Evalua resultado campo 39
@@ -514,7 +533,8 @@ class InterredProxy
                         }
                     }
                 } catch (\Exception $e) {
-                    $jMensajeISO = "{}";
+                    #$jMensajeISO = "{}";
+
                 }
             }
             // Prepara respuesta
