@@ -1,0 +1,329 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>E-Global - BBVA - Pruebas</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+	<link href="css/app.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0">
+      <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="#">Claro Pagos</a>
+      <span class="form-control form-control-dark w-100">Pruebas E-Global &bull; BBVA</span>
+      <ul class="navbar-nav px-3">
+        <li class="nav-item text-nowrap">
+          <span class="nav-link" href="#">2018</span>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="container-fluid">
+      <div class="row">
+        <nav class="col-md-2 d-none d-md-block bg-light sidebar">
+          <div class="sidebar-sticky">
+            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+				<span>Pruebas disponibles</span>
+			</h6>
+            <ul class="nav flex-column">
+              <li class="nav-item">
+                <a class="nav-link active" href="#">
+                  <select id="selectPruebas" class="form-control">
+                      <option disabled selected>VENTAS NORMALES</option>
+                      <option value="1">Prueba 1</option><option value="2">Prueba 2</option>
+                      <option value="3">Prueba 3</option><option value="4">Prueba 4</option>
+                      <option disabled>VALIDACIÓN DE CVV2</option>
+                      <option value="5">Prueba 5</option><option value="6">Prueba 6</option>
+                      <option value="7">Prueba 7</option><option value="8">Prueba 8</option>
+                      <option disabled>VENTAS CON PUNTOS</option>
+                      <option value="9">Prueba 9</option><option value="10">Prueba 10</option>
+                      <option value="11">Prueba 11</option><option value="12">Prueba 12</option>
+                      <option disabled>VENTAS CON PROMOCION</option>
+                      <option value="13">Prueba 13</option><option value="14">Prueba 14</option>
+                      <option value="15">Prueba 15</option><option value="16">Prueba 16</option>
+                      <option value="17">Prueba 17</option><option value="18">Prueba 18</option>
+                      <option value="19">Prueba 19</option><option value="20">Prueba 20</option>
+                      <option disabled>DEVOLUCIONES</option>
+                      <option value="21">Prueba 21</option><option value="22">Prueba 22</option>
+                      <option value="23">Prueba 23</option>
+                      <option disabled>CANCELACIONES</option>
+                      <option value="24">Prueba 24</option><option value="25">Prueba 25</option>
+                      <option value="26">Prueba 26</option><option value="27">Prueba 27</option>
+                      <option value="28">Prueba 28</option><option value="29">Prueba 29</option>
+                      <option disabled>REVERSOS AUTOMÁTICOS COMERCIO</option>
+                      <option value="30">Prueba 30</option><option value="31">Prueba 31</option>
+                      <option value="32">Prueba 32</option>
+                      <option disabled>REVERSOS AUTOMÁTICOS EG</option>
+                      <option value="33">Prueba 33</option><option value="34">Prueba 34</option>
+                      <option value="35">Prueba 35</option>
+                  </select>
+                </a>
+              </li>
+            </ul>
+
+          </div>
+        </nav>
+
+        <main role="main" class="col-md-9 ml-sm-auto col-lg-10 pt-3 px-4">
+			<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+				<h2 id="pruebaTitle" class="h2">Pruebas de conexión</h2>
+			</div>
+
+            <h5 class="h5">Datos a enviar a Eglobal - BBVA</h5>
+
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <a class="nav-link active" data-toggle="tab" href="#IsoParsed">ISO</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#IsoValidation">ISO Val</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#hex">Hex</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#string">String</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#peticion">Petición</a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div role="tabpanel" class="tab-pane active" id="IsoParsed">
+                    <ul class="list-group media-list media-list-stream">
+                        <br><div id="pruebaIsoParsed">Prueba no seleccionada</div>
+                    </ul>
+                </div>
+                <div role="tabpanel" class="tab-pane fade in" id="IsoValidation">
+                    <ul class="list-group media-list media-list-stream">
+                        <br><div id="pruebaIsoValidation">Prueba no seleccionada</div>
+                    </ul>
+                </div>
+                <div role="tabpanel" class="tab-pane fade in" id="hex">
+                    <ul class="list-group media-list media-list-stream">
+                        <br><div id="pruebaHex">Prueba no seleccionada</div>
+                    </ul>
+                </div>
+                 <div role="tabpanel" class="tab-pane fade in" id="string">
+                    <ul class="list-group media-list media-list-stream">
+                        <br><div id="pruebaString">Prueba no seleccionada</div>
+                    </ul>
+                </div>
+                 <div role="tabpanel" class="tab-pane fade in" id="peticion">
+                    <ul class="list-group media-list media-list-stream">
+                        <br><div id="pruebaPeticion">Prueba no seleccionada</div>
+                    </ul>
+                </div>
+            </div>
+            <div id="enviarPruebaDiv" class="collapse">
+                <br><button id="enviarPrueba" type="button" class="btn btn-primary">Enviar prueba</button>
+            </div>
+
+            <hr><br>
+
+            <h5 class="h5">Respuesta Eglobal - BBVA</h5>
+
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <a class="nav-link active" data-toggle="tab" href="#responseIsoParsed">ISO</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#responseIsoValidation">ISO Val</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#responseHex">Hex</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#responseString">String</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#responsePeticion">Petición</a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div role="tabpanel" class="tab-pane active" id="responseIsoParsed">
+                    <ul class="list-group media-list media-list-stream">
+                        <br><div id="responseIsoParsed">Datos no enviados</div>
+                    </ul>
+                </div>
+                <div role="tabpanel" class="tab-pane fade in" id="responseIsoValidation">
+                    <ul class="list-group media-list media-list-stream">
+                        <br><div id="responseIsoValidation">Datos no enviados</div>
+                    </ul>
+                </div>
+                <div role="tabpanel" class="tab-pane fade in" id="responseHex">
+                    <ul class="list-group media-list media-list-stream">
+                        <br><div id="responseHex">Datos no enviados</div>
+                    </ul>
+                </div>
+                 <div role="tabpanel" class="tab-pane fade in" id="responseString">
+                    <ul class="list-group media-list media-list-stream">
+                        <br><div id="responseString">Datos no enviados</div>
+                    </ul>
+                </div>
+                 <div role="tabpanel" class="tab-pane fade in" id="responsePeticion">
+                    <ul class="list-group media-list media-list-stream">
+                        <br><div id="responsePeticion">Datos no enviados</div>
+                    </ul>
+                </div>
+            </div>
+            <hr><br>
+        </main>
+      </div>
+    </div>
+
+	<!-- Ventana spinner -->
+	<div class="modal fade" id="ventanaSpinnerModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<div id="p1_title">
+						<h5 class="modal-title" id="pruebaModalLabel">Obteniendo datos de la prueba</h5>
+					</div>
+				</div>
+				<div class="modal-body text-center">
+					<span class="fa fa-spinner fa-spin fa-3x"></span>
+					Espere por favor...
+				</div>
+			</div>
+		</div>
+	</div>
+
+    <!-- Scripts -->
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+
+    <script charset="utf-8" src="js/app.js"></script>
+
+    <script src="js/json-viewer.js"></script>
+    <link rel="stylesheet" href="css/json-viewer.css">
+
+
+    <script>
+        $("#selectPruebas").change(function( event ) {
+            $('#pruebaModalLabel').html('Obteniendo datos de la prueba');
+            $('#ventanaSpinnerModal').modal('show');
+            // Envía datos a claro pagos
+            $.get(
+                '//api.claropay.local.com/web/bbva?prueba=' + $("#selectPruebas").val() + '&tipo=datos_json&',
+                function(resultado) {
+                    console.log( "Request Successful" );
+                },
+                'json'
+            )
+            .done(function(resultado) {
+                $('#ventanaSpinnerModal').modal('hide');
+                console.log("Displaying data");
+                console.log(resultado);
+                $('#pruebaHex').html(resultado.data.peticion.mensaje_hex);
+                $('#pruebaString').html(window.atob(resultado.data.peticion.mensaje_b64));
+                $('#pruebaTitle').html(resultado.data.peticion.mensaje_json.descripcion);
+
+                // Petición
+                $('#pruebaPeticion').html(""); // JSON.stringify(resultado.data.peticion.mensaje_json)
+                var jsonViewerPeticion = new JSONViewer();
+                document.querySelector("#pruebaPeticion").appendChild(jsonViewerPeticion .getContainer());
+                jsonViewerPeticion.showJSON(resultado.data.peticion.mensaje_json, -1, 2);
+
+                // Iso Parsed
+                $('#pruebaIsoParsed').html(""); // JSON.stringify(resultado.data.peticion.iso_parsed)
+                var jsonViewerIsoParsed = new JSONViewer();
+                document.querySelector("#pruebaIsoParsed").appendChild(jsonViewerIsoParsed .getContainer());
+                jsonViewerIsoParsed.showJSON(resultado.data.peticion.iso_parsed, -1, 2);
+
+                // Iso Validation
+                $('#pruebaIsoValidation').html(""); // JSON.stringify(resultado.data.peticion.iso_validation)
+                var jsonViewerIsoValidation = new JSONViewer();
+                document.querySelector("#pruebaIsoValidation").appendChild(jsonViewerIsoValidation .getContainer());
+                jsonViewerIsoValidation.showJSON(resultado.data.peticion.iso_validation, -1, 1);
+
+                // Botón de envío de datos
+                $('#enviarPrueba').removeClass("btn-success btn-danger").addClass("btn-primary");
+                $('#enviarPruebaDiv').show();
+            })
+            .fail(function(response) {
+                $('#ventanaSpinnerModal').modal('hide');
+                console.log("Error on request");
+                var resultado = response.responseJSON;
+                console.log(resultado);
+                $('#pruebaHex').html(resultado.error.message);
+                $('#pruebaString').html(window.atob(resultado.error.message));
+                $('#pruebaPeticion').html(resultado.error.message);
+                $('#pruebaIsoParsed').html(resultado.error.message);
+                $('#pruebaIsoValidation').html(resultado.error.message);
+            })
+            .always(function(resultado) {
+                //$('#result').html(data);
+                console.log("Ajax complete");
+                $('#ventanaSpinnerModal').modal('hide');
+            });
+        });
+
+        // RESPUESTA
+
+        $("#enviarPrueba").click(function(event) {
+            $("#enviarPrueba").prop('disabled', true);
+            $('#pruebaModalLabel').html('Enviando prueba a servidor proxy Eglobal BBVA');
+            $('#ventanaSpinnerModal').modal('show');
+            // Envía datos a claro pagos
+            $.get(
+                '//api.claropay.local.com/web/bbva?prueba=' + $("#selectPruebas").val() + '&tipo=envio_json&',
+                function(resultado) {
+                    console.log( "Request Successful" );
+                },
+                'json'
+            )
+            .done(function(resultado) {
+                $('#ventanaSpinnerModal').modal('hide');
+                console.log("Displaying data");
+                console.log(resultado);
+                $('#responseHex').html(resultado.data.respuesta.mensaje_hex);
+                $('#responseString').html(window.atob(resultado.data.respuesta.mensaje_b64));
+
+                // Petición
+                $('#responsePeticion').html(""); // JSON.stringify(resultado.data.peticion)
+                var jsonViewerPeticion = new JSONViewer();
+                document.querySelector("#responsePeticion").appendChild(jsonViewerPeticion .getContainer());
+                jsonViewerPeticion.showJSON(resultado.data.peticion.mensaje_json, -1, 2);
+
+                // Iso Parsed
+                $('#responseIsoParsed').html(""); // JSON.stringify(resultado.data.iso_parsed)
+                var jsonViewerIsoParsed = new JSONViewer();
+                document.querySelector("#responseIsoParsed").appendChild(jsonViewerIsoParsed .getContainer());
+                jsonViewerIsoParsed.showJSON(resultado.data.respuesta.iso_parsed, -1, 2);
+
+                // Iso Validation
+                $('#responseIsoValidation').html(""); // JSON.stringify(resultado.data.iso_validation)
+                var jsonViewerIsoValidation = new JSONViewer();
+                document.querySelector("#responseIsoValidation").appendChild(jsonViewerIsoValidation .getContainer());
+                jsonViewerIsoValidation.showJSON(resultado.data.respuesta.iso_validation, -1, 1);
+
+                // Botón de envío de datos
+                $('#enviarPrueba').removeClass("btn-primary btn-danger").addClass("btn-success");
+            })
+            .fail(function(response) {
+                $('#ventanaSpinnerModal').modal('hide');
+                console.log("Error on request");
+                var resultado = response.responseJSON;
+                console.log(resultado);
+                // Botón de envío de datos
+                $('#enviarPrueba').removeClass("btn-primary btn-success").addClass("btn-danger");
+                // Ventanas de resultados
+                $('#responseHex').html(resultado.error.message);
+                $('#responseString').html(window.atob(resultado.error.message));
+                $('#responsePeticion').html(resultado.error.message);
+                $('#responseIsoParsed').html(resultado.error.message);
+                $('#responseIsoValidation').html(resultado.error.message);
+            })
+            .always(function(resultado) {
+                //$('#result').html(data);
+                console.log("Ajax complete");
+                $('#ventanaSpinnerModal').modal('hide');
+                $("#enviarPrueba").prop('disabled', false);
+            });
+        });
+    </script>
+</body>
+</html>

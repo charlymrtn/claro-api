@@ -89,7 +89,7 @@ return [
                     'ip' => '127.0.0.1',
                     'puerto' => '8300',
                     'timeout' => 60,
-                    'verbose' => true,
+                    'verbose' => 'info', // emergency, alert, critical, error, warning, notice, info and debug
                 ],
                 // Servidor
                 'ip' => '127.0.0.1',
@@ -178,7 +178,7 @@ return [
                     'ip' => '127.0.0.1',
                     'puerto' => '8300',
                     'timeout' => 15,
-                    'verbose' => true,
+                    'verbose' => 'error',
                 ],
                 // Servidor
                 'ip' => '172.26.202.4',
@@ -234,7 +234,7 @@ return [
                     'ip' => '127.0.0.1',
                     'puerto' => '8300',
                     'timeout' => 15,
-                    'verbose' => false,
+                    'verbose' => 'error',
                 ],
                 // Servidor
                 'ip' => '127.0.0.1',
@@ -290,7 +290,7 @@ return [
                     'ip' => '127.0.0.1',
                     'puerto' => '8300',
                     'timeout' => 15,
-                    'verbose' => false,
+                    'verbose' => 'warning',
                 ],
                 // Servidor
                 'ip' => '127.0.0.1',
@@ -346,7 +346,7 @@ return [
                     'ip' => '127.0.0.1',
                     'puerto' => '8300',
                     'timeout' => 15,
-                    'verbose' => false,
+                    'verbose' => 'warning',
                 ],
                 // Servidor
                 'ip' => '172.26.202.4',

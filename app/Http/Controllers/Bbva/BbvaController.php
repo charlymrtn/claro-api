@@ -36,14 +36,26 @@ class BbvaController extends Controller
      */
     public function index(Request $oRequest)
     {
-        $sFunction = 'prueba' . $oRequest->prueba;
+        $sPrueba = $oRequest->input('prueba', '1');
+        $sTipo = $oRequest->input('tipo', 'envio_online');
+        // Prepara prueba
         $oBbvaTest = new BbvaTest();
-        echo "\n<br>Buscando {$sFunction}...";
-        if (method_exists($oBbvaTest, $sFunction)) {
-            echo "\n<br>Ejecutando {$sFunction}...";
-            $oResultado = $oBbvaTest->$sFunction();
-        } else {
-            echo "\n<br>Prueba no encontrada!";
+        try {
+            $oResultado = $oBbvaTest->pruebas($sPrueba, $sTipo);
+        } catch (\Exception $e) {
+            $iCode = $e->getCode();
+            if (empty($iCode)) {
+                $iCode = 520;
+            }
+            return ejsend_error(['code' => $iCode, 'type' => 'Sistema', 'message' => $e->getMessage()], $iCode);
+        }
+
+        if (in_array($sTipo, ['datos_json', 'envio_json'])) {
+            // Obtiene los datos a enviar de la prueba
+            return ejsend_success($oResultado);
+        } else if ($sTipo == 'envio_online') {
+            echo "\n<br>Ejecutando prueba {$sPrueba}...";
+            return $oResultado;
         }
     }
 

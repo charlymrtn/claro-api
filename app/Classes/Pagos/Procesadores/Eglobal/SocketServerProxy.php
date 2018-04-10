@@ -54,9 +54,9 @@ class SocketServerProxy implements MessageComponentInterface
     private $aClientesConectados;
 
     /*
-     * @var array $aClientesConectados Arreglo de datos de los clientes conectados
+     * @var array $aMensajesEviados Arreglo de mensajes enviados y los clientes correspondientes
      */
-    private $aClientesData;
+    private $aMensajesEviados;
 
     /*
      * @var resource $oEglobalCliente Stream resource del cliente del servidor Eglobal
@@ -203,8 +203,9 @@ class SocketServerProxy implements MessageComponentInterface
                 //$this->recibeEglobal(); // EGlobal no envía nada al realizar la conexión
                 // Envía mensaje de sign on
                 $oInterred = new BBVAInterred();
-                // Recibe mensaje de sign on
-                $this->enviaEglobal($oInterred->mensajeSignOn());
+                $this->enviaEglobal(null, 0, 0, $oInterred->mensajeSignOn());
+                // Recibe mensajes en el socket
+                $this->escuchaEglobal();
             }
         }
         // Regresa resultado de conexión
@@ -216,9 +217,9 @@ class SocketServerProxy implements MessageComponentInterface
      *
      * @param string $sMensaje Mensaje a enviar.
      *
-     * @return string Respuesta del mensaje.
+     * @return boolean Verificación del envío del mensaje.
      */
-    public function enviaEglobal(string $sMensaje)
+    private function enviaEglobal($from, string $sTrxId, string $sStan, string $sMensaje): bool
     {
         // Valida conexión
         if ($this->aStats['eglobal']['conectado'] == false) {
@@ -230,72 +231,76 @@ class SocketServerProxy implements MessageComponentInterface
         }
         // Envía mensaje
         try {
+            if (!empty($sStan) && !empty($sTrxId)) {
+                $this->aMensajesEviados[$sStan] = ['transaccion_id' => $sTrxId, 'stan' => $sStan, 'from' => $from, 'enviado' => null];
+            }
             $iMessageSize = strlen($sMensaje);
-            $this->loguea("  Enviando mensaje a eglobal (str): " . $sMensaje, 'debug', 'error');
+            $this->loguea("  Enviando mensaje a eglobal (str): " . $sMensaje, 'debug');
             $this->loguea("  Enviando mensaje a eglobal (hex): " . $this->ascii2hex($sMensaje), 'debug');
             // Procesa mensaje ISO
-            $oInterred = new BBVAInterred();
-            $aMensajeISO = $oInterred->procesaMensaje($sMensaje);
-            $this->loguea("  Enviando mensaje a eglobal (iso): " . json_encode($aMensajeISO['header']), 'debug');
-            $this->loguea("  Enviando mensaje a eglobal (iso): " . json_encode($aMensajeISO['iso_mti']), 'debug');
-            $this->loguea("  Enviando mensaje a eglobal (iso): " . json_encode($aMensajeISO['iso_parsed']), 'debug');
             $iMessageBytes = fwrite($this->oEglobalCliente, $sMensaje, $iMessageSize);
             if ($iMessageBytes === false || $iMessageBytes < $iMessageSize) {
-                $this->loguea("ERROR: Error al escribir en el socket de eglobal.", 'error');
-                $this->aStats['eglobal']['conectado'] = false;
-                throw new \Exception("ERROR: Error al escribir en el socket de eglobal.");
-                return false;
+                throw new \Exception("No se envió el mensaje completo: ({$iMessageBytes}) bytes de ({$iMessageSize})");
             } else {
+                $oNow = Carbon::now();
                 $this->aStats['eglobal']['transacciones'] += 1;
-                $this->aStats['eglobal']['ultima_transaccion'] = Carbon::now();
-                $this->loguea("      Mensaje enviado correctamente a eglobal. (Bytes enviados: {$iMessageBytes})", 'debug');
-                // Recibe respuesta
-                return $this->recibeEglobal();
+                $this->aStats['eglobal']['ultima_transaccion'] = $oNow;
+                $this->aMensajesEviados[$sStan]['enviado'] = $oNow;
+                $this->loguea("      Mensaje enviado correctamente a eglobal. (Bytes enviados: {$iMessageBytes})", 'info');
             }
+            unset($iMessageSize, $iMessageBytes);
         } catch (\Exception $e) {
-            $this->loguea("ERROR: Error al escribir en el socket de eglobal: " . $e->getMessage(), 'error');
+            $this->loguea("ERROR: Error al escribir en el socket de eglobal: " . $e->getMessage() . ' ' . $e->getLine(), 'error');
             $this->aStats['eglobal']['conectado'] = false;
             return false;
         }
+        return true;
     }
 
-    /**
-     * Recibe mensaje de eglobal.
-     *
-     * @return string Datos recibidos de eglobal..
-     */
-    public function recibeEglobal(): string
+    private function escuchaEglobal(): void
     {
         // Prepara variables
         $oTime = Carbon::now();
+        $bMensajes = true;
         // Recibe datos
         $this->loguea("      Esperando respuesta de eglobal...", 'debug');
-        while (empty($sMensaje)) {
+        while ($bMensajes) {
             usleep(10000);
-            $sMensaje = stream_get_contents($this->oEglobalCliente, 1024);
-            if ($oTime->diffInSeconds() > 10) {
-                break;
+            // Lee primeros dos bytes indicando el tamaño del mensaje
+            $sMensajeBytes = stream_get_contents($this->oEglobalCliente, 2);
+            if (!empty($sMensajeBytes)) {
+                $iMensajeBytes = hexdec($this->ascii2hex($sMensajeBytes)) - 2;
+                // Obtiene mensaje de tamaño $iMensajeBytes
+                $sMensaje = stream_get_contents($this->oEglobalCliente, $iMensajeBytes);
+                // Mensaje raw
+                $this->loguea("      Respuesta recibida (str): " . $sMensaje, 'debug');
+                $this->loguea("      Respuesta recibida (hex): " . $this->ascii2hex($sMensaje), 'debug');
+                // Revisa si el mensaje es un ISO Adecuado
+                if (substr($sMensaje, 0, 3) == 'ISO') {
+                    // Obtiene STAN
+                    $oRespuesta = new BBVAInterred();
+                    $aRespuestaMensajeISO = $oRespuesta->procesaMensaje($sMensajeBytes . $sMensaje);
+                    $sRespuestaStan = $aRespuestaMensajeISO['iso_parsed'][11];
+                    if (!empty($sRespuestaStan)) {
+                        $this->loguea("      Respuesta STAN: " . $sRespuestaStan, 'debug');
+                        // Envía respuesta a cliente conectado
+                        if (isset($this->aMensajesEviados[$sRespuestaStan]) && isset($this->aMensajesEviados[$sRespuestaStan]['from'])) {
+                            $this->sendMessage($this->aMensajesEviados[$sRespuestaStan]['from'], ['conexion' => 'success', 'encoding' => 'base64', 'respuesta' => base64_encode($sMensajeBytes . $sMensaje)]);
+                            // Mensaje enviado respondido, limpiando datos
+                            unset($this->aMensajesEviados[$sRespuestaStan]);
+                        } else {
+                            $this->loguea("      Mensaje interno descartado.", 'debug');
+                        }
+                    } else {
+                        $this->loguea("      Mensaje BBVA ISO inválido.", 'error');
+                    }
+                } else {
+                    $this->loguea("      Mensaje BBVA ISO inválido.", 'error');
+                }
+            } else {
+                $bMensajes = false;
             }
         }
-        // Mensaje raw
-        $this->loguea("      Respuesta recibida (str): " . $sMensaje, 'debug');
-        $this->loguea("      Respuesta recibida (hex): " . $this->ascii2hex($sMensaje), 'debug');
-        // Procesa mensaje
-        if (!empty($sMensaje)) {
-            try {
-                $oInterred = new BBVAInterred();
-                $aMensajeISO = $oInterred->procesaMensaje($sMensaje);
-                $this->loguea("      Respuesta recibida (iso): " . json_encode($aMensajeISO['header']), 'debug');
-                $this->loguea("      Respuesta recibida (iso): " . json_encode($aMensajeISO['iso_mti']), 'debug');
-                $this->loguea("      Respuesta recibida (iso): " . json_encode($aMensajeISO['iso_parsed']), 'debug');
-            } catch (\Exception $e) {
-                $this->loguea("ERROR: Error al parsear mensaje: " . $e->getMessage(), 'error');
-            }
-        } else {
-            $this->loguea("ERROR: Mensaje desconocido: " . $sMensaje, 'error');
-            $this->aStats['eglobal']['conectado'] = false;
-        }
-        return $sMensaje;
     }
 
     /**
@@ -305,26 +310,47 @@ class SocketServerProxy implements MessageComponentInterface
      * @param string $sVerboseLevel Nivel de verbose. ['emergency', 'alert', 'critical', 'error', 'warning', 'notice', 'info', 'debug']
      *
      */
-    private function loguea(string $sMensaje, string $sVerboseLevel = 'debug')
+    private function loguea(string $sMensaje, string $sVerboseLevel = 'debug'): void
     {
-        // Variables
-        $sTermResetTag = "\033[0m"; // Reset
-        // Verifica si se envía al STDOUT
-        if ($this->aConfig['proxy']['verbose']) {
-            if (in_array($sVerboseLevel, ['debug'])) {
-                $sTermTag = "";
-            } else if (in_array($sVerboseLevel, ['alert', 'warning'])) {
-                $sTermTag = "\033[01;93m"; // Yellow
-            } else if (in_array($sVerboseLevel, ['emergency', 'critical', 'error'])) {
-                $sTermTag = "\033[01;31m"; // Red
-            } else if (in_array($sVerboseLevel, ['notice', 'info'])) {
-                $sTermTag = "\033[01;36m"; // cyan
-            }
-            echo "   " . Carbon::now() . ' ' . $sTermTag . $sMensaje . $sTermResetTag . "\n";
+        // Valida nivel de logueo del mensaje
+        if (!in_array($sVerboseLevel, ['emergency', 'alert', 'critical', 'error', 'warning', 'notice', 'info', 'debug'])) {
+            $sVerboseLevel = 'info';
         }
         // Escribe log en log configurado en laravel
-        if (in_array($sVerboseLevel, ['emergency', 'alert', 'critical', 'error', 'warning', 'notice', 'info', 'debug'])) {
-            Log::$sVerboseLevel($sMensaje);
+        Log::$sVerboseLevel($sMensaje);
+        // Valida nivel de logueo a terminal del config
+        if (!in_array($this->aConfig['proxy']['verbose'], ['emergency', 'alert', 'critical', 'error', 'warning', 'notice', 'info', 'debug'])) {
+            $this->aConfig['proxy']['verbose'] = 'info';
+        }
+        // Variables
+        $sTTag = [
+            'reset' => "\033[0m", // Yellow
+            'alert' => "\033[01;93m", // Yellow
+            'warning' => "\033[01;93m", // Yellow
+            'emergency' => "\033[01;31m", // Red
+            'critical' => "\033[01;31m", // Red
+            'error' => "\033[01;31m", // Red
+            'notice' => "\033[01;36m", // Cyan
+            'info' => "\033[01;36m", // Cyan
+            'debug' => "", // Blank
+        ];
+        // Loguea en terminal
+        if ($sVerboseLevel == 'emergency' && in_array($this->aConfig['proxy']['verbose'], ['emergency'])) {
+            echo "   " . Carbon::now() . ' ' . $sTTag[$sVerboseLevel] . $sMensaje . $sTTag['reset'] . "\n";
+        } else if ($sVerboseLevel == 'alert' && in_array($this->aConfig['proxy']['verbose'], ['emergency', 'alert'])) {
+            echo "   " . Carbon::now() . ' ' . $sTTag[$sVerboseLevel] . $sMensaje . $sTTag['reset'] . "\n";
+        } else if ($sVerboseLevel == 'critical' && in_array($this->aConfig['proxy']['verbose'], ['emergency', 'alert', 'critical'])) {
+            echo "   " . Carbon::now() . ' ' . $sTTag[$sVerboseLevel] . $sMensaje . $sTTag['reset'] . "\n";
+        } else if ($sVerboseLevel == 'error' && in_array($this->aConfig['proxy']['verbose'], ['emergency', 'alert', 'critical', 'error'])) {
+            echo "   " . Carbon::now() . ' ' . $sTTag[$sVerboseLevel] . $sMensaje . $sTTag['reset'] . "\n";
+        } else if ($sVerboseLevel == 'warning' && in_array($this->aConfig['proxy']['verbose'], ['emergency', 'alert', 'critical', 'error', 'warning'])) {
+            echo "   " . Carbon::now() . ' ' . $sTTag[$sVerboseLevel] . $sMensaje . $sTTag['reset'] . "\n";
+        } else if ($sVerboseLevel == 'notice' && in_array($this->aConfig['proxy']['verbose'], ['emergency', 'alert', 'critical', 'error', 'warning', 'notice'])) {
+            echo "   " . Carbon::now() . ' ' . $sTTag[$sVerboseLevel] . $sMensaje . $sTTag['reset'] . "\n";
+        } else if ($sVerboseLevel == 'info' && in_array($this->aConfig['proxy']['verbose'], ['emergency', 'alert', 'critical', 'error', 'warning', 'notice', 'info'])) {
+            echo "   " . Carbon::now() . ' ' . $sTTag[$sVerboseLevel] . $sMensaje . $sTTag['reset'] . "\n";
+        } else if ($sVerboseLevel == 'debug' && in_array($this->aConfig['proxy']['verbose'], ['emergency', 'alert', 'critical', 'error', 'warning', 'notice', 'info', 'debug'])) {
+            echo "   " . Carbon::now() . ' ' . $sTTag[$sVerboseLevel] . $sMensaje . $sTTag['reset'] . "\n";
         }
     }
 
@@ -351,7 +377,7 @@ class SocketServerProxy implements MessageComponentInterface
         $this->aConfig = config('claropagos.' . $this->sEnv . '.procesadores_pago.eglobal');
         // Inicializa variables
         $this->aClientesConectados = [];
-        $this->aClientesData = [];
+        $this->aMensajesEviados = [];
         // Inicia arreglo de oConexiones
         $this->oConexiones = new \SplObjectStorage;
         // Guarda referencia a loop
@@ -381,7 +407,7 @@ class SocketServerProxy implements MessageComponentInterface
         // Agrega conección a storage
         $this->oConexiones->attach($conn);
         // Agrega conexión a clientes conectados
-        $this->aClientesConectados [$conn->resourceId] = $conn;
+        $this->aClientesConectados[$conn->resourceId] = $conn;
         // Envía a terminal mensaje de conexión nueva
         $this->loguea("Nuevo cliente conectado: {$conn->resourceId}", 'debug');
         // Envía mensaje de bienvenida
@@ -403,16 +429,20 @@ class SocketServerProxy implements MessageComponentInterface
         if ($jMensaje->accion == 'send') {
             // Revisa si el mensaje a enviar es un ISO Adecuado
             if (substr($jMensaje->mensaje, 2, 12) == 'ISO023400070') {
-                // Envía mensaje y espera respuesta
-                $sRespuestaEglobal = $this->enviaEglobal($jMensaje->mensaje);
-                // Regresa respuesta
-                $this->sendMessage($from, ['conexion' => 'success', 'encoding' => 'base64', 'respuesta' => base64_encode($sRespuestaEglobal)]);
+                // Envía mensaje
+                $bEnvioEglobal = $this->enviaEglobal($from, $jMensaje->transaccion_id, $jMensaje->stan, $jMensaje->mensaje);
+                // Regresa resultado de envío de mensaje
+                //$this->sendMessage($from, ['envio' => $bEnvioEglobal ? 'success' : 'fail', 'error' => $bEnvioEglobal ? '' : 'Conexión interrumpida']);
             } else {
-                $this->loguea("Mensaje BBVA ISO inválido.", 'error');
+                $this->loguea("Mensaje ISO inválido", 'error');
+                $this->sendMessage($from, ['envio' => 'fail', 'error' => 'Mensaje ISO inválido']);
             }
         } else {
             $this->loguea("Acción desconocida de {$conn->resourceId}:" . $jMensaje->accion, 'debug');
+            $this->sendMessage($from, ['envio' => 'fail', 'error' => "Acción {$jMensaje->accion} desconocida"]);
         }
+        // Recibe mensajes en el socket
+        $this->escuchaEglobal();
     }
 
     public function onClose(ConnectionInterface $conn)
@@ -421,8 +451,7 @@ class SocketServerProxy implements MessageComponentInterface
         $this->oConexiones->detach($conn);
         // Quita conección de clientes conectados
         unset($this->aClientesConectados[$conn->resourceId]);
-//        unset($this->aClientesData[$conn->resourceId]);
-        // Envía a terminal mensaje de cierre de conexión
+        // Enía a terminal mensaje de cierre de conexión
         $this->loguea("Cliente desconectado: {$conn->resourceId}", 'debug');
         #$this->loguea(json_encode($this->getEstadisticasProxy()), 'debug');
     }
@@ -436,9 +465,9 @@ class SocketServerProxy implements MessageComponentInterface
     /**
      * Envía mensaje de keepalive para eglobal.
      *
-     * @return string Respuesta del mensaje.
+     * @return bool Resultado del envío del mensaje.
      */
-    public function keepalive(): string
+    public function keepalive(): bool
     {
         // Valida conexión
         if ($this->aStats['eglobal']['conectado'] == false) {
@@ -450,9 +479,12 @@ class SocketServerProxy implements MessageComponentInterface
         if ($iUltimaTrx >= ($this->aConfig['keepalive'])) {
             $this->loguea("Enviando keepalive a eglobal.", 'debug');
             $oInterred = new BBVAInterred();
-            return $this->enviaEglobal($oInterred->mensajeEcho());
+            return $this->enviaEglobal(null, 0, 0, $oInterred->mensajeEcho());
         }
-        return '';
+        // Revisa si hay mensajes en el socket
+        $this->escuchaEglobal();
+        // Termina
+        return false;
     }
 
     // }}}
