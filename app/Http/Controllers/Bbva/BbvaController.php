@@ -47,7 +47,7 @@ class BbvaController extends Controller
             if (empty($iCode)) {
                 $iCode = 520;
             }
-            return ejsend_error(['code' => $iCode, 'type' => 'Sistema', 'message' => $e->getMessage()], $iCode);
+            return ejsend_error(['code' => $iCode, 'type' => 'Sistema', 'message' => $e->getMessage() . ' ' . $e->getLine()], $iCode);
         }
 
         if (in_array($sTipo, ['datos_json', 'envio_json'])) {

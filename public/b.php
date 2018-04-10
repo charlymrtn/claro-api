@@ -415,14 +415,16 @@ class InterredProxy
         if ($bEnvia) {
             $aResultadoEnvio = $this->enviaMensaje($oPeticionCargo->id, $sIso->getValue(11), $sMensaje, $bEcho);
             #dump($aResultadoEnvio);
-            $aResultado['respuesta'] = [
-                'mensaje_b64' => $aResultadoEnvio['respuesta']->respuesta,
-                'mensaje_hex' => $this->ascii2hex($aResultadoEnvio['respuesta']->respuesta),
-                'iso_header' => $aResultadoEnvio['respuesta_iso']['header'],
-                'iso_mti' => $aResultadoEnvio['respuesta_iso']['iso_mti'],
-                'iso_parsed' => $aResultadoEnvio['respuesta_iso']['iso_parsed'],
-                'iso_validation' => $aResultadoEnvio['respuesta_iso']['iso_validation'],
-            ];
+            if (!empty($aResultadoEnvio) && !empty($aResultadoEnvio['respuesta'])) {
+                $aResultado['respuesta'] = [
+                    'mensaje_b64' => $aResultadoEnvio['respuesta']->respuesta ?? 'ERROR',
+                    'mensaje_hex' => $this->ascii2hex($aResultadoEnvio['respuesta']->respuesta ?? 'ERROR'),
+                    'iso_header' => $aResultadoEnvio['respuesta_iso']['header'],
+                    'iso_mti' => $aResultadoEnvio['respuesta_iso']['iso_mti'],
+                    'iso_parsed' => $aResultadoEnvio['respuesta_iso']['iso_parsed'],
+                    'iso_validation' => $aResultadoEnvio['respuesta_iso']['iso_validation'],
+                ];
+            }
         }
         // Regresa resultado
         return (object) $aResultado;
