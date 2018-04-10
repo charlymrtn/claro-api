@@ -422,10 +422,6 @@ class SocketServerProxy implements MessageComponentInterface
         $jMensaje = json_decode($sMensaje);
         if (empty($jMensaje)) {
             $this->loguea("Mensaje desconocido de {$conn->resourceId}:" . $sMensaje, 'debug');
-        }        if ($oData->encoding == 'base64') {
-            $sRespuesta = base64_decode($oData->respuesta);
-        } else {
-            $sRespuesta = $oData->respuesta;
         }
         // Revisa encoding
         if ($jMensaje->encoding == 'base64') {
