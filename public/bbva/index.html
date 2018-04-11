@@ -42,21 +42,24 @@
                       <option disabled>VENTAS CON PROMOCION</option>
                       <option value="13">Prueba 13</option><option value="14">Prueba 14</option>
                       <option value="15">Prueba 15</option><option value="16">Prueba 16</option>
-                      <option value="17">Prueba 17</option><option value="18">Prueba 18</option>
-                      <option value="19">Prueba 19</option><option value="20">Prueba 20</option>
                       <option disabled>DEVOLUCIONES</option>
-                      <option value="21">Prueba 21</option><option value="22">Prueba 22</option>
-                      <option value="23">Prueba 23</option>
+                      <option value="17">Prueba 17</option><option value="18">Prueba 18</option>
+                      <option value="19">Prueba 19</option>
                       <option disabled>CANCELACIONES</option>
-                      <option value="24">Prueba 24</option><option value="25">Prueba 25</option>
-                      <option value="26">Prueba 26</option><option value="27">Prueba 27</option>
-                      <option value="28">Prueba 28</option><option value="29">Prueba 29</option>
+                      <option value="20">Prueba 20</option>
+                      <option value="21">Prueba 21</option>
+                      <option value="22">Prueba 22</option>
+                      <option value="23">Prueba 23</option>
+                      <option value="24">Prueba 24</option>
+                      <option value="25">Prueba 25</option>
                       <option disabled>REVERSOS AUTOMÁTICOS COMERCIO</option>
-                      <option value="30">Prueba 30</option><option value="31">Prueba 31</option>
-                      <option value="32">Prueba 32</option>
+                      <option value="26">Prueba 26</option>
+                      <option value="27">Prueba 27</option>
+                      <option value="28">Prueba 28</option>
                       <option disabled>REVERSOS AUTOMÁTICOS EG</option>
-                      <option value="33">Prueba 33</option><option value="34">Prueba 34</option>
-                      <option value="35">Prueba 35</option>
+                      <option value="29">Prueba 29</option>
+                      <option value="30">Prueba 30</option>
+                      <option value="31">Prueba 31</option>
                   </select>
                 </a>
               </li>
@@ -168,7 +171,109 @@
                     </ul>
                 </div>
             </div>
+
+            <div id="enviarSecundariaDiv" class="collapse">
+                <br><button id="enviarCancelacion" type="button" class="btn btn-primary">Enviar cancelación</button>
+            </div>
+
             <hr><br>
+
+            <div id="transaccionSecundaria" class="collapse">
+                <h5 class="h5">Transacción secundaria</h5>
+
+                <ul class="nav nav-tabs">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-toggle="tab" href="#secondaryReqIsoParsed">ISO Req</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-toggle="tab" href="#secondaryReqIsoValidation">ISO Req Val</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-toggle="tab" href="#secondaryReqHex">Hex Req</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-toggle="tab" href="#secondaryReqString">String Req</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-toggle="tab" href="#secondaryReqPeticion">Petición</a>
+                    </li>
+
+
+                    <li class="nav-item">
+                        <a class="nav-link active" data-toggle="tab" href="#secondaryRespIsoParsed">ISO Resp</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-toggle="tab" href="#secondaryRespIsoValidation">ISO Resp Val</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-toggle="tab" href="#secondaryRespHex">Hex Resp</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-toggle="tab" href="#secondaryRespString">String Resp</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-toggle="tab" href="#secondaryRespPeticion">Respuesta</a>
+                    </li>
+                </ul>
+                <div class="tab-content">
+                    <div role="tabpanel" class="tab-pane active" id="secondaryReqIsoParsed">
+                        <ul class="list-group media-list media-list-stream">
+                            <br><div id="secondaryReqIsoParsed">Datos no enviados</div>
+                        </ul>
+                    </div>
+                    <div role="tabpanel" class="tab-pane fade in" id="secondaryReqIsoValidation">
+                        <ul class="list-group media-list media-list-stream">
+                            <br><div id="secondaryReqIsoValidation">Datos no enviados</div>
+                        </ul>
+                    </div>
+                    <div role="tabpanel" class="tab-pane fade in" id="secondaryReqHex">
+                        <ul class="list-group media-list media-list-stream">
+                            <br><div id="secondaryReqHex">Datos no enviados</div>
+                        </ul>
+                    </div>
+                     <div role="tabpanel" class="tab-pane fade in" id="secondaryReqString">
+                        <ul class="list-group media-list media-list-stream">
+                            <br><div id="secondaryReqString">Datos no enviados</div>
+                        </ul>
+                    </div>
+                     <div role="tabpanel" class="tab-pane fade in" id="secondaryReqPeticion">
+                        <ul class="list-group media-list media-list-stream">
+                            <br><div id="secondaryReqPeticion">Datos no enviados</div>
+                        </ul>
+                    </div>
+
+
+                    <div role="tabpanel" class="tab-pane fade in" id="secondaryRespIsoParsed">
+                        <ul class="list-group media-list media-list-stream">
+                            <br><div id="secondaryRespIsoParsed">Datos no enviados</div>
+                        </ul>
+                    </div>
+                    <div role="tabpanel" class="tab-pane fade in" id="secondaryRespIsoValidation">
+                        <ul class="list-group media-list media-list-stream">
+                            <br><div id="secondaryRespIsoValidation">Datos no enviados</div>
+                        </ul>
+                    </div>
+                    <div role="tabpanel" class="tab-pane fade in" id="secondaryRespHex">
+                        <ul class="list-group media-list media-list-stream">
+                            <br><div id="secondaryRespHex">Datos no enviados</div>
+                        </ul>
+                    </div>
+                     <div role="tabpanel" class="tab-pane fade in" id="secondaryRespString">
+                        <ul class="list-group media-list media-list-stream">
+                            <br><div id="secondaryRespString">Datos no enviados</div>
+                        </ul>
+                    </div>
+                     <div role="tabpanel" class="tab-pane fade in" id="secondaryRespPeticion">
+                        <ul class="list-group media-list media-list-stream">
+                            <br><div id="secondaryRespPeticion">Datos no enviados</div>
+                        </ul>
+                    </div>
+                </div>
+
+            <hr><br>
+            </div>
+
+
         </main>
       </div>
     </div>
@@ -184,7 +289,7 @@
 				</div>
 				<div class="modal-body text-center">
 					<span class="fa fa-spinner fa-spin fa-3x"></span>
-					Espere por favor...
+					<br>Espere por favor...
 				</div>
 			</div>
 		</div>
@@ -302,6 +407,10 @@
 
                 // Botón de envío de datos
                 $('#enviarPrueba').removeClass("btn-primary btn-danger").addClass("btn-success");
+
+                // Muestra botones de transacciones scundarias
+                //$('#enviarSecundariaDiv').show();
+
             })
             .fail(function(response) {
                 $('#ventanaSpinnerModal').modal('hide');

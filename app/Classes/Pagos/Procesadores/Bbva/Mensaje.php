@@ -303,7 +303,6 @@ class Mensaje extends iso8583_1987
             // 16 = Consulta de Puntos
             $sResultado .= '16';
         } else if (in_array($aData['tipo'], ['puntos_compra', 'puntos_reverso'])) {
-        } else if ($aData['tipo'] == 'puntos_compra') {
             // 18 = Compra con Puntos
             $sResultado .= '18';
         } else if ($aData['tipo'] == 'dineromovil') {
