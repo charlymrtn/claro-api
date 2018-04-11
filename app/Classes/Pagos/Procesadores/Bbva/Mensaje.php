@@ -634,7 +634,7 @@ class Mensaje extends iso8583_1987
 		}
 
         // 04
-        if (!empty($aTipo['tipo']) && $aTipo['tipo'] == 'devolucion') {
+        if (!empty($aTipo['tipo']) && in_array($aTipo['tipo'], ['devolucion', 'cancelacion', 'reverso', 'puntos_cancelacion', 'cancelacion_cash_back', 'cancelacion_cash_advance', 'cancelacion_pago_finanzia'])) {
             // No lleva campo 04
         } else {
             $iTokens += 1;
@@ -642,7 +642,7 @@ class Mensaje extends iso8583_1987
         }
 
         // C0
-        if (!empty($aTipo['tipo']) && $aTipo['tipo'] == 'devolucion') {
+        if (!empty($aTipo['tipo']) && in_array($aTipo['tipo'], ['devolucion', 'cancelacion', 'reverso', 'puntos_cancelacion', 'cancelacion_cash_back', 'cancelacion_cash_advance', 'cancelacion_pago_finanzia'])) {
             // No lleva campo C0
         } else {
             $iTokens += 1;
