@@ -634,7 +634,7 @@ class Mensaje extends iso8583_1987
 		}
 
         // 04
-        if (!empty($aTipo['tipo']) && in_array($aTipo['tipo'], ['devolucion', 'cancelacion', 'reverso', 'puntos_cancelacion', 'cancelacion_cash_back', 'cancelacion_cash_advance', 'cancelacion_pago_finanzia'])) {
+        if (!empty($aTipo['tipo']) && in_array($aTipo['tipo'], ['devolucion', 'cancelacion', 'puntos_cancelacion', 'cancelacion_cash_back', 'cancelacion_cash_advance', 'cancelacion_pago_finanzia'])) {
             // No lleva campo 04
         } else {
             $iTokens += 1;
@@ -642,7 +642,7 @@ class Mensaje extends iso8583_1987
         }
 
         // C0
-        if (!empty($aTipo['tipo']) && in_array($aTipo['tipo'], ['devolucion', 'cancelacion', 'reverso', 'puntos_cancelacion', 'cancelacion_cash_back', 'cancelacion_cash_advance', 'cancelacion_pago_finanzia'])) {
+        if (!empty($aTipo['tipo']) && in_array($aTipo['tipo'], ['devolucion', 'cancelacion', 'puntos_cancelacion', 'cancelacion_cash_back', 'cancelacion_cash_advance', 'cancelacion_pago_finanzia'])) {
             // No lleva campo C0
         } else {
             $iTokens += 1;
@@ -851,7 +851,7 @@ class Mensaje extends iso8583_1987
         // 1-4  Id de mensaje ISO de la transacción original
         $sResultado .= $aData['mti_original'];
         // 5-16  Retrieval reference number de la transacción original (C37)
-        $sResultado .= $aData['referencia'];
+        $sResultado .= $aData['referencia'] ?? '000000000000';
         // 17-20  Fecha local de la transacción original (C13)
         $sResultado .= $aData['fecha_original'];
         // 21-26  Hora local de la transacción original (C12)
