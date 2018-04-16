@@ -497,47 +497,47 @@ class iso8583_1987
         switch($aDataElementDefinition['type']) {
             case "n": // Caracteres numéricos
                 if (!is_numeric($data)) {
-                    throw new \Exception("Tipo de campo {$aDataElementDefinition['type']} inválido.");
+                    throw new \Exception("Tipo de campo n '{$aDataElementDefinition['type']}' inválido: '" . $data . "'");
                 }
                 break;
             case "a": // Caracteres alfabéticos
                 if (!ctype_alpha($data)) {
-                    throw new \Exception("Tipo de campo {$aDataElementDefinition['type']} inválido.");
+                    throw new \Exception("Tipo de campo a '{$aDataElementDefinition['type']}' inválido: '" . $data . "'");
                 }
                 break;
             case "an": // Caracteres alfabéticos y/o numéricos
                 if (!ctype_alnum($data)) {
-                    throw new \Exception("Tipo de campo {$aDataElementDefinition['type']} inválido.");
+                    throw new \Exception("Tipo de campo an '{$aDataElementDefinition['type']}' inválido: '" . $data . "'");
                 }
                 break;
             case "anp": // Caracteres alfabéticos, numéricos y espacios
                 if(!preg_match('!^[0-9A-Za-z ]*$!', $data)) {
-                    throw new \Exception("Tipo de campo {$aDataElementDefinition['type']} inválido.");
+                    throw new \Exception("Tipo de campo anp '{$aDataElementDefinition['type']}' inválido: '" . $data . "'");
                 }
                 break;
             case "as": // Caracteres alfabéticos y/o especiales
                 if(!$this->_validateAsciiChars($data, $this->SPECIAL_CHARS_AS)) {
-                    throw new \Exception("Tipo de campo as {$aDataElementDefinition['type']} inválido: '" . $data . "'");
+                    throw new \Exception("Tipo de campo as '{$aDataElementDefinition['type']}' inválido: '" . $data . "'");
                 }
                 break;
             case "ansb": // Caracteres alfabéticos, numéricos y/o especiales, binarios
                 if(!$this->_validateAsciiChars($data, $this->SPECIAL_CHARS_ANSB)) {
-                    throw new \Exception("Tipo de campo ans {$aDataElementDefinition['type']} inválido: '" . $data . "'");
+                    throw new \Exception("Tipo de campo ans '{$aDataElementDefinition['type']}' inválido: '" . $data . "'");
                 }
                 break;
             case "ans": // Caracteres alfabéticos, numéricos y/o especiales
                 if(!$this->_validateAsciiChars($data, $this->SPECIAL_CHARS_ANS)) {
-                    throw new \Exception("Tipo de campo ans {$aDataElementDefinition['type']} inválido: '" . $data . "'");
+                    throw new \Exception("Tipo de campo ans '{$aDataElementDefinition['type']}' inválido: '" . $data . "'");
                 }
                 break;
             case "s": // Caracteres especiales (ASCII character set 32 - 126)
                 if(!$this->_validateAsciiChars($data, $this->SPECIAL_CHARS_S)) {
-                    throw new \Exception("Tipo de campo s {$aDataElementDefinition['type']} inválido: '" . $data . "'");
+                    throw new \Exception("Tipo de campo s '{$aDataElementDefinition['type']}' inválido: '" . $data . "'");
                 }
                 break;
             case "ns": // Caracteres numéricos y/o especiales
                 if(!$this->_validateAsciiChars($data, $this->SPECIAL_CHARS_NS)) {
-                    throw new \Exception("Tipo de campo {$aDataElementDefinition['type']} inválido: '" . $data . "'");
+                    throw new \Exception("Tipo de campo '{$aDataElementDefinition['type']}' inválido: '" . $data . "'");
                 }
                 break;
             case "b": // Binario

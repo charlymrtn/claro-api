@@ -130,7 +130,7 @@ class Mensaje extends iso8583_1987
             ],
         ],
         37 =>  [],
-        38 =>  ['format' => ['pad_type' => 'right', 'pad_string' => '0']],
+        38 =>  ['type' => 'anp', 'format' => ['pad_type' => 'right', 'pad_string' => '0']],
         39 =>  [
             'values' => [
                 '00' => ['usage' => 'Aprobada'],

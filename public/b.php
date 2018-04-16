@@ -246,7 +246,24 @@ class BbvaTest
             $this->oPeticionCargo->parcialidades = 6;
             $this->oPeticionCargo->plan = 'msi';
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' REVERSOS AUTOMÁTICOS COMERCIO - Venta 6 MSI';
-            $aOpciones = ['tipo' => 'puntos_compra'];
+            $aOpciones = ['tipo' => 'puntos_compra', 'tipo_original' => 'puntos_compra'];
+        } else if ($sPrueba == '28') {
+            $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
+            $this->oPeticionCargo->monto = 761;
+            $this->oPeticionCargo->puntos = 761;
+            $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' REVERSOS AUTOMÁTICOS COMERCIO - Venta con Puntos';
+            $aOpciones = ['tipo' => 'puntos_compra', 'tipo_original' => 'puntos_compra'];
+        } else if ($sPrueba == '29') {
+            $this->oPeticionCargo->tarjeta = $this->oTarjetaDebito1;
+            $this->oPeticionCargo->monto = 2128.00;
+            $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . '  REVERSOS AUTOMÁTICOS EG - Venta normal';
+            $aOpciones = ['tipo' => 'compra', 'tipo_original' => 'compra'];
+        } else if ($sPrueba == '30') {
+            $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
+            $this->oPeticionCargo->monto =  1207.00 ;
+            $this->oPeticionCargo->puntos = 1207.00;
+            $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' REVERSOS AUTOMÁTICOS EG - Venta con Puntos';
+            $aOpciones = ['tipo' => 'puntos_compra', 'tipo_original' => 'puntos_compra'];
         } else {
             throw new \Exception("Prueba no encontrada", 404);
         }
@@ -298,10 +315,11 @@ class BbvaTest
         }
 
         // Pruebas de reverso
-        if (in_array($sPrueba, ['26', '27'])) {
+        if (in_array($sPrueba, ['26', '27', '28', '29', '30', '31'])) {
             $this->oPeticionCargo->descripcion = $this->oPeticionCargo->descripcion . ' - Reverso Automático';
             $aOpcionesReverso = [
                 'tipo' => 'reverso',
+                'tipo_original' => $aOpciones['tipo'] ?? 'puntos_compra',
                 'mti_original' => $aResultado['peticion']['iso_mti'], // ?  Id de mensaje ISO de la transacción original
                 'referencia' => $aResultado['peticion']['iso_parsed']['37'], // Campo 37
                 'autorizacion' => $aResultado['respuesta']['iso_parsed']['38'] ?? '      ', // Campo 38 de la respuesta
@@ -320,7 +338,7 @@ class BbvaTest
                 ];
             }
             // Prepara mensaje reverso y envía
-            $oResultadoReversoRet = $oInterredProxyReverso->mensajeReverso($this->oPeticionCargo, $aOpcionesReverso, true, $bEcho);
+            $oResultadoReversoRet = $oInterredProxyReverso->mensajeReenvioReverso($this->oPeticionCargo, $aOpcionesReverso, true, $bEcho);
             if (isset($oResultadoReversoRet->respuesta)) {
                 $aResultado['reverso_reenvio'] = $oResultadoReversoRet->respuesta;
             }
@@ -498,7 +516,7 @@ class InterredProxy
         $oMensaje->setData(32, '12'); // Acquiring Institution Identification Code
         $oMensaje->setData(35, $oMensaje->formateaCampo35($oPeticionCargo->tarjeta)); // Track 2 Data
         $oMensaje->setData(37, $aTipo['referencia']); // Retrieval Reference Number
-        $oMensaje->setData(38, $aTipo['autorizacion']); // Authorization Identification Response
+        $oMensaje->setData(38, $aTipo['autorizacion'] ?? '000000'); // Authorization Identification Response
         $oMensaje->setData(39, $oMensaje->formateaCampo39($aTipo['cancelacion_motivo'] ?? 'cancelacion')); // Motivo cancelación
         $oMensaje->setData(41, '0000CP01        '); // Card Acceptor Terminal Identification
         $oMensaje->setData(48, '5462742            00000000'); // Additional DataRetailer Data - Define la afiliación del Establecimiento
@@ -529,12 +547,12 @@ class InterredProxy
         return $oMensaje;
     }
 
-    private function isoTipoReverso(PeticionCargo $oPeticionCargo, array $aTipo = [], $bEcho = false)
+    private function isoTipoReverso(PeticionCargo $oPeticionCargo, array $aOpciones = [], $bEcho = false)
     {
         // Define campos
         $oMensaje = new Mensaje();
         $oMensaje->setMTI('0420');
-        $oMensaje->setData(3, $oMensaje->formateaCampo3($aTipo)); // Processing Code
+        $oMensaje->setData(3, $oMensaje->formateaCampo3(['tipo' => $aOpciones['tipo_original'] ?? 'puntos_compra'])); // Processing Code
         $oMensaje->setData(4, $oMensaje->formateaCampo4($oPeticionCargo->monto)); // Transaction Amount - Monto de la transacción con centavos
         $oMensaje->setData(7, gmdate('mdHis')); // Date & time
         $oMensaje->setData(11, $oMensaje->generateSystemsTraceAuditNumber()); // Systems Trace Audit Number
@@ -550,14 +568,14 @@ class InterredProxy
         }
         $oMensaje->setData(32, '12'); // Acquiring Institution Identification Code
         $oMensaje->setData(35, $oMensaje->formateaCampo35($oPeticionCargo->tarjeta)); // Track 2 Data
-        $oMensaje->setData(37, $aTipo['referencia']); // Retrieval Reference Number
-        $oMensaje->setData(38, $aTipo['autorizacion']); // Authorization Identification Response
-        $oMensaje->setData(39, $oMensaje->formateaCampo39($aTipo['cancelacion_motivo'] ?? 'timeout')); // Motivo cancelación
+        $oMensaje->setData(37, $aOpciones['referencia']); // Retrieval Reference Number
+        $oMensaje->setData(38, $aOpciones['autorizacion'] ?? '000000'); // Authorization Identification Response
+        $oMensaje->setData(39, $oMensaje->formateaCampo39($aOpciones['cancelacion_motivo'] ?? 'timeout')); // Motivo cancelación
         $oMensaje->setData(41, '0000CP01        '); // Card Acceptor Terminal Identification
         $oMensaje->setData(48, '5462742            00000000'); // Additional DataRetailer Data - Define la afiliación del Establecimiento
         $oMensaje->setData(49, '484'); // Transaction Currency Code.
         #$oMensaje->setData(54, '000000000000')); // Additional Amounts - Monto del cash advance/back con centavos NO IMPLEMENTAOD
-        if (isset($aTipo['cancelacion_motivo']) && $aTipo['cancelacion_motivo'] == 'emv_fail') {
+        if (isset($aOpciones['cancelacion_motivo']) && $aOpciones['cancelacion_motivo'] == 'emv_fail') {
             $oMensaje->setData(55, ''); // NO IMPLEMENTAOD
         }
         #$oMensaje->setData(59, ''); // NO IMPLEMENTAOD
@@ -572,8 +590,8 @@ class InterredProxy
                 'parcialidades' => $oPeticionCargo->parcialidades,
                 'diferimiento' => $oPeticionCargo->diferido,
                 'plan' => $oPeticionCargo->plan,
-            ], $aTipo)); // POS Additional Data
-        $oMensaje->setData(90, $oMensaje->formateaCampo90($aTipo)); // Motivo cancelación
+            ], $aOpciones)); // POS Additional Data
+        $oMensaje->setData(90, $oMensaje->formateaCampo90($aOpciones)); // Motivo cancelación
         #$oMensaje->setData(103, ''); //
         if ($bEcho) {
             echo "<pre>" . print_r($oMensaje->getDataArray(), true) . "</pre>";
@@ -582,6 +600,18 @@ class InterredProxy
         return $oMensaje;
     }
 
+    private function isoTipoReenvioReverso(PeticionCargo $oPeticionCargo, array $aOpciones = [], $bEcho = false)
+    {
+        $oMensaje = $this->isoTipoReverso($oPeticionCargo, $aOpciones, $bEcho);
+        // Define campos
+        $oMensaje->setMTI('0421');
+        // Debug
+        if ($bEcho) {
+            echo "<pre>" . print_r($oMensaje->getDataArray(), true) . "</pre>";
+        }
+        // Regresa mensaje
+        return $oMensaje;
+    }
 
     // ********************************************************************************************************************
 
@@ -622,7 +652,7 @@ class InterredProxy
     public function mensajeCancelacion(PeticionCargo $oPeticionCargo, array $aOpciones = [], $bEnvia = false, $bEcho = false)
     {
         if ($bEcho) {
-            echo "<br>Preparando mensaje de Venta...";
+            echo "<br>Preparando mensaje de Cancelación...";
         }
         // Actualiza opciones con default
         $aOpciones = array_merge(['tipo' => 'puntos_compra'], $aOpciones);
@@ -656,7 +686,7 @@ class InterredProxy
     public function mensajeReverso(PeticionCargo $oPeticionCargo, array $aOpciones = [], $bEnvia = false, $bEcho = false)
     {
         if ($bEcho) {
-            echo "<br>Preparando mensaje de Venta...";
+            echo "<br>Preparando mensaje de Reverso...";
         }
         // Actualiza opciones con default
         $aOpciones = array_merge(['tipo' => 'puntos_compra'], $aOpciones);
@@ -686,6 +716,41 @@ class InterredProxy
         // Regresa resultado
         return (object) $aResultado;
     }
+
+    public function mensajeReenvioReverso(PeticionCargo $oPeticionCargo, array $aOpciones = [], $bEnvia = false, $bEcho = false)
+    {
+        if ($bEcho) {
+            echo "<br>Preparando mensaje de Reenvío de Reverso...";
+        }
+        // Actualiza opciones con default
+        $aOpciones = array_merge(['tipo' => 'puntos_compra'], $aOpciones);
+        // Define campos
+        $sIso = $this->isoTipoReenvioReverso($oPeticionCargo, $aOpciones, $bEcho);
+        $sMensaje = $this->preparaMensaje($sIso->getISO(false), $bEcho);
+        // Evalua retorno
+        $aResultado = [
+            'mensaje' => $sMensaje,
+            'mensaje_hex' => $this->ascii2hex($sMensaje),
+            'iso' => $sIso,
+        ];
+        if ($bEnvia) {
+            $aResultadoEnvio = $this->enviaMensaje($oPeticionCargo->id, $sIso->getValue(11), $sMensaje, $bEcho);
+            #dump($aResultadoEnvio);
+            if (!empty($aResultadoEnvio) && !empty($aResultadoEnvio['respuesta'])) {
+                $aResultado['respuesta'] = [
+                    'mensaje_b64' => $aResultadoEnvio['respuesta']->respuesta ?? 'ERROR',
+                    'mensaje_hex' => $this->ascii2hex($aResultadoEnvio['respuesta']->respuesta ?? 'ERROR'),
+                    'iso_header' => $aResultadoEnvio['respuesta_iso']['header'],
+                    'iso_mti' => $aResultadoEnvio['respuesta_iso']['iso_mti'],
+                    'iso_parsed' => $aResultadoEnvio['respuesta_iso']['iso_parsed'],
+                    'iso_validation' => $aResultadoEnvio['respuesta_iso']['iso_validation'],
+                ];
+            }
+        }
+        // Regresa resultado
+        return (object) $aResultado;
+    }
+
 
     public function enviaMensaje(string $sId, string $sStan, string $sMensaje, $bEcho = false): array
     {
@@ -810,9 +875,9 @@ class InterredProxy
             }
         } catch (\Exception $e) {
             if ($bEcho) {
-                echo "<br>Error: " . $e->getMessage() . ". Línea " . $e->getLine();;
+                echo "<br>Error: " . $e->getMessage() . ". Archivo: " . $e->getFile() . " Línea " . $e->getLine();
             }
-            $aResponseResult['status_message'] = $e->getMessage() . ". Línea " . $e->getLine();
+            $aResponseResult['status_message'] = $e->getMessage() . ". Archivo: " . $e->getFile() . " Línea " . $e->getLine();
             $aResponseResult['status_code'] = $e->getCode();
             return $aResponseResult;
         }
