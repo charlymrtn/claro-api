@@ -520,18 +520,41 @@ class Mensaje extends iso8583_1987
      */
     public function formateaCampo58(array $aData): string
     {
+        // Define variables
+        $sMti = $aData['mti'] ?? '0200';
         $sResultado = '';
-        // 16 Número impredecible
-        $sResultado .= $aData['numero'] ?? '2020202020202020';
+
+        // Formatea campo
+
+        if ($sMti == '0200') {
+            // 16 Número impredecible
+            $sResultado .= $aData['numero'] ?? '2020202020202020';
+        }
+
         // 12 Importe en pesos
         // Venta con Redención de Puntos Se enviará el total del importe en pesos de la venta. En la respuesta, el host enviará sólo el importe en pesos realmente redimidos.
         // Venta Normal con Bin Presente en Tabla de Lealtad y Consulta de Puntos Se enviará el importe en ceros. En la respuesta, la información en este campo no es relevante
         $sResultado .= sprintf("%012s", $aData['importe_total'] ?? '0');
+
         // 10 Número de puntos. Se enviará el número de puntos en cero. En la respuesta se regresará el número de puntos redimidos. Aplica para TDC y TDD
         $sResultado .= sprintf("%010s", $aData['importe_puntos'] ?? '0');
-        // 02 Tipo POS. 00 -> POS No tiene la funcionalidad de VB, 01 -> POS tiene la funcionalidad de VB
-        $sResultado .= $aData['pos_vb'] ?? '00';
 
+        if ($sMti == '0200') {
+            // 02 Tipo POS. 00 -> POS No tiene la funcionalidad de VB, 01 -> POS tiene la funcionalidad de VB
+            $sResultado .= $aData['pos_vb'] ?? '00';
+        }
+
+        if ($sMti == '0210') {
+            // 02 -> Factor de exponenciación. Valores: 00, 01, 02, 03, 04
+            $sResultado .= $aData['exponenciacion'] ?? '00';
+            // 12 -> Saldo disponible en pesos
+            $sResultado .= sprintf("%012s", $aData['saldo_disponible_pesos'] ?? '0');
+            // 10 -> Saldo anterior en puntos
+            $sResultado .= sprintf("%010s", $aData['saldo_anterior_puntos'] ?? '0');
+            // 12 -> Saldo anterior en puntos
+            $sResultado .= sprintf("%012s", $aData['saldo_anterior_pesos'] ?? '0');
+            // @todo: Agregar campos restantes a respuesta
+        }
         return $sResultado;
     }
 
@@ -577,13 +600,19 @@ class Mensaje extends iso8583_1987
         // 5 Transacción forzada o de ajuste, 0220/0221.
         // 9 Situación desconocida.
         if (empty($aData['autorizacion_modo'])) {
-            $sResultado .= '9 ';
+            $sResultado .= '9';
         } else if ($aData['autorizacion_modo'] == 'offline') {
-            $sResultado .= '4 ';
+            $sResultado .= '4';
         } else if ($aData['autorizacion_modo'] == 'forzado' || $aData['mti'] == '0220') {
-            $sResultado .= '5 ';
+            $sResultado .= '5';
         } else if ($aData['autorizacion_modo'] == 'desconocido') {
-            $sResultado .= '9 ';
+            $sResultado .= '9';
+        }
+        // Separador 3
+        if ($aData['mti'] == '0430') {
+            $sResultado .= '0';
+        } else {
+            $sResultado .= ' ';
         }
 
         // Q2

@@ -38,10 +38,13 @@ class BbvaController extends Controller
     {
         $sPrueba = $oRequest->input('prueba', '1');
         $sTipo = $oRequest->input('tipo', 'envio_online');
+        $sAccion = $oRequest->input('accion', 'prueba');
+        $sTrxReq = base64_decode(urldecode($oRequest->input('trx_request', null)));
+        $sTrxResp = base64_decode(urldecode($oRequest->input('trx_response', null)));
         // Prepara prueba
         $oBbvaTest = new BbvaTest();
         try {
-            $oResultado = $oBbvaTest->pruebas($sPrueba, $sTipo);
+            $oResultado = $oBbvaTest->pruebas($sPrueba, $sTipo, $sAccion, $sTrxReq, $sTrxResp);
         } catch (\Exception $e) {
             $iCode = $e->getCode();
             if (empty($iCode)) {

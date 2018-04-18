@@ -63,10 +63,6 @@ class CargoController extends Controller
     public function store(Request $oRequest)
     {
 
-        /**
-         * @todo: IMPORTANTE: Versión para demo, cambiar pasando el demo!
-         */
-
          // Valida datos de entrada
         $oValidator = Validator::make($oRequest->toArray(), [
             'prueba' => 'boolean',
@@ -208,6 +204,12 @@ class CargoController extends Controller
             Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ':' . $e->getMessage());
             return ejsend_fail(['code' => $sCode, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], $sCode, ['errors' => $e->getMessage()]);
         }
+
+        
+        /**
+         * @todo: IMPORTANTE: Versión para demo, cambiar pasando el demo!
+         */
+
 
         // @todo: Cambiar Procesadores\Amex\InternetDirect por Procesadores\sProcesadorAmex
 

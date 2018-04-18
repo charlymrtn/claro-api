@@ -179,7 +179,7 @@
             <hr><br>
 
             <div id="transaccionSecundaria" class="collapse">
-                <h5 class="h5">Transacción secundaria</h5>
+                <h5 class="h5">Cancelación</h5>
 
                 <ul class="nav nav-tabs">
                     <li class="nav-item">
@@ -200,7 +200,7 @@
 
 
                     <li class="nav-item">
-                        <a class="nav-link active" data-toggle="tab" href="#secondaryRespIsoParsed">ISO Resp</a>
+                        <a class="nav-link" data-toggle="tab" href="#secondaryRespIsoParsed">ISO Resp</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" data-toggle="tab" href="#secondaryRespIsoValidation">ISO Resp Val</a>
@@ -307,6 +307,9 @@
 
 
     <script>
+        var sResultadoTrxB64 = '';
+        var sRequestTrxB64 = '';
+
         $("#selectPruebas").change(function( event ) {
             $('#pruebaModalLabel').html('Obteniendo datos de la prueba');
             $('#ventanaSpinnerModal').modal('show');
@@ -381,24 +384,45 @@
                 'json'
             )
             .done(function(resultado) {
+                $("#enviarPrueba").prop('disabled', false);
                 $('#ventanaSpinnerModal').modal('hide');
                 console.log("Displaying data");
                 console.log(resultado);
+                // PETICION
+                $('#pruebaHex').html(resultado.data.peticion.mensaje_hex);
+                $('#pruebaString').html(window.atob(resultado.data.peticion.mensaje_b64));
+                sRequestTrxB64 = resultado.data.peticion.mensaje_b64;
+                $('#pruebaTitle').html(resultado.data.peticion.mensaje_json.descripcion);
+                // Json
+                $('#pruebaPeticion').html(""); // JSON.stringify(resultado.data.peticion.mensaje_json)
+                var jsonViewerPeticion = new JSONViewer();
+                document.querySelector("#pruebaPeticion").appendChild(jsonViewerPeticion .getContainer());
+                jsonViewerPeticion.showJSON(resultado.data.peticion.mensaje_json, -1, 2);
+                // Iso Parsed
+                $('#pruebaIsoParsed').html(""); // JSON.stringify(resultado.data.peticion.iso_parsed)
+                var jsonViewerIsoParsed = new JSONViewer();
+                document.querySelector("#pruebaIsoParsed").appendChild(jsonViewerIsoParsed .getContainer());
+                jsonViewerIsoParsed.showJSON(resultado.data.peticion.iso_parsed, -1, 2);
+                // Iso Validation
+                $('#pruebaIsoValidation').html(""); // JSON.stringify(resultado.data.peticion.iso_validation)
+                var jsonViewerIsoValidation = new JSONViewer();
+                document.querySelector("#pruebaIsoValidation").appendChild(jsonViewerIsoValidation .getContainer());
+                jsonViewerIsoValidation.showJSON(resultado.data.peticion.iso_validation, -1, 1);
+
+                // RESPUESTA
                 $('#responseHex').html(resultado.data.respuesta.mensaje_hex);
                 $('#responseString').html(window.atob(resultado.data.respuesta.mensaje_b64));
-
-                // Petición
+                sResultadoTrxB64 = resultado.data.respuesta.mensaje_b64;
+                // Json
                 $('#responsePeticion').html(""); // JSON.stringify(resultado.data.peticion)
                 var jsonViewerPeticion = new JSONViewer();
                 document.querySelector("#responsePeticion").appendChild(jsonViewerPeticion .getContainer());
                 jsonViewerPeticion.showJSON(resultado.data.peticion.mensaje_json, -1, 2);
-
                 // Iso Parsed
                 $('#responseIsoParsed').html(""); // JSON.stringify(resultado.data.iso_parsed)
                 var jsonViewerIsoParsed = new JSONViewer();
                 document.querySelector("#responseIsoParsed").appendChild(jsonViewerIsoParsed .getContainer());
                 jsonViewerIsoParsed.showJSON(resultado.data.respuesta.iso_parsed, -1, 2);
-
                 // Iso Validation
                 $('#responseIsoValidation').html(""); // JSON.stringify(resultado.data.iso_validation)
                 var jsonViewerIsoValidation = new JSONViewer();
@@ -409,10 +433,11 @@
                 $('#enviarPrueba').removeClass("btn-primary btn-danger").addClass("btn-success");
 
                 // Muestra botones de transacciones scundarias
-                //$('#enviarSecundariaDiv').show();
+                $('#enviarSecundariaDiv').show();
 
             })
             .fail(function(response) {
+                $("#enviarPrueba").prop('disabled', false);
                 $('#ventanaSpinnerModal').modal('hide');
                 console.log("Error on request");
                 var resultado = response.responseJSON;
@@ -430,7 +455,89 @@
                 //$('#result').html(data);
                 console.log("Ajax complete");
                 $('#ventanaSpinnerModal').modal('hide');
-                $("#enviarPrueba").prop('disabled', false);
+            });
+        });
+
+        // CANCELACION
+
+        $("#enviarCancelacion").click(function(event) {
+            $("#enviarPrueba").prop('disabled', true);
+            $('#pruebaModalLabel').html('Enviando cancelación a servidor proxy Eglobal BBVA');
+            $('#ventanaSpinnerModal').modal('show');
+            $('#transaccionSecundaria').show();
+            // Envía datos a claro pagos
+            $.get(
+                '//api.claropay.local.com/web/bbva?prueba=' + $("#selectPruebas").val() + '&tipo=envio_json&accion=cancelacion&trx_response=' + encodeURIComponent(sResultadoTrxB64) + '&trx_request=' + encodeURIComponent(sRequestTrxB64),
+                function(resultado) {
+                    console.log( "Request Successful" );
+                },
+                'json'
+            )
+            .done(function(resultado) {
+                $("#enviarCancelacion").prop('disabled', false);
+                $('#ventanaSpinnerModal').modal('hide');
+                console.log("Displaying cancellation data");
+                console.log(resultado);
+                // PETICION
+                $('#secondaryReqHex').html(resultado.data.peticion.mensaje_hex);
+                $('#secondaryReqString').html(window.atob(resultado.data.peticion.mensaje_b64));
+                // Json
+                $('#secondaryReqPeticion').html(""); // JSON.stringify(resultado.data.peticion.mensaje_json)
+                var jsonViewerPeticion = new JSONViewer();
+                document.querySelector("#secondaryReqPeticion").appendChild(jsonViewerPeticion .getContainer());
+                jsonViewerPeticion.showJSON(resultado.data.peticion.mensaje_json, -1, 2);
+                // Iso Parsed
+                $('#secondaryReqIsoParsed').html(""); // JSON.stringify(resultado.data.peticion.iso_parsed)
+                var jsonViewerIsoParsed = new JSONViewer();
+                document.querySelector("#secondaryReqIsoParsed").appendChild(jsonViewerIsoParsed .getContainer());
+                jsonViewerIsoParsed.showJSON(resultado.data.peticion.iso_parsed, -1, 2);
+                // Iso Validation
+                $('#secondaryReqIsoValidation').html(""); // JSON.stringify(resultado.data.peticion.iso_validation)
+                var jsonViewerIsoValidation = new JSONViewer();
+                document.querySelector("#secondaryReqIsoValidation").appendChild(jsonViewerIsoValidation .getContainer());
+                jsonViewerIsoValidation.showJSON(resultado.data.peticion.iso_validation, -1, 1);
+
+                // RESPUESTA
+                $('#secondaryRespHex').html(resultado.data.respuesta.mensaje_hex);
+                $('#secondaryRespString').html(window.atob(resultado.data.respuesta.mensaje_b64));
+                // Json
+                $('#secondaryRespPeticion').html(""); // JSON.stringify(resultado.data.peticion)
+                var jsonViewerPeticion = new JSONViewer();
+                document.querySelector("#secondaryRespPeticion").appendChild(jsonViewerPeticion .getContainer());
+                jsonViewerPeticion.showJSON(resultado.data.peticion.mensaje_json, -1, 2);
+                // Iso Parsed
+                $('#secondaryRespIsoParsed').html(""); // JSON.stringify(resultado.data.iso_parsed)
+                var jsonViewerIsoParsed = new JSONViewer();
+                document.querySelector("#secondaryRespIsoParsed").appendChild(jsonViewerIsoParsed .getContainer());
+                jsonViewerIsoParsed.showJSON(resultado.data.respuesta.iso_parsed, -1, 2);
+                // Iso Validation
+                $('#secondaryRespIsoValidation').html(""); // JSON.stringify(resultado.data.iso_validation)
+                var jsonViewerIsoValidation = new JSONViewer();
+                document.querySelector("#secondaryRespIsoValidation").appendChild(jsonViewerIsoValidation .getContainer());
+                jsonViewerIsoValidation.showJSON(resultado.data.respuesta.iso_validation, -1, 1);
+
+                // Botón de envío de datos
+                $('#enviarCancelacion').removeClass("btn-primary btn-danger").addClass("btn-success");
+            })
+            .fail(function(response) {
+                $("#enviarCancelacion").prop('disabled', false);
+                $('#ventanaSpinnerModal').modal('hide');
+                console.log("Error on request");
+                var resultado = response.responseJSON;
+                console.log(resultado);
+                // Botón de envío de datos
+                $('#enviarCancelacion').removeClass("btn-primary btn-success").addClass("btn-danger");
+                // Ventanas de resultados
+                $('#secondaryRespHex').html(resultado.error.message);
+                $('#secondaryRespString').html(window.atob(resultado.error.message));
+                $('#secondaryRespPeticion').html(resultado.error.message);
+                $('#secondaryRespIsoParsed').html(resultado.error.message);
+                $('#secondaryRespIsoValidation').html(resultado.error.message);
+            })
+            .always(function(resultado) {
+                //$('#result').html(data);
+                console.log("Ajax complete");
+                $('#ventanaSpinnerModal').modal('hide');
             });
         });
     </script>

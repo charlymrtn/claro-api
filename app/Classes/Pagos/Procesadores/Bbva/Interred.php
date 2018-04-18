@@ -59,8 +59,9 @@ class Interred
     {
     }
 
-	public function preparaMensaje($sIso)
+	public function preparaMensaje(Mensaje $oMensaje)
 	{
+        $sIso = $oMensaje->getISO(false);
 		$sMensaje = 'ISO023400070' . $sIso;
 		return $this->isoLength(strlen('00' . $sMensaje)) . $sMensaje;
 	}
@@ -72,7 +73,7 @@ class Interred
 	}
 
 
-	private function isoTipoRed($sNMICode, $sMTI = '0800', $aOpt = [])
+	private function mensajeTipoRed($sNMICode, $sMTI = '0800', $aOpt = [])
 	{
 		// Define campos
 		$oMensaje = new Mensaje();
@@ -88,10 +89,10 @@ class Interred
             }
         }
 		$oMensaje->setData(70, $sNMICode); // Network Management Information Code
-		return $oMensaje->getISO(false);
+		return $oMensaje;
 	}
 
-	private function isoTipoCompra(PeticionCargo $oPeticionCargo, array $aTipo = [])
+	private function mensajeTipoCompra(PeticionCargo $oPeticionCargo, array $aTipo = [])
 	{
 		// Define campos
 		$oMensaje = new Mensaje();
@@ -105,29 +106,46 @@ class Interred
 		$oMensaje->setData(17, date('md')); // Date & time - Día en el cual la transacción es registrada por el Adquirente
 		$oMensaje->setData(22, '012'); // PoS Entry Mode
 		#$oMensaje->setData(23, ''); //
-		$oMensaje->setData(25, '59'); // Point of Service Condition Code - 59 = Comercio Electrónico
+        if (in_array($oPeticionCargo->plan, ['msi', 'mci', 'diferido'])) {
+            // Deaparece el campo 25... Puff! Motivo: Pos nomas.
+        } else {
+            $oMensaje->setData(25, '59'); // Point of Service Condition Code - 59 = Comercio Electrónico
+        }
 		$oMensaje->setData(32, '12'); // Acquiring Institution Identification Code
 		$oMensaje->setData(35, $oMensaje->formateaCampo35($oPeticionCargo->tarjeta)); // Track 2 Data
-		$oMensaje->setData(37, '000000123401'); // Retrieval Reference Number
+        $oMensaje->setData(37, date('ymdhis')); // Retrieval Reference Number
 		$oMensaje->setData(41, '0000CP01        '); // Card Acceptor Terminal Identification
 		//$oMensaje->setData(43, 'Radiomovil DIPSA SA CVCMXCMXMX'); //  Card Acceptor Name/Location
 		$oMensaje->setData(48, '5462742            00000000'); // Additional DataRetailer Data - Define la afiliación del Establecimiento
 		$oMensaje->setData(49, '484'); // Transaction Currency Code.
 		//$oMensaje->setData(54, '000000000000')); // Additional Amounts - Monto del cash advance/back con centavos
 		#$oMensaje->setData(55, ''); //
-		#$oMensaje->setData(58, ''); //
+        if (!empty($aTipo['tipo']) && $aTipo['tipo'] == 'puntos_compra') {
+            if (in_array($oPeticionCargo->plan, ['msi', 'mci', 'diferido'])) {
+                $oMensaje->setData(58, $oMensaje->formateaCampo58(['importe_total' => 0, 'importe_puntos' => 0]));
+            } else {
+                $oMensaje->setData(58,
+                $oMensaje->formateaCampo58([
+                    'importe_total' => $oMensaje->formateaCampo4($oPeticionCargo->monto),
+                    //'importe_puntos' => $oPeticionCargo->puntos, // Cantidad de puntos debe enviarse con ceros a petición de EGlobal y BBVA
+                    'importe_puntos' => 0,
+                ]));
+            }
+        }
 		#$oMensaje->setData(59, ''); //
 		$oMensaje->setData(60, 'CLPGTES1+0000000'); // POS Terminal Data
 		$oMensaje->setData(63, $oMensaje->formateaCampo63([
             'mti' => '0200',
+            // C0
+            'cvv2' => $oPeticionCargo->tarjeta->cvv2,
+            'indicador_cvv2' => $oPeticionCargo->tarjeta->cvv2 ? 'presente' : 'no_presente',
+            // Q6
             'parcialidades' => $oPeticionCargo->parcialidades,
             'diferimiento' => $oPeticionCargo->diferido,
-            'cvv2' => $oPeticionCargo->tarjeta->cvv2,
-            'indicador_cvv2' => $oPeticionCargo->tarjeta->cvv2 ? 'presente' : 'no',
-        ])); // POS Additional Data
+            'plan' => $oPeticionCargo->plan,
+        ], $aTipo)); // POS Additional Data
 		#$oMensaje->setData(103, ''); //
-		echo "<pre>" . print_r($oMensaje->getDataArray(), true) . "</pre>";
-		return $oMensaje->getISO(false);
+		return $oMensaje;
 	}
 
 	public function ascii2hex($ascii) {
@@ -189,32 +207,32 @@ class Interred
 
 	public function mensajeEcho(): string
 	{
-		return $this->preparaMensaje($this->isoTipoRed('301'));
+		return $this->preparaMensaje($this->mensajeTipoRed('301'));
 	}
 
 	public function mensajeSignOn(): string
 	{
-		return $this->preparaMensaje($this->isoTipoRed('001'));
+		return $this->preparaMensaje($this->mensajeTipoRed('001'));
 	}
 
 	public function mensajeSignOff(): string
 	{
-		return $this->preparaMensaje($this->isoTipoRed('002'));
+		return $this->preparaMensaje($this->mensajeTipoRed('002'));
 	}
 
 	public function mensajeCutoff(): string
 	{
-		return $this->preparaMensaje($this->isoTipoRed('201'));
+		return $this->preparaMensaje($this->mensajeTipoRed('201'));
 	}
 
 	public function respuestaSignOn($aOpt = []): string
 	{
-		return $this->preparaMensaje($this->isoTipoRed('001', '0810', $aOpt));
+		return $this->preparaMensaje($this->mensajeTipoRed('001', '0810', $aOpt));
 	}
 
 	public function respuestaEcho($aOpt = []): string
 	{
-		return $this->preparaMensaje($this->isoTipoRed('301', '0810', $aOpt));
+		return $this->preparaMensaje($this->mensajeTipoRed('301', '0810', $aOpt));
 	}
 
     /**

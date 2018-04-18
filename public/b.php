@@ -42,6 +42,15 @@ class BbvaTest
             'expiracion_anio' => '20',
             'lealtad' => false,
         ]);
+        $this->oTarjetaCreditoVisa = new TarjetaCredito([
+            // Crédito
+            'pan' => '4761739001010119',
+            'nombre' => 'Juan Perez Lopez',
+            'cvv2' => '830',
+            'expiracion_mes' => '12',
+            'expiracion_anio' => '17',
+            'lealtad' => true,
+        ]);
         // Construye petición de cargo
         $this->oPeticionCargo = new PeticionCargo([
             'prueba' => true,
@@ -56,10 +65,9 @@ class BbvaTest
         ]);
     }
 
-    public function pruebas(string $sPrueba, string $sTipo = 'envio_online')
+    public function pruebas(string $sPrueba, string $sTipo = 'envio_online', string $sAccion = 'prueba', string $sTrxReq = null, string $sTrxResp = null)
     {
-        // Inicializa
-        // Datos de pruebas
+        // Pruebas
         if ($sPrueba == '1') {
             $this->oPeticionCargo->monto = 1830.00;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VENTAS NORMALES';
@@ -190,12 +198,12 @@ class BbvaTest
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' CANCELACIONES - Venta Con Puntos - Cancelaión';
             $aOpciones = [
                 'tipo' => 'cancelacion',
-                'referencia' => '180411104744', // CAMPO 37 de la respuesta
-                'autorizacion' => '300038', // CAMPO 38 de la respuesta
+                'referencia' => '180417115603', // CAMPO 37 de la respuesta
+                'autorizacion' => '563178', // CAMPO 38 de la respuesta
                 'mti_original' => '0200', // ?  Id de mensaje ISO de la transacción original
-                'fecha_original' => '0411', // CAMPO 13 de la respuesta
-                'hora_original' => '104744', // CAMPO 12 de la respuesta
-                'fecha_captura_original' => '0411', // CAMPO 17 de la respuesta
+                'fecha_original' => '0417', // CAMPO 13 de la respuesta
+                'hora_original' => '115603', // CAMPO 12 de la respuesta
+                'fecha_captura_original' => '0417', // CAMPO 17 de la respuesta
             ];
         } else if ($sPrueba == '22') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaDebito1;
@@ -264,9 +272,149 @@ class BbvaTest
             $this->oPeticionCargo->puntos = 1207.00;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' REVERSOS AUTOMÁTICOS EG - Venta con Puntos';
             $aOpciones = ['tipo' => 'puntos_compra', 'tipo_original' => 'puntos_compra'];
+        } else if ($sPrueba == '31') {
+            $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
+            $this->oPeticionCargo->monto = 1107.50;
+            $this->oPeticionCargo->parcialidades = 6;
+            $this->oPeticionCargo->plan = 'msi';
+            $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' REVERSOS AUTOMÁTICOS EG - Venta 6 MSI';
+            $aOpciones = ['tipo' => 'puntos_compra', 'tipo_original' => 'puntos_compra'];
+
+
+
+
+        } else if ($sPrueba == '1v') {
+            $this->oPeticionCargo->tarjeta = $this->oTarjetaCreditoVisa; // Credito
+            $this->oPeticionCargo->monto = 570.50;
+            $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VISA - VENTAS NORMALES - Venta normal';
+            $aOpciones = ['tipo' => 'compra'];
+        } else if ($sPrueba == '2v') {
+            $this->oPeticionCargo->tarjeta = $this->oTarjetaCreditoVisa; // Credito
+            $this->oPeticionCargo->monto = 331.00;
+            $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VISA - VENTAS NORMALES - Venta normal';
+            $aOpciones = ['tipo' => 'compra'];
+        } else if ($sPrueba == '3v') {
+            $this->oPeticionCargo->tarjeta = $this->oTarjetaCreditoVisa; // Credito
+            $this->oPeticionCargo->monto = 649.55;
+            $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VISA - REVERSOS AUTOMÁTICOS COMERCIO - Venta normal con reversos';
+            $aOpciones = ['tipo' => 'compra'];
+        } else if ($sPrueba == '4v') {
+            $this->oPeticionCargo->tarjeta = $this->oTarjetaCreditoVisa; // Credito
+            $this->oPeticionCargo->monto = 828.00;
+            $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VISA - REVERSOS AUTOMÁTICOS COMERCIO - Venta normal con reversos';
+            $aOpciones = ['tipo' => 'compra'];
+        } else if ($sPrueba == '5v') {
+            $this->oPeticionCargo->tarjeta = $this->oTarjetaCreditoVisa; // Credito
+            $this->oPeticionCargo->monto = 381.82;
+            $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VISA - REVERSOS AUTOMÁTICOS EG - Venta normal con reversos';
+            $aOpciones = ['tipo' => 'compra'];
+        } else if ($sPrueba == '6v') {
+            $this->oPeticionCargo->tarjeta = $this->oTarjetaCreditoVisa; // Credito
+            $this->oPeticionCargo->monto = 1968.80;
+            $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VISA - REVERSOS AUTOMÁTICOS EG - Venta normal con reversos';
+            $aOpciones = ['tipo' => 'compra'];
+
+
+
+
+        } else if ($sPrueba == '1m') {
+            $this->oPeticionCargo->tarjeta = new TarjetaCredito([
+                // Crédito
+                'pan' => '5413330089020011',
+                'nombre' => 'Juan Perez Lopez',
+                'cvv2' => '601',
+                'expiracion_mes' => '12',
+                'expiracion_anio' => '25',
+                'lealtad' => false,
+            ]);
+            $this->oPeticionCargo->monto = 227.50;
+            $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' MC - VENTAS NORMALES';
+            $aOpciones = ['tipo' => 'compra'];
+        } else if ($sPrueba == '2m') {
+            $this->oPeticionCargo->tarjeta = new TarjetaCredito([
+                // Crédito
+                'pan' => '5413330089020078',
+                'nombre' => 'Juan Perez Lopez',
+                'cvv2' => '201',
+                'expiracion_mes' => '12',
+                'expiracion_anio' => '25',
+                'lealtad' => false,
+            ]);
+            $this->oPeticionCargo->monto = 302.00;
+            $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' MC - VENTAS NORMALES';
+            $aOpciones = ['tipo' => 'compra'];
+        } else if ($sPrueba == '3m') {
+            $this->oPeticionCargo->tarjeta = new TarjetaCredito([
+                // Crédito
+                'pan' => '5413330089020086',
+                'nombre' => 'Juan Perez Lopez',
+                'cvv2' => '201',
+                'expiracion_mes' => '12',
+                'expiracion_anio' => '25',
+                'lealtad' => false,
+            ]);
+            $this->oPeticionCargo->monto = 156.00;
+            $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' MC - VENTAS NORMALES';
+            $aOpciones = ['tipo' => 'compra'];
+        } else if ($sPrueba == '4m') {
+            $this->oPeticionCargo->tarjeta = new TarjetaCredito([
+                // Crédito
+                'pan' => '5413330089010483',
+                'nombre' => 'Juan Perez Lopez',
+                'cvv2' => '201',
+                'expiracion_mes' => '12',
+                'expiracion_anio' => '25',
+                'lealtad' => false,
+            ]);
+            $this->oPeticionCargo->monto = 1306.00;
+            $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' MC - VENTAS NORMALES';
+            $aOpciones = ['tipo' => 'compra'];
+        } else if ($sPrueba == '5m') {
+            $this->oPeticionCargo->tarjeta = new TarjetaCredito([
+                // Crédito
+                'pan' => '5413330089010442',
+                'nombre' => 'Juan Perez Lopez',
+                'cvv2' => '201',
+                'expiracion_mes' => '12',
+                'expiracion_anio' => '25',
+                'lealtad' => false,
+            ]);
+            $this->oPeticionCargo->monto = 451.00;
+            $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' MC - VENTAS NORMALES';
+            $aOpciones = ['tipo' => 'compra'];
         } else {
             throw new \Exception("Prueba no encontrada", 404);
         }
+
+
+
+
+
+
+        // Verifica acción a ejecutar
+        if ($sAccion == 'cancelacion' && !empty($sTrxReq) && !empty($sTrxResp)) {
+            $oInterredTrx = new BBVAInterred();
+            $aMensajeTrxReq = $oInterredTrx->procesaMensaje($sTrxReq);
+            $aMensajeTrxResp = $oInterredTrx->procesaMensaje($sTrxResp);
+            unset($oInterredTrx);
+            $aOpcionesCancelacion = [
+                'tipo' => 'cancelacion',
+                'tipo_original' => $aOpciones['tipo'],
+                'referencia' => $aMensajeTrxResp['iso_parsed']['37'], // CAMPO 37 de la respuesta
+                'autorizacion' => $aMensajeTrxResp['iso_parsed']['38'], // CAMPO 38 de la respuesta
+                'mti_original' => $aMensajeTrxReq['iso_mti'], // MTI de mensaje ISO de la transacción original
+                'fecha_original' => $aMensajeTrxResp['iso_parsed']['13'], // CAMPO 13 de la respuesta
+                'hora_original' => $aMensajeTrxResp['iso_parsed']['12'], // CAMPO 12 de la respuesta
+                'fecha_captura_original' => $aMensajeTrxResp['iso_parsed']['17'], // CAMPO 17 de la respuesta
+            ];
+            $aOpciones = $aOpcionesCancelacion;
+        }
+
+
+
+
+
+
 
         // Verifica tipo de prueba
         $bEnvio = false;
@@ -314,8 +462,8 @@ class BbvaTest
             $aResultado['respuesta'] = $oResultado->respuesta;
         }
 
-        // Pruebas de reverso
-        if (in_array($sPrueba, ['26', '27', '28', '29', '30', '31'])) {
+        // Pruebas de reverso automático
+        if (in_array($sPrueba, ['26', '27', '28', '29', '30', '31', '3v', '4v', '5v', '6v'])) {
             $this->oPeticionCargo->descripcion = $this->oPeticionCargo->descripcion . ' - Reverso Automático';
             $aOpcionesReverso = [
                 'tipo' => 'reverso',
@@ -337,7 +485,7 @@ class BbvaTest
                     'mensaje_json' => $this->oPeticionCargo,
                 ];
             }
-            // Prepara mensaje reverso y envía
+            // Prepara mensaje reenvío de reverso y envía
             $oResultadoReversoRet = $oInterredProxyReverso->mensajeReenvioReverso($this->oPeticionCargo, $aOpcionesReverso, true, $bEcho);
             if (isset($oResultadoReversoRet->respuesta)) {
                 $aResultado['reverso_reenvio'] = $oResultadoReversoRet->respuesta;
@@ -475,8 +623,7 @@ class InterredProxy
         #$oMensaje->setData(55, ''); //
         #$oMensaje->setData(59, ''); //
         $oMensaje->setData(60, 'CLPGTES1+0000000'); // POS Terminal Data
-        $oMensaje->setData(63,
-        $oMensaje->formateaCampo63([
+        $oMensaje->setData(63, $oMensaje->formateaCampo63([
             'mti' => '0200',
             // C0
             'cvv2' => $oPeticionCargo->tarjeta->cvv2,
