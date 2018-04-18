@@ -315,7 +315,7 @@
             $('#ventanaSpinnerModal').modal('show');
             // Envía datos a claro pagos
             $.get(
-                '//api.claropay.local.com/web/bbva?prueba=' + $("#selectPruebas").val() + '&tipo=datos_json&',
+                '/web/bbva?prueba=' + $("#selectPruebas").val() + '&tipo=datos_json&',
                 function(resultado) {
                     console.log( "Request Successful" );
                 },
@@ -377,7 +377,7 @@
             $('#ventanaSpinnerModal').modal('show');
             // Envía datos a claro pagos
             $.get(
-                '//api.claropay.local.com/web/bbva?prueba=' + $("#selectPruebas").val() + '&tipo=envio_json&',
+                '/web/bbva?prueba=' + $("#selectPruebas").val() + '&tipo=envio_json&',
                 function(resultado) {
                     console.log( "Request Successful" );
                 },
@@ -467,7 +467,7 @@
             $('#transaccionSecundaria').show();
             // Envía datos a claro pagos
             $.get(
-                '//api.claropay.local.com/web/bbva?prueba=' + $("#selectPruebas").val() + '&tipo=envio_json&accion=cancelacion&trx_response=' + encodeURIComponent(sResultadoTrxB64) + '&trx_request=' + encodeURIComponent(sRequestTrxB64),
+                '/web/bbva?prueba=' + $("#selectPruebas").val() + '&tipo=envio_json&accion=cancelacion&trx_response=' + encodeURIComponent(sResultadoTrxB64) + '&trx_request=' + encodeURIComponent(sRequestTrxB64),
                 function(resultado) {
                     console.log( "Request Successful" );
                 },
