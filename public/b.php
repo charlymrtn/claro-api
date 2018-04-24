@@ -69,6 +69,7 @@ class BbvaTest
     {
         // Pruebas
         if ($sPrueba == '1') {
+            $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1;
             $this->oPeticionCargo->monto = 1830.00;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VENTAS NORMALES';
             $aOpciones = ['tipo' => 'puntos_compra'];
@@ -79,7 +80,7 @@ class BbvaTest
             $aOpciones = ['tipo' => 'compra'];
         } else if ($sPrueba == '3') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaDebito1; // Debito
-            $this->oPeticionCargo->monto = 532.00;
+            $this->oPeticionCargo->monto = 532.55;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VENTAS NORMALES';
             $aOpciones = ['tipo' => 'compra'];
         } else if ($sPrueba == '4') {
@@ -104,7 +105,7 @@ class BbvaTest
             $this->oPeticionCargo->tarjeta = $this->oTarjetaDebito1; // Debito
             $this->oPeticionCargo->monto = 812.00;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VALIDACIÓN DE CVV2';
-            $aOpciones = ['tipo' => 'puntos_compra'];
+            $aOpciones = ['tipo' => 'compra'];
         } else if ($sPrueba == '8') {
             $this->oTarjetaCredito1->cvv2 = '';
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito

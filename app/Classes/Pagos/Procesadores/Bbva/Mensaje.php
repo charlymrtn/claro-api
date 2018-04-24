@@ -645,22 +645,26 @@ class Mensaje extends iso8583_1987
         }
 
         // Q6
-		if (!empty($aData['diferimiento']) || !empty($aData['parcialidades'])) {
-			$iTokens += 1;
-			$sResultado .= '! Q600006 ';
-			$sResultado .= sprintf("%02s", $aData['diferimiento'] ?? '00');
-			$sResultado .= sprintf("%02s", $aData['parcialidades'] ?? '00');
-			if (empty($aData['plan'])) {
-				// Default
-				$sResultado .= '00';
-			} else if ($aData['plan'] == 'msi') { // Meses Sin Intereses | Diferido com MSI
-				$sResultado .= '03';
-			} else if ($aData['plan'] == 'mci') { // Meses Con Intereses | Diferido com MCI
-				$sResultado .= '05';
-			} else if ($aData['plan'] == 'diferido') { // Diferido pago total
-				$sResultado .= '07';
-			}
-		}
+        if (!empty($aTipo['tipo']) && in_array($aTipo['tipo'], ['cancelacion', 'puntos_cancelacion', 'cancelacion_cash_back', 'cancelacion_cash_advance', 'cancelacion_pago_finanzia'])) {
+            // No lleva campo Q6
+        } else {
+            if (!empty($aData['diferimiento']) || !empty($aData['parcialidades'])) {
+                $iTokens += 1;
+                $sResultado .= '! Q600006 ';
+                $sResultado .= sprintf("%02s", $aData['diferimiento'] ?? '00');
+                $sResultado .= sprintf("%02s", $aData['parcialidades'] ?? '00');
+                if (empty($aData['plan'])) {
+                    // Default
+                    $sResultado .= '00';
+                } else if ($aData['plan'] == 'msi') { // Meses Sin Intereses | Diferido com MSI
+                    $sResultado .= '03';
+                } else if ($aData['plan'] == 'mci') { // Meses Con Intereses | Diferido com MCI
+                    $sResultado .= '05';
+                } else if ($aData['plan'] == 'diferido') { // Diferido pago total
+                    $sResultado .= '07';
+                }
+            }
+        }
 
         // 04
         if (!empty($aTipo['tipo']) && in_array($aTipo['tipo'], ['devolucion', 'cancelacion', 'puntos_cancelacion', 'cancelacion_cash_back', 'cancelacion_cash_advance', 'cancelacion_pago_finanzia'])) {
@@ -794,44 +798,48 @@ class Mensaje extends iso8583_1987
 
 
         // C5 - Multipagos
-        if (!empty($aData['multipagos'])) {
-            if ($aData['multipagos']['tipo'] == 'cie') {
-				$iTokens += 1;
-                // CIE
-                $sResultado .= '! C500078 01';
-                $sResultado .= sprintf("%-09s", $aData['multipagos']['convenio_cie'] ?? '0');
-                $sResultado .= sprintf("% 20s", $aData['multipagos']['referencia'] ?? '0');
-                $sResultado .= sprintf("%-07s", $aData['multipagos']['guia_cie'] ?? '0');
-                $sResultado .= sprintf("% 40s", $aData['multipagos']['referencia'] ?? ' ');
-            } else if ($aData['multipagos'] == 'hipoteca') {
-				$iTokens += 1;
-                // Pago de Crédito Hipotecario
-                $sResultado .= '! C500090 02009999901';
-                // Número de Crédito Hipotecario
-                $sResultado .= sprintf("% 20s", $aData['multipagos']['credito_hipotecario'] ?? ' ');
-                $sResultado .= sprintf("%-07s", $aData['multipagos']['folio'] ?? '0');
-                $sResultado .= sprintf("% 40s", $aData['multipagos']['titular'] ?? ' ');
-                $sResultado .= sprintf("%-012s", $aData['multipagos']['importe'] ?? '0');
-            } else if ($aData['multipagos'] == 'express') {
-				$iTokens += 1;
-                // Depósito a Cuenta Express
-                $sResultado .= '! C500078 ';
-                // Dataset Id
-                if ($aData['multipagos']['deposito'] == 'celular') {
-                    $sResultado .= '03';
-                } else if ($aData['multipagos']['deposito'] == 'cuenta') {
-                    $sResultado .= '04';
+        if (!empty($aTipo['tipo']) && in_array($aTipo['tipo'], ['devolucion', 'cancelacion', 'puntos_cancelacion', 'cancelacion_cash_back', 'cancelacion_cash_advance', 'cancelacion_pago_finanzia'])) {
+            // No lleva campo C5
+        } else {
+            if (!empty($aData['multipagos'])) {
+                if ($aData['multipagos']['tipo'] == 'cie') {
+                    $iTokens += 1;
+                    // CIE
+                    $sResultado .= '! C500078 01';
+                    $sResultado .= sprintf("%-09s", $aData['multipagos']['convenio_cie'] ?? '0');
+                    $sResultado .= sprintf("% 20s", $aData['multipagos']['referencia'] ?? '0');
+                    $sResultado .= sprintf("%-07s", $aData['multipagos']['guia_cie'] ?? '0');
+                    $sResultado .= sprintf("% 40s", $aData['multipagos']['referencia'] ?? ' ');
+                } else if ($aData['multipagos'] == 'hipoteca') {
+                    $iTokens += 1;
+                    // Pago de Crédito Hipotecario
+                    $sResultado .= '! C500090 02009999901';
+                    // Número de Crédito Hipotecario
+                    $sResultado .= sprintf("% 20s", $aData['multipagos']['credito_hipotecario'] ?? ' ');
+                    $sResultado .= sprintf("%-07s", $aData['multipagos']['folio'] ?? '0');
+                    $sResultado .= sprintf("% 40s", $aData['multipagos']['titular'] ?? ' ');
+                    $sResultado .= sprintf("%-012s", $aData['multipagos']['importe'] ?? '0');
+                } else if ($aData['multipagos'] == 'express') {
+                    $iTokens += 1;
+                    // Depósito a Cuenta Express
+                    $sResultado .= '! C500078 ';
+                    // Dataset Id
+                    if ($aData['multipagos']['deposito'] == 'celular') {
+                        $sResultado .= '03';
+                    } else if ($aData['multipagos']['deposito'] == 'cuenta') {
+                        $sResultado .= '04';
+                    }
+                    $sResultado .= sprintf("%-09s", $aData['multipagos']['convenio_cie'] ?? '009999903');
+                    $sResultado .= sprintf("% 20s", $aData['multipagos']['cuenta'] ?? '0000000000');
+                    $sResultado .= '       ';
+                    $sResultado .= sprintf("% 40s", $aData['multipagos']['referencia'] ?? ' ');
+                } else if ($aData['multipagos'] == 'dinero_movil') {
+                    $iTokens += 1;
+                    // Dinero móvil
+                    $sResultado .= '! C500018 05';
+                    $sResultado .= sprintf("%04s", $aData['multipagos']['codigo'] ?? '0');
+                    $sResultado .= sprintf("%012s", $aData['multipagos']['confirmacion'] ?? '0');
                 }
-                $sResultado .= sprintf("%-09s", $aData['multipagos']['convenio_cie'] ?? '009999903');
-                $sResultado .= sprintf("% 20s", $aData['multipagos']['cuenta'] ?? '0000000000');
-                $sResultado .= '       ';
-                $sResultado .= sprintf("% 40s", $aData['multipagos']['referencia'] ?? ' ');
-            } else if ($aData['multipagos'] == 'dinero_movil') {
-				$iTokens += 1;
-                // Dinero móvil
-                $sResultado .= '! C500018 05';
-                $sResultado .= sprintf("%04s", $aData['multipagos']['codigo'] ?? '0');
-                $sResultado .= sprintf("%012s", $aData['multipagos']['confirmacion'] ?? '0');
             }
         }
 
