@@ -534,7 +534,11 @@ class Mensaje extends iso8583_1987
         // 12 Importe en pesos
         // Venta con Redención de Puntos Se enviará el total del importe en pesos de la venta. En la respuesta, el host enviará sólo el importe en pesos realmente redimidos.
         // Venta Normal con Bin Presente en Tabla de Lealtad y Consulta de Puntos Se enviará el importe en ceros. En la respuesta, la información en este campo no es relevante
-        $sResultado .= sprintf("%012s", $aData['importe_total'] ?? '0');
+        if (empty($aData['importe_puntos'])) {
+            $sResultado .= sprintf("%012s", '0');
+        } else {
+            $sResultado .= sprintf("%012s", $aData['importe_total'] ?? '0');
+        }
 
         // 10 Número de puntos. Se enviará el número de puntos en cero. En la respuesta se regresará el número de puntos redimidos. Aplica para TDC y TDD
         $sResultado .= sprintf("%010s", $aData['importe_puntos'] ?? '0');
