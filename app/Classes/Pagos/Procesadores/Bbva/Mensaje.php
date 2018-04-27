@@ -541,7 +541,9 @@ class Mensaje extends iso8583_1987
         }
 
         // 10 Número de puntos. Se enviará el número de puntos en cero. En la respuesta se regresará el número de puntos redimidos. Aplica para TDC y TDD
-        $sResultado .= sprintf("%010s", $aData['importe_puntos'] ?? '0');
+        //$sResultado .= sprintf("%010s", $aData['importe_puntos'] ?? '0');
+        // Cantidad de puntos debe enviarse con ceros a petición de EGlobal y BBVA ???
+        $sResultado .= sprintf("%010s", '0');
 
         if ($sMti == '0200') {
             // 02 Tipo POS. 00 -> POS No tiene la funcionalidad de VB, 01 -> POS tiene la funcionalidad de VB

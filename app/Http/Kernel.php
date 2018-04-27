@@ -41,7 +41,6 @@ class Kernel extends HttpKernel
             'cors',
             'throttle:80,1',
             'bindings',
-            'client.credentials',
         ],
     ];
 

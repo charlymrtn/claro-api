@@ -6,11 +6,15 @@ Route::get('/', function () {
     return view('index');
 });
 
-// API v1
-require base_path('routes/api/v1/v1.php');
+Route::group(['middleware' => ['client.credentials']], function () {
 
-// API Admin
-require base_path('routes/api/admin/admin.php');
+    // API v1
+    require base_path('routes/api/v1/v1.php');
+
+    // API Admin
+    require base_path('routes/api/admin/admin.php');
+
+});
 
 // PRUEBA BBVA
 Route::resource('/bbva', 'Bbva\BbvaController');

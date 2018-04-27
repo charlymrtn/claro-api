@@ -615,8 +615,7 @@ class InterredProxy
                 $oMensaje->setData(58,
                 $oMensaje->formateaCampo58([
                     'importe_total' => $oMensaje->formateaCampo4($oPeticionCargo->monto),
-                    //'importe_puntos' => $oPeticionCargo->puntos, // Cantidad de puntos debe enviarse con ceros a petición de EGlobal y BBVA
-                    'importe_puntos' => 0,
+                    'importe_puntos' => $oPeticionCargo->puntos,
                 ]));
             }
         }
