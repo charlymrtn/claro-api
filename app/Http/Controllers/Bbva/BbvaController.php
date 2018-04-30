@@ -5,13 +5,13 @@ namespace app\Http\Controllers\Bbva;
 use Log;
 use Validator;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Webpatser\Uuid\Uuid;
 use App\Http\Controllers\Controller;
 use App\Models\Transaccion;
-use App\Classes\Pagos\Parametros\PeticionCargo;
 //use App\Classes\Sistema\Mensaje;
-use Webpatser\Uuid\Uuid;
+use App\Classes\Pagos\Parametros\PeticionCargo;
 use App\Classes\Pagos\Procesadores\Bbva\Mensaje;
-
 
 require public_path('b.php');
 use app\Prueba\Bbva\BbvaTest;
@@ -134,6 +134,8 @@ class BbvaController extends Controller
     {
         $i = 1;
 
+        $batch_filename = 'cpg1' . date('dmy') . '.txt';
+
         $batch_header_1 = [
 
             sprintf("%06s", $i++), // [6] Número de registro
@@ -144,15 +146,15 @@ class BbvaController extends Controller
             '01', // [2] Número NN fijo. Número asignado por BBVA Bancomer a la Interred
             '01', // [2] Número de ventana que corresponde en el día
             '01.30', // [5] Versión del Formato del archivo. Fijo: 01.30
-            'cpg1200418', // [8] Nombre físico del presente archivo
+            substr($batch_filename, 0, 8), // [8] Nombre físico del presente archivo
             '00', // [2] Sentido del archivo: 00 = viaja de la Interred hacia BBVA Bancomer 01 = viaja de BBVA Bancomer hacia la Interred
             '                                                                             ', // [77] Espacios para uso futuro
         ];
         $batch_header_2 = [
             sprintf("%06s", $i++), // [6] Número consecutivo de registro
             '2', // [1] Tipo de registro. Fijo: 2
-            '04372512', // [8] Identificador propio del Negocio por parte de la Interred
-            '04372512', // [8] Número que BBVA Bancomer otorga al negocio para su identificación
+            '05462742', // [8] Identificador propio del Negocio por parte de la Interred
+            '05462742', // [8] Número que BBVA Bancomer otorga al negocio para su identificación
             '00000000', // [8] Número de referencia a la cuenta de cheques. Es opcional y solo informativo
             '000', // [3] Número de la sucursal (opcional y solo informativo)
             '0000000', // [7] Número de la cuenta de cheques  (opcional y solo es informativo
@@ -221,7 +223,7 @@ class BbvaController extends Controller
                     // [23] Número único para la localización de pagares “
                         '7455546', // [7] 7455546” = Valor Fijo.
                         substr($res[37], 1, 1), // [1] “A” = último dígito del año.
-                        date("z", strtotime(substr($res[37], 0, 2) . '-' . substr($res[37], 2, 2) . '-' . substr($res[37], 4, 2))), // [3] “DDD = fecha juliana.
+                        date("z", strtotime(substr($res[37], 0, 2) . '-' . substr($res[37], 2, 2) . '-' . substr($res[37], 4, 2))) + 1, // [3] “DDD = fecha juliana.
                         sprintf("%011s", $res[11]), // [11] “99999999999” = 11 posiciones libre numérico.
                         $this->calcLuhn($res[11]), // [1]  “1” = dígito verificador ( módulo 10)
                     sprintf("%- 19s", substr($res[35], 2, strpos($res[35], '=') - 2)), // [19] Número de tarjeta (BBVA Bancomer, Visa, MC, BBVA Bancomer, Carnet, Amex)
@@ -265,6 +267,8 @@ class BbvaController extends Controller
         ];
 
         $batch = implode('', $batch_header_1) . "\n" . implode('', $batch_header_2) . "\n" . implode('', $batch_linea) . implode('', $batch_footer_1);
+
+        Storage::put($batch_filename, $batch);
 
         return $batch;
 

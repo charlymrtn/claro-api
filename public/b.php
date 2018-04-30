@@ -587,7 +587,7 @@ class InterredProxy
         $oMensaje->setData(4, $oMensaje->formateaCampo4($oPeticionCargo->monto)); // Transaction Amount - Monto de la transacción con centavos
         $oMensaje->setData(7, gmdate('mdHis')); // Date & time
         $oMensaje->setData(11, $oMensaje->generateSystemsTraceAuditNumber()); // Systems Trace Audit Number
-        $oMensaje->setData(12, date('his')); // Hora local de la transacción
+        $oMensaje->setData(12, date('His')); // Hora local de la transacción
         $oMensaje->setData(13, date('md')); // Date & time - Día local de la transacción
         $oMensaje->setData(17, date('md')); // Date & time - Día en el cual la transacción es registrada por el Adquirente
         $oMensaje->setData(22, '012'); // PoS Entry Mode
@@ -650,7 +650,7 @@ class InterredProxy
         $oMensaje->setData(4, $oMensaje->formateaCampo4($oPeticionCargo->monto)); // Transaction Amount - Monto de la transacción con centavos
         $oMensaje->setData(7, gmdate('mdHis')); // Date & time
         $oMensaje->setData(11, $oMensaje->generateSystemsTraceAuditNumber()); // Systems Trace Audit Number
-        $oMensaje->setData(12, date('his')); // Hora local de la transacción
+        $oMensaje->setData(12, date('His')); // Hora local de la transacción
         $oMensaje->setData(13, date('md')); // Date & time - Día local de la transacción
         $oMensaje->setData(15, date('md')); // Settlement Date: MMDD - Día en el cual se esta contabilizando la transacción
         $oMensaje->setData(17, date('md')); //  Capture Date: MMDD - Día en el cual la transacción es registrada por el Adquirente
@@ -703,7 +703,7 @@ class InterredProxy
         $oMensaje->setData(4, $oMensaje->formateaCampo4($oPeticionCargo->monto)); // Transaction Amount - Monto de la transacción con centavos
         $oMensaje->setData(7, gmdate('mdHis')); // Date & time
         $oMensaje->setData(11, $oMensaje->generateSystemsTraceAuditNumber()); // Systems Trace Audit Number
-        $oMensaje->setData(12, date('his')); // Hora local de la transacción
+        $oMensaje->setData(12, date('His')); // Hora local de la transacción
         $oMensaje->setData(13, date('md')); // Date & time - Día local de la transacción
         $oMensaje->setData(15, date('md')); // Settlement Date: MMDD - Día en el cual se esta contabilizando la transacción
         $oMensaje->setData(17, date('md')); //  Capture Date: MMDD - Día en el cual la transacción es registrada por el Adquirente

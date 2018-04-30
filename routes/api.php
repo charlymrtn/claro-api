@@ -2,7 +2,7 @@
 
 use Illuminate\Http\Request;
 
-Route::get('/', function () {
+Route::any('/', function () {
     return view('index');
 });
 

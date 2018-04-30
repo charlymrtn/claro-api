@@ -2,9 +2,19 @@
 //Transaccion model factories
 
 $factory->define(App\Models\Transaccion::class, function (Faker\Generator $faker){
+    // Obtiene datos para no generar objetos extra
+
+    // Comercios
+    $aComercioIds = \App\Models\Comercio::select('uuid')->get()->toArray();
+    if (empty($aComercioIds)) {
+        $iComercioId = factory(App\Models\Comercio::class)->create()->uuid;
+    } else {
+        $iComercioId = $faker->randomElement($aComercioIds)["uuid"];
+    }
+
     return [
         'uuid' => $faker->uuid,
-        'comercio' => $faker->company,
+        'comercio_uuid' => $iComercioId,
         'pais' => $faker->randomElement(['MEX']),
         'prueba' => $faker->boolean,
         'operacion' => $faker->randomElement([
@@ -23,7 +33,6 @@ $factory->define(App\Models\Transaccion::class, function (Faker\Generator $faker
         ]),
         'datos_pago' => $faker->randomElement(['{}']),
         'datos_antifraude' => $faker->randomElement(['{}']),
-        'comercio_orden_id' => $faker->randomNumber(),
         'datos_comercio' => $faker->randomElement(['{}']),
         'datos_claropagos' => $faker->randomElement(['{}']),
         'datos_procesador' => $faker->randomElement(['{}']),

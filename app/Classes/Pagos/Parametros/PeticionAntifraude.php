@@ -6,6 +6,7 @@ use Jenssegers\Model\Model;
 use Exception;
 use Validator;
 use Carbon\Carbon;
+use Webpatser\Uuid\Uuid;
 use App\Classes\Pagos\Base\Pedido;
 use App\Classes\Pagos\Base\Contacto;
 use App\Classes\Pagos\Base\Direccion;
@@ -16,7 +17,7 @@ use App\Classes\Pagos\Medios\TarjetaCredito;
  * Clase para parámetros de entrada para cargos
  *
  */
-class PeticionCargo extends Model
+class PeticionAntifraude extends Model
 {
     // {{{ properties
 
@@ -24,18 +25,10 @@ class PeticionCargo extends Model
      * @var array $fillable Atributos asignables
      */
     protected $fillable = [
-        'prueba', // Booleano que indica si es una transacción de prueba o no
+        'procesador', // String. Nombre del procesador antifraude utilizado
         'tarjeta', // Objeto tipo TarjetaCredito
-        'monto', // Monto total de la transacción
-        'puntos', // Cantidad del monto total pagado en puntos (Si el procesador lo soporta)
-        'descripcion',
         'pedido', // Objeto tipo Pedido
         'cliente', // Objeto tipo Contacto
-        'parcialidades',
-        'diferido', // Número de meses de diferimiento del pago
-        'plan', // Tipo de plan de pagos
-        'direccion_cargo', // Objeto tipo Direccion
-        'comercio_uuid',
     ];
 
     /*
@@ -57,8 +50,6 @@ class PeticionCargo extends Model
      * Atributos mutables
      */
     protected $casts = [
-        'parcialidades' => 'integer',
-        'prueba' => 'boolean',
     ];
 
     /*
@@ -72,14 +63,7 @@ class PeticionCargo extends Model
      * @var array $rules Reglas de validación
      */
     protected $rules = [
-            'prueba' => 'boolean',
-            'tarjeta' => 'required',
-            'monto' => 'required',
-            'puntos' => 'numeric',
-            'descripcion' => 'max:250',
-            'parcialidades' => 'numeric|min:0|max:60',
-            'diferido' => 'numeric|min:0|max:12',
-            'comercio_uuid' => 'required|string',
+            'procesador' => 'required|string',
     ];
 
     // }}}}
@@ -111,11 +95,10 @@ class PeticionCargo extends Model
     /**
      * Constructor
      */
-    public function __construct($aAttributes = [])
+    public function __construct($aAttributes)
     {
         // Define fecha de creación
         $this->attributes['created_at'] = Carbon::now();
-        $this->attributes['prueba'] = true;
         // Valida entradas
         $this->valida($aAttributes);
         // Ejecuta constructor padre

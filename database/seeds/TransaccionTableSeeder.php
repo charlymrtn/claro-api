@@ -16,7 +16,7 @@ class TransaccionTableSeeder extends Seeder
         //Inserta valores iniciales
 //        Transaccion::create([
 //            'uuid' => '5b948b52-7ffb-4fbd-beff-143a0f319d9b',
-//            'comercio_id' => 1,
+//            'comercio_uuid' => 1,
 //            'prueba' => false,
 //            'operacion' => 'preautorizacion',
 //            'transaccion_estatus_id' => 3,
