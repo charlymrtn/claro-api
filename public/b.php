@@ -46,9 +46,9 @@ class BbvaTest
             // Crédito
             'pan' => '4761739001010119',
             'nombre' => 'Juan Perez Lopez',
-            'cvv2' => '830',
-            'expiracion_mes' => '12',
-            'expiracion_anio' => '17',
+            'cvv2' => '840',
+            'expiracion_mes' => '04',
+            'expiracion_anio' => '20',
             'lealtad' => true,
         ]);
         // Construye petición de cargo
@@ -459,8 +459,10 @@ class BbvaTest
             ],
         ];
         // Prepara respuesta si fue enviado el mensaje
+        $bRespuesta = false;
         if (isset($oResultado->respuesta)) {
             $aResultado['respuesta'] = $oResultado->respuesta;
+            $bRespuesta = true;
         }
 
         // Pruebas de reverso automático
@@ -779,7 +781,7 @@ class InterredProxy
             'iso' => $sIso,
         ];
         if ($bEnvia) {
-            $aResultadoEnvio = $this->enviaMensaje($oPeticionCargo->id, $sIso->getValue(11), $sMensaje, $bEcho);
+            $aResultadoEnvio = $this->enviaMensaje(Uuid::generate(4)->string, $sIso->getValue(11), $sMensaje, $bEcho);
             #dump($aResultadoEnvio);
             if (!empty($aResultadoEnvio) && !empty($aResultadoEnvio['respuesta'])) {
                 $aResultado['respuesta'] = [
@@ -813,7 +815,7 @@ class InterredProxy
             'iso' => $sIso,
         ];
         if ($bEnvia) {
-            $aResultadoEnvio = $this->enviaMensaje($oPeticionCargo->id, $sIso->getValue(11), $sMensaje, $bEcho);
+            $aResultadoEnvio = $this->enviaMensaje(Uuid::generate(4)->string, $sIso->getValue(11), $sMensaje, $bEcho);
             #dump($aResultadoEnvio);
             if (!empty($aResultadoEnvio) && !empty($aResultadoEnvio['respuesta'])) {
                 $aResultado['respuesta'] = [
@@ -847,7 +849,7 @@ class InterredProxy
             'iso' => $sIso,
         ];
         if ($bEnvia) {
-            $aResultadoEnvio = $this->enviaMensaje($oPeticionCargo->id, $sIso->getValue(11), $sMensaje, $bEcho);
+            $aResultadoEnvio = $this->enviaMensaje(Uuid::generate(4)->string, $sIso->getValue(11), $sMensaje, $bEcho);
             #dump($aResultadoEnvio);
             if (!empty($aResultadoEnvio) && !empty($aResultadoEnvio['respuesta'])) {
                 $aResultado['respuesta'] = [
@@ -881,7 +883,7 @@ class InterredProxy
             'iso' => $sIso,
         ];
         if ($bEnvia) {
-            $aResultadoEnvio = $this->enviaMensaje($oPeticionCargo->id, $sIso->getValue(11), $sMensaje, $bEcho);
+            $aResultadoEnvio = $this->enviaMensaje(Uuid::generate(4)->string, $sIso->getValue(11), $sMensaje, $bEcho);
             #dump($aResultadoEnvio);
             if (!empty($aResultadoEnvio) && !empty($aResultadoEnvio['respuesta'])) {
                 $aResultado['respuesta'] = [
