@@ -121,7 +121,7 @@ class Mensaje
             ];
         } catch (\GuzzleHttp\Exception\ClientException $e) {
             $sErrorMessage = $e->getMessage();
-            Log::error('Error en '.__METHOD__.' línea '.__LINE__.':' . $sErrorMessage);
+            Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':' . $sErrorMessage);
                 $aResponseResult = [
                     'status' => 'fail',
                     'status_message' => 'ClientException: ' . $sErrorMessage,
@@ -130,7 +130,7 @@ class Mensaje
                 ];
         } catch (\GuzzleHttp\Exception\ConnectException $e) {
             $sErrorMessage = $e->getMessage();
-            Log::error('Error en '.__METHOD__.' línea '.__LINE__.':' . $sErrorMessage);
+            Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':' . $sErrorMessage);
             if (strpos($sErrorMessage, 'cURL error 28') !== false) {
                 $aResponseResult = [
                     'status' => 'fail',
@@ -148,7 +148,7 @@ class Mensaje
             }
         } catch (\GuzzleHttp\Exception\RequestException $e) {
             $sErrorMessage = $e->getMessage();
-            Log::error('Error en '.__METHOD__.' línea '.__LINE__.':' . $sErrorMessage);
+            Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':' . $sErrorMessage);
             $aResponseResult = [
                 'status' => 'fail',
                 'status_message' => 'Error desconocido en request: ' . $sErrorMessage,
@@ -157,7 +157,7 @@ class Mensaje
             ];
         } catch (Exception $e) {
             $sErrorMessage = $e->getMessage();
-            Log::error('Error en '.__METHOD__.' línea '.__LINE__.':' . $sErrorMessage);
+            Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':' . $sErrorMessage);
             $aResponseResult = [
                 'status' => 'fail',
                 'status_message' => 'Error desconocido: ' . $sErrorMessage,

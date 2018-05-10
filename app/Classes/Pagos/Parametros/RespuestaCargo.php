@@ -4,6 +4,7 @@ namespace App\Classes\Pagos\Parametros;
 
 use Jenssegers\Model\Model;
 use Exception;
+use Validator;
 use Carbon\Carbon;
 use App\Classes\Pagos\Parametros\PeticionCargo;
 
@@ -13,14 +14,13 @@ use App\Classes\Pagos\Parametros\PeticionCargo;
  */
 class RespuestaCargo extends Model
 {
-
     // {{{ properties
 
     /*
      * @var array $fillable Atributos asignables
      */
     protected $fillable = [
-        'id', // Id de la transacción en Claro Pagos
+        'uuid', // ID de la transacción en Claro Pagos
         'prueba', // Booleano que indica si es una transacción de prueba o no
         'estatus'
     ];

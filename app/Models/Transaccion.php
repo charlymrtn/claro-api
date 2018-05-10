@@ -56,10 +56,10 @@ class Transaccion extends Model
     protected $casts = [
         'datos_pago' => 'array',
         'datos_comercio' => 'array',
-        'datos_claropagos' => 'array',
         'datos_destino' => 'array',
         'datos_antifraude' => 'array',
         'datos_procesador' => 'array',
+        'datos_claropagos' => 'array',
     ];
 
     /**
@@ -67,6 +67,8 @@ class Transaccion extends Model
      * @var $incrementing string
      */
     public $incrementing = 'false';
+    protected $primaryKey = 'uuid';
+    protected $keyType = 'uuid';
 
     /**
      *  Setup model event hooks

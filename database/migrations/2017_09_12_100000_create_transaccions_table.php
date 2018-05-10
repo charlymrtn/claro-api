@@ -20,8 +20,10 @@ class CreateTransaccionsTable extends Migration
             //Catalogos
             $table->uuid('comercio_uuid');
             $table->enum('estatus', [
-                'pendiente', 'completada', 'reembolsada', 'reembolso-parcial', 'autorizada',
-                'cancelada', 'rechazada-banco', 'rechazada-antifraude', 'contracargo-pendiente', 'contracargo-rechazado',
+                'pendiente',
+                'aprobada-antifraude', 'rechazada-antifraude',
+                'completada', 'reembolsada', 'reembolso-parcial', 'autorizada',
+                'cancelada', 'rechazada-banco', 'contracargo-pendiente', 'contracargo-rechazado',
                 'contracargada', 'fallida', 'declinada'
             ]);
             $table->string('pais', 3);

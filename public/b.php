@@ -3,6 +3,7 @@
 namespace app\Prueba\Bbva;
 
 use App;
+use Storage;
 use Carbon\Carbon;
 use App\Classes\Pagos\Procesadores\Bbva\Mensaje;
 use App\Classes\Pagos\Medios\TarjetaCredito;
@@ -46,9 +47,9 @@ class BbvaTest
             // Crédito
             'pan' => '4761739001010119',
             'nombre' => 'Juan Perez Lopez',
-            'cvv2' => '840',
-            'expiracion_mes' => '04',
-            'expiracion_anio' => '20',
+            'cvv2' => '830',
+            'expiracion_mes' => '12',
+            'expiracion_anio' => '17',
             'lealtad' => true,
         ]);
         // Construye petición de cargo
