@@ -29,6 +29,17 @@ return [
             ],
             'antifraude' => [
                 'url' => env('CP_ANTIFRAUDE', 'http://antifraude.claropay.local.com'),
+                'token' => 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6IjFjZGYyZjMyMzQwZWIxNjI1MTViYWVhODcyN2M3M2VhNjIwOTVjNzQ'
+                         . '1NjI5ZmI5NmE0ZTU3NThmZmU5MWJmNDBlNTA3Zjc0ZGM4YWYxOWI3In0.eyJhdWQiOiIxIiwianRpIjoiMWNkZjJmMzIzNDBlYj'
+                         . 'E2MjUxNWJhZWE4NzI3YzczZWE2MjA5NWM3NDU2MjlmYjk2YTRlNTc1OGZmZTkxYmY0MGU1MDdmNzRkYzhhZjE5YjciLCJpYXQiO'
+                         . 'jE1MjUzMjE2OTgsIm5iZiI6MTUyNTMyMTY5OCwiZXhwIjoxNTU2ODU3Njk4LCJzdWIiOiIiLCJzY29wZXMiOlsic3VwZXJhZG1p'
+                         . 'biJdfQ.ozB6Y8Iz2ef9L_J_NizSAFZiA2pCvHFZq9ftuJVzwHdQe9u8pX4qe3HJsqgnXQ_gTouNVEGNyC7DfnbBvJzYqW53iKiK'
+                         . '47eSZfy3Hrzeiu4JURF0vzTZA48Qdwbw5xerw8YyCB3VfokYzWtO_13bZT3fLO8JJMrG7n_ogLnGMR-5lDRdlCjAlE9IBL4AOkB'
+                         . '-vmjcOkJX7boI1e3xPawpJNaf0d0qt6QBFWQpU3VtddsB0lDa0EbmiaexpWqLS0auZK4suPkojRIcnAvATXoBkWfvBkbh0N_FTj'
+                         . 'etGPhnx886exDctVuTfEvem-v5H20NavPZ_UX8j_TTGxW3R3Cd8AvISWeM4cvvmOFFAN3vvmZZBA5yEEjmvOtaKbjbnkZ1foEfk'
+                         . 'BGEe5NZ1XXgf8xxVbzVWDsXTVUyPfrniKz9cQOVX4f6qv9NdgFDn_9Kc-9AUvmme5vkiBltEwV26dczUpT8dUa9AjP7MUfIisDy'
+                         . '78LnxNRsTe4G42fHMYAvDWoxOizpANLU9VxgnmZ6gtEIq3iQP2cCnx26AfEddgL5BWDDwLfScMVkSLnIsJomlyLFZYlZNEF1Zt8'
+                         . 'cyYxLM7TD_fUSWVlLQe83eor6Ry0gluu0UWR9RLZJuEnb_JEG4VB_Ca5BKodhKkyUmtUz84OmC3kfR1hR4UNhgU5FKtPJ0aI',
             ],
             'api' => [
                 'url' => env('CP_API', 'http://api.claropay.local.com'),
@@ -46,6 +57,17 @@ return [
             ],
             'boveda' => [
                 'url' => env('CP_BOVEDA', 'http://boveda.claropay.local.com'),
+                'token' => 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6IjQ4MzhmZWJhOTZiMWMwMjJlZWY0M2JjNjAyZjM0MDM3Mzk4MmMwMWJ'
+                         . 'jMDhjZTMwYWU5MGQxMGU3YTc5MDliOWMzZGVkODUxY2ZmMjc1ZDVlIn0.eyJhdWQiOiIxIiwianRpIjoiNDgzOGZlYmE5NmIxYz'
+                         . 'AyMmVlZjQzYmM2MDJmMzQwMzczOTgyYzAxYmMwOGNlMzBhZTkwZDEwZTdhNzkwOWI5YzNkZWQ4NTFjZmYyNzVkNWUiLCJpYXQiO'
+                         . 'jE1MjUzMTg4NDAsIm5iZiI6MTUyNTMxODg0MCwiZXhwIjoxNTU2ODU0ODQwLCJzdWIiOiIiLCJzY29wZXMiOlsic3VwZXJhZG1p'
+                         . 'biJdfQ.bWa73J0CoaqoR-TBPafLsgfBMEU_Syq7mp02sBxrUzIVynq6V6srzktlw0yjBv48POMX6rgiBKq6ZjMxy5VwJrpWTAAo'
+                         . '2UgsHAvHcJcsUbpZOVwW9Eph0jJ3sv_C3VHHPOTW0jBLJecB2w9TObGMGhn3_Bzlti-CEWPP-80adcdNSYPaSDfK89BWEz-Ozsq'
+                         . 'ecdTMP5JsvoxxrmSc2WFcwe1E1TrylbYLLSBWqrqLVHCM_M-o7bqr3NFSOUiJDjg73uFtbglD25pOlaN8nHR8aEDglK87i51JbB'
+                         . '5_JYle9v-v4qqQLtwkDk_Hc9K_X3cPBoYc9ULeQc_GG5zVusghEIZNfoxXSq91XBEHU_lVoa7NEG-kDE4Tnv7EicZCo4Sp4HXa7'
+                         . 'VPZEhKpm66o_n69pLeHSs92SQq9FU0yMyWrT8np91bKzd6j50BGqaYTD9K28jhpbpMsbxNO2zFYRtXiBoucOXeJ3Xuw1Qd3Qtpt'
+                         . '0UJZ9xyNDljOmaoemwb30EmF1zpmbuU4N0sgN2J6CPQb2bFZNzYSgc_BsPPbSrDI2LYrI9UHYmrWFKvp0Y-grEkacO33Jhq7Sz7'
+                         . 'EnFwYypeet_Gm3m6Ilt1lF61T5Zk6NYlf1heU1bdp4GIpudcrot_VUGQzOtrJ4ZbRHxgl_VPA507PeSlTruBY5YPlHNDzcTg',
             ],
             'clientes' => [
                 'url' => env('CP_CLIENTE', 'http://clientes.claropay.local.com'),
@@ -66,6 +88,17 @@ return [
             ],
             'tareas' => [
                 'url' => env('CP_TAREAS', 'http://tareas.claropay.local.com'),
+                'token' => ''
+                         . ''
+                         . ''
+                         . ''
+                         . ''
+                         . ''
+                         . ''
+                         . ''
+                         . ''
+                         . ''
+                         . '',
             ],
         ],
 
@@ -109,7 +142,7 @@ return [
         // Servidores del ecosistema Claro Pagos
         'server' => [
             'admin' => [
-                'url' => env('CP_ADMIN', 'http://atenea.dev.mavericksgateway.net'),
+                'url' => env('CP_ADMIN', 'https://atenea.dev.mavericksgateway.net'),
                 'token' => 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6ImMxNjhhZjQ0ZDk0YmVjMjNmMDA4ZWI4YmI0NGIwODY2ZDE1NWZkNTc'
                          . '3MTRlN2M3MWQ2NTkzZGQ5OGM2N2U1MGZkMGZjYzVjYWYxNDBlN2RjIn0.eyJhdWQiOiIxIiwianRpIjoiYzE2OGFmNDRkOTRiZW'
                          . 'MyM2YwMDhlYjhiYjQ0YjA4NjZkMTU1ZmQ1NzcxNGU3YzcxZDY1OTNkZDk4YzY3ZTUwZmQwZmNjNWNhZjE0MGU3ZGMiLCJpYXQiO'
@@ -123,7 +156,18 @@ return [
                          . 'YZlgFhaT5wdqVVfnZH1AdMZ05V40YAUWhiW1L90RrJEMBsj36LNN4BO-uuqS5bZSMx07Yww2hADLNFGAE6yst0t3pNllhKAE',
             ],
             'antifraude' => [
-                'url' => env('CP_ANTIFRAUDE', 'http://ares.dev.mavericksgateway.net'),
+                'url' => env('CP_ANTIFRAUDE', 'https://ares.dev.mavericksgateway.net'),
+                'token' => 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6IjFjZGYyZjMyMzQwZWIxNjI1MTViYWVhODcyN2M3M2VhNjIwOTVjNzQ'
+                         . '1NjI5ZmI5NmE0ZTU3NThmZmU5MWJmNDBlNTA3Zjc0ZGM4YWYxOWI3In0.eyJhdWQiOiIxIiwianRpIjoiMWNkZjJmMzIzNDBlYj'
+                         . 'E2MjUxNWJhZWE4NzI3YzczZWE2MjA5NWM3NDU2MjlmYjk2YTRlNTc1OGZmZTkxYmY0MGU1MDdmNzRkYzhhZjE5YjciLCJpYXQiO'
+                         . 'jE1MjUzMjE2OTgsIm5iZiI6MTUyNTMyMTY5OCwiZXhwIjoxNTU2ODU3Njk4LCJzdWIiOiIiLCJzY29wZXMiOlsic3VwZXJhZG1p'
+                         . 'biJdfQ.ozB6Y8Iz2ef9L_J_NizSAFZiA2pCvHFZq9ftuJVzwHdQe9u8pX4qe3HJsqgnXQ_gTouNVEGNyC7DfnbBvJzYqW53iKiK'
+                         . '47eSZfy3Hrzeiu4JURF0vzTZA48Qdwbw5xerw8YyCB3VfokYzWtO_13bZT3fLO8JJMrG7n_ogLnGMR-5lDRdlCjAlE9IBL4AOkB'
+                         . '-vmjcOkJX7boI1e3xPawpJNaf0d0qt6QBFWQpU3VtddsB0lDa0EbmiaexpWqLS0auZK4suPkojRIcnAvATXoBkWfvBkbh0N_FTj'
+                         . 'etGPhnx886exDctVuTfEvem-v5H20NavPZ_UX8j_TTGxW3R3Cd8AvISWeM4cvvmOFFAN3vvmZZBA5yEEjmvOtaKbjbnkZ1foEfk'
+                         . 'BGEe5NZ1XXgf8xxVbzVWDsXTVUyPfrniKz9cQOVX4f6qv9NdgFDn_9Kc-9AUvmme5vkiBltEwV26dczUpT8dUa9AjP7MUfIisDy'
+                         . '78LnxNRsTe4G42fHMYAvDWoxOizpANLU9VxgnmZ6gtEIq3iQP2cCnx26AfEddgL5BWDDwLfScMVkSLnIsJomlyLFZYlZNEF1Zt8'
+                         . 'cyYxLM7TD_fUSWVlLQe83eor6Ry0gluu0UWR9RLZJuEnb_JEG4VB_Ca5BKodhKkyUmtUz84OmC3kfR1hR4UNhgU5FKtPJ0aI',
             ],
             'api' => [
                 'url' => env('CP_API', 'ciclope.dev.mavericksgateway.net'),
@@ -140,10 +184,21 @@ return [
                          . '0XTv-n7Sj4NZw2uUtSRm4v2YKfScsfZ5fGkNmGJHdDZC00qFd4j4c38U_aGo4xX0kK1jjOO6xqu-WYpXJ_UTMo904AX43W6Kc',
             ],
             'boveda' => [
-                'url' => env('CP_BOVEDA', 'http://busiris.dev.mavericksgateway.net'),
+                'url' => env('CP_BOVEDA', 'https://busiris.dev.mavericksgateway.net'),
+                'token' => 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6IjQ4MzhmZWJhOTZiMWMwMjJlZWY0M2JjNjAyZjM0MDM3Mzk4MmMwMWJ'
+                         . 'jMDhjZTMwYWU5MGQxMGU3YTc5MDliOWMzZGVkODUxY2ZmMjc1ZDVlIn0.eyJhdWQiOiIxIiwianRpIjoiNDgzOGZlYmE5NmIxYz'
+                         . 'AyMmVlZjQzYmM2MDJmMzQwMzczOTgyYzAxYmMwOGNlMzBhZTkwZDEwZTdhNzkwOWI5YzNkZWQ4NTFjZmYyNzVkNWUiLCJpYXQiO'
+                         . 'jE1MjUzMTg4NDAsIm5iZiI6MTUyNTMxODg0MCwiZXhwIjoxNTU2ODU0ODQwLCJzdWIiOiIiLCJzY29wZXMiOlsic3VwZXJhZG1p'
+                         . 'biJdfQ.bWa73J0CoaqoR-TBPafLsgfBMEU_Syq7mp02sBxrUzIVynq6V6srzktlw0yjBv48POMX6rgiBKq6ZjMxy5VwJrpWTAAo'
+                         . '2UgsHAvHcJcsUbpZOVwW9Eph0jJ3sv_C3VHHPOTW0jBLJecB2w9TObGMGhn3_Bzlti-CEWPP-80adcdNSYPaSDfK89BWEz-Ozsq'
+                         . 'ecdTMP5JsvoxxrmSc2WFcwe1E1TrylbYLLSBWqrqLVHCM_M-o7bqr3NFSOUiJDjg73uFtbglD25pOlaN8nHR8aEDglK87i51JbB'
+                         . '5_JYle9v-v4qqQLtwkDk_Hc9K_X3cPBoYc9ULeQc_GG5zVusghEIZNfoxXSq91XBEHU_lVoa7NEG-kDE4Tnv7EicZCo4Sp4HXa7'
+                         . 'VPZEhKpm66o_n69pLeHSs92SQq9FU0yMyWrT8np91bKzd6j50BGqaYTD9K28jhpbpMsbxNO2zFYRtXiBoucOXeJ3Xuw1Qd3Qtpt'
+                         . '0UJZ9xyNDljOmaoemwb30EmF1zpmbuU4N0sgN2J6CPQb2bFZNzYSgc_BsPPbSrDI2LYrI9UHYmrWFKvp0Y-grEkacO33Jhq7Sz7'
+                         . 'EnFwYypeet_Gm3m6Ilt1lF61T5Zk6NYlf1heU1bdp4GIpudcrot_VUGQzOtrJ4ZbRHxgl_VPA507PeSlTruBY5YPlHNDzcTg',
             ],
             'clientes' => [
-                'url' => env('CP_CLIENTE', 'http://apolo.dev.mavericksgateway.net'),
+                'url' => env('CP_CLIENTE', 'https://apolo.dev.mavericksgateway.net'),
                 'token' => 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6ImZlMjg1M2Y5Y2UxOTgxY2Y0NWM4MGY0ODQ0MDU5M2EyMzJjYzg4ZmI'
                          . '3ZWIzYmViY2U2ODM2NjNiMWEyN2IyMzI3ZWI1YjVmOTBiYTBhYjdmIn0.eyJhdWQiOiIxIiwianRpIjoiZmUyODUzZjljZTE5OD'
                          . 'FjZjQ1YzgwZjQ4NDQwNTkzYTIzMmNjODhmYjdlYjNiZWJjZTY4MzY2M2IxYTI3YjIzMjdlYjViNWY5MGJhMGFiN2YiLCJpYXQiO'
@@ -157,10 +212,10 @@ return [
                          . '_bpfj1gMHrd4V3DTKgx46WWxvNslAbQrQelSt5Ut107YUY7Wazhc31j9tc6iwc_dPhjuCQ5F19whLINb6hQBjtBCEYtjFsS4',
             ],
             'monitor' => [
-                'url' => env('CP_MONITOR', 'http://medusa.dev.mavericksgateway.net'),
+                'url' => env('CP_MONITOR', 'https://medusa.dev.mavericksgateway.net'),
             ],
             'tareas' => [
-                'url' => env('CP_TAREAS', 'http://triton.dev.mavericksgateway.net'),
+                'url' => env('CP_TAREAS', 'https://triton.dev.mavericksgateway.net'),
             ],
         ],
         // Configuración de procesadores de pago
@@ -197,25 +252,25 @@ return [
         // Servidores del ecosistema Claro Pagos
         'server' => [
             'admin' => [
-                'url' => env('CP_ADMIN', 'atenea.rel.mavericksgateway.net'),
+                'url' => env('CP_ADMIN', 'https://atenea.rel.mavericksgateway.net'),
             ],
             'antifraude' => [
-                'url' => env('CP_ANTIFRAUDE', 'ares.rel.mavericksgateway.net'),
+                'url' => env('CP_ANTIFRAUDE', 'https://ares.rel.mavericksgateway.net'),
             ],
             'api' => [
-                'url' => env('CP_API', 'ciclope.rel.mavericksgateway.net'),
+                'url' => env('CP_API', 'https://ciclope.rel.mavericksgateway.net'),
             ],
             'boveda' => [
-                'url' => env('CP_BOVEDA', 'busiris.rel.mavericksgateway.net'),
+                'url' => env('CP_BOVEDA', 'https://busirisrelqa.mavericksgateway.net'),
             ],
             'clientes' => [
-                'url' => env('CP_CLIENTE', 'apolo.rel.mavericksgateway.net'),
+                'url' => env('CP_CLIENTE', 'https://apolo.rel.mavericksgateway.net'),
             ],
             'monitor' => [
-                'url' => env('CP_MONITOR', 'medusa.rel.mavericksgateway.net'),
+                'url' => env('CP_MONITOR', 'https://medusa.rel.mavericksgateway.net'),
             ],
             'tareas' => [
-                'url' => env('CP_TAREAS', 'triton.rel.mavericksgateway.net'),
+                'url' => env('CP_TAREAS', 'https://triton.rel.mavericksgateway.net'),
             ],
         ],
 
@@ -253,25 +308,25 @@ return [
         // Servidores del ecosistema Claro Pagos
         'server' => [
             'admin' => [
-                'url' => env('CP_ADMIN', 'admin.sandbox.claropagos.com'),
+                'url' => env('CP_ADMIN', 'https://admin.sandbox.claropagos.com'),
             ],
             'antifraude' => [
-                'url' => env('CP_ANTIFRAUDE', 'antifraude.sandbox.claropagos.com'),
+                'url' => env('CP_ANTIFRAUDE', 'https://antifraude.sandbox.claropagos.com'),
             ],
             'api' => [
-                'url' => env('CP_API', 'api.sandbox.claropagos.com'),
+                'url' => env('CP_API', 'https://api.sandbox.claropagos.com'),
             ],
             'boveda' => [
-                'url' => env('CP_BOVEDA', 'boveda.sandbox.claropagos.com'),
+                'url' => env('CP_BOVEDA', 'https://boveda.sandbox.claropagos.com'),
             ],
             'clientes' => [
-                'url' => env('CP_CLIENTE', 'clientes.sandbox.claropagos.com'),
+                'url' => env('CP_CLIENTE', 'https://clientes.sandbox.claropagos.com'),
             ],
             'monitor' => [
-                'url' => env('CP_MONITOR', 'monitor.sandbox.claropagos.com'),
+                'url' => env('CP_MONITOR', 'https://monitor.sandbox.claropagos.com'),
             ],
             'tareas' => [
-                'url' => env('CP_TAREAS', 'tareas.sandbox.claropagos.com'),
+                'url' => env('CP_TAREAS', 'https://tareas.sandbox.claropagos.com'),
             ],
         ],
 
@@ -309,25 +364,25 @@ return [
         // Servidores del ecosistema Claro Pagos
         'server' => [
             'admin' => [
-                'url' => env('CP_ADMIN', 'admin.claropagos.com'),
+                'url' => env('CP_ADMIN', 'https://admin.claropagos.com'),
             ],
             'antifraude' => [
-                'url' => env('CP_ANTIFRAUDE', 'antifraude.claropagos.com'),
+                'url' => env('CP_ANTIFRAUDE', 'https://antifraude.claropagos.com'),
             ],
             'api' => [
-                'url' => env('CP_API', 'api.claropagos.com'),
+                'url' => env('CP_API', 'https://api.claropagos.com'),
             ],
             'boveda' => [
-                'url' => env('CP_BOVEDA', 'boveda.claropagos.com'),
+                'url' => env('CP_BOVEDA', 'https://boveda.claropagos.com'),
             ],
             'clientes' => [
-                'url' => env('CP_CLIENTE', 'clientes.claropagos.com'),
+                'url' => env('CP_CLIENTE', 'https://clientes.claropagos.com'),
             ],
             'monitor' => [
-                'url' => env('CP_MONITOR', 'monitor.claropagos.com'),
+                'url' => env('CP_MONITOR', 'https://monitor.claropagos.com'),
             ],
             'tareas' => [
-                'url' => env('CP_TAREAS', 'tareas.claropagos.com'),
+                'url' => env('CP_TAREAS', 'https://tareas.claropagos.com'),
             ],
         ],
 
