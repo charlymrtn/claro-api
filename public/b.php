@@ -453,41 +453,43 @@ class BbvaTest
         if ($bEcho) {
             echo "\n<br>Generando transacción";
         }
-        // Prepara transacción
-        $sUuid = Uuid::generate(4);
-        $oTrx = new Transaccion([
-            'uuid' => $sUuid,
-            'prueba' => $this->oPeticionCargo->prueba,
-            'operacion' => 'pago',
-            'monto' => $this->oPeticionCargo->monto,
-            'forma_pago' => 'tarjeta',
-            'estatus' => 'pendiente',
-            'datos_pago' => [
-                'nombre' => $this->oPeticionCargo->tarjeta->nombre,
-                'pan' => $this->oPeticionCargo->tarjeta->pan,
-                'pan_hash' => $this->oPeticionCargo->tarjeta->pan_hash,
-                'marca' => $this->oPeticionCargo->tarjeta->marca,
-            ],
-            // Comercio
-            'datos_comercio' => [
-                'pedido' => $this->oPeticionCargo->pedido,
-                'cliente' => $this->oPeticionCargo->cliente,
-            ],
-            // Claropagos
-            'datos_claropagos' => [],
-            // Eventos
-            'datos_antifraude' => [],
-            'datos_procesador' => [],
-            'datos_destino' => [],
-            // Catálogos
-            'comercio_uuid' => $this->oPeticionCargo->comercio_uuid,
-            'transaccion_estatus_id' => 4,
-            'pais' => 'MEX',
-            'moneda' => 'MXN',
-        ]);
-        // Guarda transacción
-        $oTrx->save();
-        $oTrx = Transaccion::find($sUuid);
+        if ($sTipo == 'envio_json' || $sTipo == 'envio_online') {
+            // Prepara transacción
+            $sUuid = Uuid::generate(4);
+            $oTrx = new Transaccion([
+                'uuid' => $sUuid,
+                'prueba' => $this->oPeticionCargo->prueba,
+                'operacion' => 'pago',
+                'monto' => $this->oPeticionCargo->monto,
+                'forma_pago' => 'tarjeta',
+                'estatus' => 'pendiente',
+                'datos_pago' => [
+                    'nombre' => $this->oPeticionCargo->tarjeta->nombre,
+                    'pan' => $this->oPeticionCargo->tarjeta->pan,
+                    'pan_hash' => $this->oPeticionCargo->tarjeta->pan_hash,
+                    'marca' => $this->oPeticionCargo->tarjeta->marca,
+                ],
+                // Comercio
+                'datos_comercio' => [
+                    'pedido' => $this->oPeticionCargo->pedido,
+                    'cliente' => $this->oPeticionCargo->cliente,
+                ],
+                // Claropagos
+                'datos_claropagos' => [],
+                // Eventos
+                'datos_antifraude' => [],
+                'datos_procesador' => [],
+                'datos_destino' => [],
+                // Catálogos
+                'comercio_uuid' => $this->oPeticionCargo->comercio_uuid,
+                'transaccion_estatus_id' => 4,
+                'pais' => 'MEX',
+                'moneda' => 'MXN',
+            ]);
+            // Guarda transacción
+            $oTrx->save();
+            $oTrx = Transaccion::find($sUuid);
+        }
 
 
 
@@ -514,31 +516,35 @@ class BbvaTest
             $bRespuesta = true;
 
 
-            // ========================================================================
-            $oTrx->datos_procesador = [
-                'request' => [
-                    'json' => $this->oPeticionCargo->toJson(),
-                    'b64' => base64_encode($oResultado->mensaje),
-                ],
-                'response' => [
-                    'b64' => $oResultado->respuesta['mensaje_b64'],
-                    'json' => $oResultado->respuesta['iso_parsed'],
-                ],
-            ];
-            if (isset($oTrx->datos_procesador['response']['json']['39']) && $oTrx->datos_procesador['response']['json']['39'] == '00') {
-                $oTrx->estatus = 'completada';
-            } else {
-                $oTrx->estatus = 'rechazada-banco';
+            if ($sTipo == 'envio_json' || $sTipo == 'envio_online') {
+                // ========================================================================
+                $oTrx->datos_procesador = [
+                    'request' => [
+                        'json' => $this->oPeticionCargo->toJson(),
+                        'b64' => base64_encode($oResultado->mensaje),
+                    ],
+                    'response' => [
+                        'b64' => $oResultado->respuesta['mensaje_b64'],
+                        'json' => $oResultado->respuesta['iso_parsed'],
+                    ],
+                ];
+                if (isset($oTrx->datos_procesador['response']['json']['39']) && $oTrx->datos_procesador['response']['json']['39'] == '00') {
+                    $oTrx->estatus = 'completada';
+                } else {
+                    $oTrx->estatus = 'rechazada-banco';
+                }
+                $oTrx->save();
             }
-            $oTrx->save();
         }
 
-        // Envía transacciones a admin y clientes
-        $oMensajeCP = new MensajeCP();
-        $oMensajeResultadoA = $oMensajeCP->envia('clientes', '/api/admin/transaccion', 'POST', $oTrx->toJson());
-        #dump($oMensajeResultadoA);
-        $oMensajeResultadoB = $oMensajeCP->envia('admin', '/api/admin/transaccion', 'POST', $oTrx->toJson());
-        #dump($oMensajeResultadoB);
+        if ($sTipo == 'envio_json' || $sTipo == 'envio_online') {
+            // Envía transacciones a admin y clientes
+            #$oMensajeCP = new MensajeCP();
+            #$oMensajeResultadoA = $oMensajeCP->envia('clientes', '/api/admin/transaccion', 'POST', $oTrx->toJson());
+            #dump($oMensajeResultadoA);
+            $oMensajeResultadoB = $oMensajeCP->envia('admin', '/api/admin/transaccion', 'POST', $oTrx->toJson());
+            #dump($oMensajeResultadoB);
+        }
 
         // Pruebas de reverso automático
         if (in_array($sPrueba, ['26', '27', '28', '29', '30', '31', '3v', '4v', '5v', '6v'])) {
