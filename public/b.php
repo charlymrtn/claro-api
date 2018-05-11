@@ -542,7 +542,7 @@ class BbvaTest
             #$oMensajeCP = new MensajeCP();
             #$oMensajeResultadoA = $oMensajeCP->envia('clientes', '/api/admin/transaccion', 'POST', $oTrx->toJson());
             #dump($oMensajeResultadoA);
-            $oMensajeResultadoB = $oMensajeCP->envia('admin', '/api/admin/transaccion', 'POST', $oTrx->toJson());
+            #$oMensajeResultadoB = $oMensajeCP->envia('admin', '/api/admin/transaccion', 'POST', $oTrx->toJson());
             #dump($oMensajeResultadoB);
         }
 
