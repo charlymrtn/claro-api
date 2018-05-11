@@ -20,9 +20,16 @@ class RespuestaCargo extends Model
      * @var array $fillable Atributos asignables
      */
     protected $fillable = [
-        'uuid', // ID de la transacción en Claro Pagos
+        'id', // ID de la transacción en Claro Pagos
         'prueba', // Booleano que indica si es una transacción de prueba o no
-        'estatus'
+        'monto', // Numérico (mayor a cero con dos decimales). Monto de la transacción
+        'autorizacion', // String. Identificador de autorización del procesador de pago
+        'tipo', // String. Tipo de transacción (“cargo”)
+        'orden_id', // String. Identificador del orden del comercio
+        'cliente_id', // String. Identificador de cliente del comercio
+        'estatus', // String. Estatus de la transacción
+        'error', // Objeto. Objeto de tipo Error
+        'prueba', // Boolean. Indica si la transacción es una prueba
     ];
 
     /*

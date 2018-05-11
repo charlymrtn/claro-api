@@ -11,7 +11,9 @@ use Webpatser\Uuid\Uuid;
 
 use App\Models\Transaccion;
 use App\Classes\Sistema\Mensaje;
+use App\Classes\Pagos\Base\Error;
 use App\Classes\Pagos\Parametros\PeticionCargo;
+use App\Classes\Pagos\Parametros\RespuestaCargo;
 
 /**
  * Procesador de pagos para American Express
@@ -141,9 +143,19 @@ class Cargo
             if ($oPeticionCargo->tarjeta->expiracion_mes == '01') {
                 $oTrx->datos_antifraude = ['resultado' => 'rojo', 'score' => 90, 'response_code' => '220', 'response_description' => 'Transacción muy riesgoza'];
                 $oTrx->estatus = 'rechazada-antifraude';
+                $oError = new Error([
+                    'codigo' => '220',
+                    'tipo' => 'Antifraude',
+                    'descripcion' => 'Transacción muy riesgoza',
+                ]);
             } else if ($oPeticionCargo->tarjeta->expiracion_mes == '02') {
                 $oTrx->datos_antifraude = ['resultado' => 'rojo', 'score' => 100, 'response_code' => '205', 'response_description' => 'Tarjeta reportada como robada'];
                 $oTrx->estatus = 'rechazada-antifraude';
+                $oError = new Error([
+                    'codigo' => '205',
+                    'tipo' => 'Antifraude',
+                    'descripcion' => 'Tarjeta reportada como robada',
+                ]);
             } else {
                 $oTrx->datos_antifraude = ['resultado' => 'verde', 'score' => 25, 'response_code' => '100', 'response_description' => 'Transaction de bajo riesgo'];
                 $oTrx->estatus = 'aprobada-antifraude';
@@ -167,15 +179,23 @@ class Cargo
                     $oTrx->datos_procesador = ['status' => "fail", 'data' => ['response_code' => '12', 'message' => "No se puede realizar la venta.", 'prueba' => false]];
                     //$oTrx->datos_procesador = ['status' => "fail", 'data' => ['response_code' => '05', 'message' => "Venta rechazada", "importantData" => ["orderId" => 25198,"authNum" => "0","transactionId" => 27172]]];
                     $oTrx->estatus = 'rechazada-banco';
+                    $oError = new Error([
+                        'codigo' => '12',
+                        'tipo' => 'Banco',
+                        'descripcion' => 'No se puede realizar la venta',
+                    ]);
                 } else {
                     $oTrx->datos_antifraude = ['resultado' => 'verde', 'score' => 22, 'response_code' => '100', 'response_description' => 'Transaction de bajo riesgo'];
                 }
             } else {
                 // 3.2 Define procesador a usar dependiendo de la afiliación y tarjeta proporcionada
-                if ($oPeticionCargo->tarjeta->marca == 'amex') {
+
+                // @todo: Define afiliación a usar
+                $cAfiliaciones = collect($usuario->getAfiliaciones());
+
+                if ($oPeticionCargo->tarjeta->marca == 'amex' && $cAfiliacionesAmex->contains('procesador', 'amex')) {
                     // @todo: Define afiliación a usar
-                    $cAfiliacionesAmex = collect($usuario->getAfiliaciones('amex'));
-                    $oAfiliacion = $cAfiliacionesAmex->first();
+                    $oAfiliacion = $cAfiliaciones->firstWhere('procesador', 'amex');
                     // Procesa transacción con procesador de pagos
                     // @todo: Cambiar Procesadores\Amex\InternetDirect por Procesadores\sProcesadorAmex
                     $oProcesador = new \App\Classes\Pagos\Procesadores\Amex\InternetDirect();
@@ -199,14 +219,62 @@ class Cargo
                         $oTrx->estatus = 'completada';
                     } else if (in_array($oPago->status, ['fail', 'failed'])) {
                         $oTrx->estatus = 'rechazada-banco';
+                        $oError = new Error([
+                            'codigo' => '12',
+                            'tipo' => 'Banco',
+                            'descripcion' => 'No se puede realizar la venta',
+                        ]);
                     } else {
                         $oTrx->estatus = 'completada';
                     }
 
-                } else {
+//                } else if ($cAfiliacionesAmex->contains('procesador', 'eglobal')) {
+//                    // @todo: Define afiliación a usar
+//                    $oAfiliacion = $cAfiliaciones->firstWhere('procesador', 'eglobal');
+//                    // Procesa transacción con procesador de pagos
+//                    // @todo: Cambiar Procesadores\Amex\InternetDirect por Procesadores\sProcesadorAmex
+//                    $oProcesador = new \App\Classes\Pagos\Procesadores\Prosa\VentaManualService($oTrx->prueba);
+//                    // @todo: Define configuración de afiliación
+//                    #$oProcesador->setAfiliacion($oAfiliacion);
+//                    $aProsaPago = [
+//                        'nombre' => $oPeticionCargo->tarjeta->nombre,
+//                        'pan' => $oPeticionCargo->tarjeta->_pan,
+//                        'amount' => $oPeticionCargo->monto,
+//                        'datetime' => date('ymdhis'),
+//                        'date_exp' => $oPeticionCargo->tarjeta->expiracion_anio . $oPeticionCargo->tarjeta->expiracion_mes,
+//                        'cvv' => $oPeticionCargo->tarjeta->cvv2,
+//                        'direccion' => $oPeticionCargo->direccion_cargo,
+//                        'email' => $oPeticionCargo->cliente->email,
+//                        'productos' => [
+//                            [
+//                                'Quantity' => $oPeticionCargo->pedido->articulos,
+//                                'description' => $oPeticionCargo->descripcion,
+//                                'nombre' => $oPeticionCargo->cliente->nombre,
+//                                'unitPrice' => $oPeticionCargo->monto,
+//                                'amount' => $oPeticionCargo->monto,
+//                                'Id' => $oPeticionCargo->pedido->id,
+//                            ],
+//                        ],
+//                    ];
+//                    $oPago = $oProcesador->sendTransaction($aProsaPago['amount'], $aProsaPago['productos'], $aProsaPago['pan'], $aProsaPago['nombre'], $aProsaPago['cvv'], $aProsaPago['date_exp'])->getData();
+//                    $oTrx->datos_procesador = json_decode(json_encode($oPago), true);
+//                    //$oTrx->datos_procesador = '{"status":"success","data":{"message":"Venta generada correctamente","response_code":"00","importantData":{"orderId":25198,"authNum":"152099","transactionId":27172},"prueba":true}}';
+//                    if ($oPago->data->response_code == '00') {
+//                        $oTrx->estatus = 'completada';
+//                        //$oTrx->autorizacion = $oPago->data->importantData->authNum;
+//                    } else {
+//                        $oTrx->estatus = 'rechazada-banco';
+//                        //$oTrx->mensaje = $oPago->data->message;
+//                        //$oTrx->autorizacion = 0;
+//                        $oError = new Error([
+//                            'codigo' => '05',
+//                            'tipo' => 'Banco',
+//                            'descripcion' => 'Rechazada por el banco',
+//                        ]);
+//                    }
+                } else if ($cAfiliacionesAmex->contains('procesador', 'prosa')) {
                     // @todo: Define afiliación a usar
-                    $cAfiliacionesProsa = collect($usuario->getAfiliaciones('prosa'));
-                    $oAfiliacion = $cAfiliacionesProsa->first();
+                    $oAfiliacion = $cAfiliaciones->firstWhere('procesador', 'prosa');
                     // Procesa transacción con procesador de pagos
                     // @todo: Cambiar Procesadores\Amex\InternetDirect por Procesadores\sProcesadorAmex
                     $oProcesador = new \App\Classes\Pagos\Procesadores\Prosa\VentaManualService($oTrx->prueba);
@@ -242,10 +310,13 @@ class Cargo
                         $oTrx->estatus = 'rechazada-banco';
                         //$oTrx->mensaje = $oPago->data->message;
                         //$oTrx->autorizacion = 0;
+                        $oError = new Error([
+                            'codigo' => '05',
+                            'tipo' => 'Banco',
+                            'descripcion' => 'Rechazada por el banco',
+                        ]);
                     }
                 }
-
-                // 3.3 @todo: Envía transacción al procesador
             }
         }
         $oTrx->save();
@@ -253,13 +324,28 @@ class Cargo
         // 4. Envía transacción a Admin y Clientes
         // @todo: Cambiar envío a tareas y mensajes únicamente para que ese sistema envíe estos mensajes a los otros sistemas.
         $oMensajeResultadoA = $this->oMensaje->envia('clientes', '/api/admin/transaccion', 'POST', $oTrx->toJson());
-        dump($oMensajeResultadoA);
+        #dump($oMensajeResultadoA);
         $oMensajeResultadoB = $this->oMensaje->envia('admin', '/api/admin/transaccion', 'POST', $oTrx->toJson());
         #dump($oMensajeResultadoB);
 
-        // Regresa resultado
+        // 5. Regresa resultado en RespuestaCargo
+        $aRespuesta = [
+            'id' => $oTrx->uuid,
+            'monto' => $oTrx->monto,
+            'autorizacion' => '',
+            'tipo' => 'cargo',
+            'fecha' => $oTrx->created_at,
+            'orden_id' => $oPeticionCargo->pedido->id,
+            'cliente_id' => $oPeticionCargo->cliente->id,
+            'estatus' => $oTrx->estatus,
+            'prueba' => $oTrx->prueba,
+        ];
+        if (isset($oError)) {
+            $aRespuesta['error'] = $oError;
+        }
+        $oRespuestaCargo = new RespuestaCargo($aRespuesta);
         #dump($oTrx->toArray());
-        return $oTrx->toJson();
+        return $oRespuestaCargo;
     }
 
     // }}}
