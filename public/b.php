@@ -9,6 +9,7 @@ use Webpatser\Uuid\Uuid;
 use App\Models\Transaccion;
 use App\Classes\Sistema\Mensaje as MensajeCP;
 use App\Classes\Pagos\Medios\TarjetaCredito;
+use App\Classes\Pagos\Base\PlanPago;
 use App\Classes\Pagos\Parametros\PeticionCargo;
 use App\Classes\Pagos\Procesadores\Bbva\Mensaje;
 use App\Classes\Pagos\Procesadores\Bbva\Interred as BBVAInterred;
@@ -71,7 +72,6 @@ class BbvaTest
             'monto' => 0,
             'puntos' => 0,
             'descripcion' => 'Prueba EGlobal BBVA',
-            'parcialidades' => 0,
             'diferido' => 0,
             'comercio_uuid' => '176f76a8-2670-4288-9800-1dd5f031a57e',
         ]);
@@ -150,36 +150,31 @@ class BbvaTest
         } else if ($sPrueba == '12') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
             $this->oPeticionCargo->monto = 509.00;
-            $this->oPeticionCargo->parcialidades = 6;
-            $this->oPeticionCargo->plan = 'msi';
+            $this->oPeticionCargo->plan = new PlanPago(['plan' => 'msi', 'parcialidades' => 6]);
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VENTA CON PROMOCIÓN - Venta 6 MSI';
             $aOpciones = ['tipo' => 'puntos_compra'];
         } else if ($sPrueba == '13') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
             $this->oPeticionCargo->monto = 835.80;
-            $this->oPeticionCargo->parcialidades = 12;
-            $this->oPeticionCargo->plan = 'msi';
+            $this->oPeticionCargo->plan = new PlanPago(['plan' => 'msi', 'parcialidades' => 12]);
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VENTA CON PROMOCIÓN - Venta 12 MSI';
             $aOpciones = ['tipo' => 'puntos_compra'];
         } else if ($sPrueba == '14') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
             $this->oPeticionCargo->monto = 936.00;
-            $this->oPeticionCargo->parcialidades = 18;
-            $this->oPeticionCargo->plan = 'msi';
+            $this->oPeticionCargo->plan = new PlanPago(['plan' => 'msi', 'parcialidades' => 18]);
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VENTA CON PROMOCIÓN - Venta 18 MSI';
             $aOpciones = ['tipo' => 'puntos_compra'];
         } else if ($sPrueba == '15') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
             $this->oPeticionCargo->monto = 83.00;
-            $this->oPeticionCargo->parcialidades = 6;
-            $this->oPeticionCargo->plan = 'msi';
+            $this->oPeticionCargo->plan = new PlanPago(['plan' => 'msi', 'parcialidades' => 6]);
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VENTA CON PROMOCIÓN - 6 MSI - Declinada';
             $aOpciones = ['tipo' => 'puntos_compra'];
         } else if ($sPrueba == '16') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaDebito1;
             $this->oPeticionCargo->monto = 2543.00;
-            $this->oPeticionCargo->parcialidades = 6;
-            $this->oPeticionCargo->plan = 'msi';
+            $this->oPeticionCargo->plan = new PlanPago(['plan' => 'msi', 'parcialidades' => 6]);
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VENTA CON PROMOCIÓN - 6 MSI - Declinada Débito';
             $aOpciones = ['tipo' => 'compra'];
         } else if ($sPrueba == '17') {
@@ -239,8 +234,7 @@ class BbvaTest
         } else if ($sPrueba == '24') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
             $this->oPeticionCargo->monto = 508.00;
-            $this->oPeticionCargo->parcialidades = 6;
-            $this->oPeticionCargo->plan = 'msi';
+            $this->oPeticionCargo->plan = new PlanPago(['plan' => 'msi', 'parcialidades' => 6]);
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' CANCELACIONES - Venta 6 MSI';
             $aOpciones = ['tipo' => 'puntos_compra'];
         } else if ($sPrueba == '25') {
@@ -264,8 +258,7 @@ class BbvaTest
         } else if ($sPrueba == '27') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
             $this->oPeticionCargo->monto = 510.00;
-            $this->oPeticionCargo->parcialidades = 6;
-            $this->oPeticionCargo->plan = 'msi';
+            $this->oPeticionCargo->plan = new PlanPago(['plan' => 'msi', 'parcialidades' => 6]);
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' REVERSOS AUTOMÁTICOS COMERCIO - Venta 6 MSI';
             $aOpciones = ['tipo' => 'puntos_compra', 'tipo_original' => 'puntos_compra'];
         } else if ($sPrueba == '28') {
@@ -288,8 +281,7 @@ class BbvaTest
         } else if ($sPrueba == '31') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
             $this->oPeticionCargo->monto = 1108.50;
-            $this->oPeticionCargo->parcialidades = 6;
-            $this->oPeticionCargo->plan = 'msi';
+            $this->oPeticionCargo->plan = new PlanPago(['plan' => 'msi', 'parcialidades' => 6]);
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' REVERSOS AUTOMÁTICOS EG - Venta 6 MSI';
             $aOpciones = ['tipo' => 'puntos_compra', 'tipo_original' => 'puntos_compra'];
 
@@ -684,7 +676,7 @@ class InterredProxy
         $oMensaje->setData(17, date('md')); // Date & time - Día en el cual la transacción es registrada por el Adquirente
         $oMensaje->setData(22, '012'); // PoS Entry Mode
         #$oMensaje->setData(23, ''); //
-        if (in_array($oPeticionCargo->plan, ['msi', 'mci', 'diferido'])) {
+        if (in_array($oPeticionCargo->plan->plan, ['msi', 'mci', 'diferido'])) {
             // Deaparece el campo 25... Puff! Motivo: Pos nomas.
         } else {
             $oMensaje->setData(25, '59'); // Point of Service Condition Code - 59 = Comercio Electrónico
@@ -701,7 +693,7 @@ class InterredProxy
         $oMensaje->setData(48, '5462742            00000000'); // Additional DataRetailer Data - Define la afiliación del Establecimiento
         $oMensaje->setData(49, '484'); // Transaction Currency Code.
         if (!empty($aTipo['tipo']) && $aTipo['tipo'] == 'puntos_compra') {
-            if (in_array($oPeticionCargo->plan, ['msi', 'mci', 'diferido'])) {
+            if (in_array($oPeticionCargo->plan->plan, ['msi', 'mci', 'diferido'])) {
                 $oMensaje->setData(58, $oMensaje->formateaCampo58(['importe_total' => 0, 'importe_puntos' => 0]));
             } else {
                 $oMensaje->setData(58,
@@ -721,9 +713,9 @@ class InterredProxy
             'cvv2' => $oPeticionCargo->tarjeta->cvv2,
             'indicador_cvv2' => $oPeticionCargo->tarjeta->cvv2 ? 'presente' : 'no_presente',
             // Q6
-            'parcialidades' => $oPeticionCargo->parcialidades,
+            'parcialidades' => $oPeticionCargo->plan->parcialidades,
             'diferimiento' => $oPeticionCargo->diferido,
-            'plan' => $oPeticionCargo->plan,
+            'plan' => $oPeticionCargo->plan->plan,
         ], $aTipo)); // POS Additional Data
         #$oMensaje->setData(103, ''); //
         if ($bEcho) {
@@ -747,7 +739,7 @@ class InterredProxy
         $oMensaje->setData(15, date('md')); // Settlement Date: MMDD - Día en el cual se esta contabilizando la transacción
         $oMensaje->setData(17, date('md')); //  Capture Date: MMDD - Día en el cual la transacción es registrada por el Adquirente
         $oMensaje->setData(22, '012'); // PoS Entry Mode
-        if (in_array($oPeticionCargo->plan, ['msi', 'mci', 'diferido'])) {
+        if (in_array($oPeticionCargo->plan->plan, ['msi', 'mci', 'diferido'])) {
             // Deaparece el campo 25... Puff! Motivo: Pos nomas.
         } else {
             $oMensaje->setData(25, '59'); // Point of Service Condition Code - 59 = Comercio Electrónico
@@ -773,9 +765,9 @@ class InterredProxy
                 'cvv2' => $oPeticionCargo->tarjeta->cvv2,
                 'indicador_cvv2' => $oPeticionCargo->tarjeta->cvv2 ? 'presente' : 'no_presente',
                 // Q6
-                'parcialidades' => $oPeticionCargo->parcialidades,
+                'parcialidades' => $oPeticionCargo->plan->parcialidades,
                 'diferimiento' => $oPeticionCargo->diferido,
-                'plan' => $oPeticionCargo->plan,
+                'plan' => $oPeticionCargo->plan->plan,
             ], $aTipo)); // POS Additional Data
         $oMensaje->setData(90, $oMensaje->formateaCampo90($aTipo)); // Motivo cancelación
         #$oMensaje->setData(103, ''); //
@@ -800,7 +792,7 @@ class InterredProxy
         $oMensaje->setData(15, date('md')); // Settlement Date: MMDD - Día en el cual se esta contabilizando la transacción
         $oMensaje->setData(17, date('md')); //  Capture Date: MMDD - Día en el cual la transacción es registrada por el Adquirente
         $oMensaje->setData(22, '012'); // PoS Entry Mode
-        if (in_array($oPeticionCargo->plan, ['msi', 'mci', 'diferido'])) {
+        if (in_array($oPeticionCargo->plan->plan, ['msi', 'mci', 'diferido'])) {
             // Deaparece el campo 25... Puff! Motivo: Pos nomas.
         } else {
             $oMensaje->setData(25, '59'); // Point of Service Condition Code - 59 = Comercio Electrónico
@@ -826,9 +818,9 @@ class InterredProxy
                 'cvv2' => $oPeticionCargo->tarjeta->cvv2,
                 'indicador_cvv2' => $oPeticionCargo->tarjeta->cvv2 ? 'presente' : 'no_presente',
                 // Q6
-                'parcialidades' => $oPeticionCargo->parcialidades,
+                'parcialidades' => $oPeticionCargo->plan->parcialidades,
                 'diferimiento' => $oPeticionCargo->diferido,
-                'plan' => $oPeticionCargo->plan,
+                'plan' => $oPeticionCargo->plan->plan,
             ], $aOpciones)); // POS Additional Data
         $oMensaje->setData(90, $oMensaje->formateaCampo90($aOpciones)); // Motivo cancelación
         #$oMensaje->setData(103, ''); //

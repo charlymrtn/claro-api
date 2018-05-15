@@ -211,7 +211,26 @@ class Mensaje extends iso8583_1987
         58 =>  ['size' => 420,  'usage' => 'Datos de Lealtad', 'encoding' => 'hex'],
         59 =>  ['usage' => 'Datos de Campaña'],
         60 =>  ['sizepos' => 'LLL', 'size' => 19, 'usage' => 'POS Terminal Data'],
-        63 =>  ['usage' => 'POS Additional Data'],
+        63 =>  [
+            'usage' => 'POS Additional Data',
+            'subfields' => [
+                1 => [
+                    'fixed' => true, 'size' => 2, 'usage' => 'Header indicator', 'mandatory' => true,
+                    'values' => ['& ' => 'Valor fijo'],
+                ],
+                2 => [
+                    'fixed' => true, 'size' => 5, 'usage' => 'Contador de tokens', 'mandatory' => true,
+                    'format' => ['pad_type' => 'left', 'pad_string' => '0'],
+                ],
+                3 => [
+                    'fixed' => true, 'size' => 5, 'usage' => 'Longitud total del campo', 'mandatory' => true,
+                    'format' => ['pad_type' => 'left', 'pad_string' => '0'],
+                ],
+                4 => [
+                    'fixed' => false, 'usage' => 'Tokens', 'mandatory' => true
+                ],
+            ],
+        ],
         70 =>  [],
         90 =>  ['type' => 'ans'],
         103 => ['type' => 'ans'],
@@ -908,7 +927,6 @@ class Mensaje extends iso8583_1987
 
         return $sResultado;
     }
-
 
     /**
      * Obtiene la lista de caracteres admitidos en el tipo de datos

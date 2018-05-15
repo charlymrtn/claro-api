@@ -8,8 +8,7 @@ use Validator;
 use Carbon\Carbon;
 use App\Classes\Pagos\Base\Pedido;
 use App\Classes\Pagos\Base\Contacto;
-use App\Classes\Pagos\Base\Direccion;
-use App\Classes\Pagos\Base\Telefono;
+use App\Classes\Pagos\Base\PlanPago;
 use App\Classes\Pagos\Medios\TarjetaCredito;
 
 /**
@@ -27,13 +26,10 @@ class PeticionCargo extends Model
         'prueba', // Booleano que indica si es una transacción de prueba o no
         'tarjeta', // Objeto tipo TarjetaCredito
         'monto', // Monto total de la transacción
-        'puntos', // Cantidad del monto total pagado en puntos (Si el procesador lo soporta)
         'descripcion',
         'pedido', // Objeto tipo Pedido
         'cliente', // Objeto tipo Contacto
-        'parcialidades',
-        'diferido', // Número de meses de diferimiento del pago
-        'plan', // Tipo de plan de pagos
+        'plan', // Objeto tipo PlanPago
         'direccion_cargo', // Objeto tipo Direccion
         'comercio_uuid',
     ];
@@ -57,7 +53,6 @@ class PeticionCargo extends Model
      * Atributos mutables
      */
     protected $casts = [
-        'parcialidades' => 'integer',
         'prueba' => 'boolean',
     ];
 
@@ -77,8 +72,6 @@ class PeticionCargo extends Model
             'monto' => 'required',
             'puntos' => 'numeric',
             'descripcion' => 'max:250',
-            'parcialidades' => 'numeric|min:0|max:60',
-            'diferido' => 'numeric|min:0|max:12',
             'comercio_uuid' => 'required|string',
     ];
 
@@ -170,6 +163,17 @@ class PeticionCargo extends Model
     public function setPedidoAttribute(Pedido $oPedido)
     {
         $this->attributes['pedido'] = $oPedido;
+    }
+
+    /**
+     * Mutator a objeto PlanPago
+     *
+     * @param PlanPago $oPlanPago
+     * @return void
+     */
+    public function setPlanAttribute(PlanPago $oPlanPago)
+    {
+        $this->attributes['plan'] = $oPlanPago;
     }
 
     // }}}
