@@ -105,7 +105,7 @@ class UsuarioController extends Controller
             // Envía datos paginados
             return ejsend_success(['usuarios' => $cUsuarios]);
         } catch (\Exception $e) {
-            Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ':' . $e->getMessage());
+            Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
             return ejsend_error(['code' => 500, 'type' => 'Sistema', 'message' => 'Error al obtener el recurso: ' . $e->getMessage()]);
         }
     }
@@ -143,16 +143,20 @@ class UsuarioController extends Controller
             if ($oValidator->fails()) {
                 return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
             }
-            // Agrega valores
-            $oRequest->merge(['password' => Hash::make(str_random(24))]);
+            // Agrega valores default
+            $aDefault = [
+                'password' => Hash::make(str_random(24)),
+                'config' => '',
+            ];
+            $aRequest = array_merge($aDefault, $oRequest->all());
             // Crea usuario
-            $oUsuario = User::create($oRequest->all());
+            $oUsuario = User::create($aRequest);
             // Crea cliente API
             $this->oClientRepository->create($oUsuario->id, $oRequest->input('api_client_nombre', 'API Personal Access Client'), '/auth/callback', 1);
             // Regresa resultados
             return ejsend_success(['usuario' => $oUsuario]);
         } catch (\Exception $e) {
-            Log::error('Error en ' . __METHOD__ . ' línea ' . __LINE__ . ':' . $e->getMessage());
+            Log::error('Error en ' . __METHOD__ . ' línea ' . $e->getLine() . ':' . $e->getMessage());
             return ejsend_error(['code' => 500, 'type' => 'Sistema', 'message' => 'Error al crear el recurso: ' . $e->getMessage()]);
         }
     }
@@ -185,7 +189,7 @@ class UsuarioController extends Controller
             }
         } catch (\Exception $e) {
             // Registra error
-            Log::error('Error en ' . __METHOD__ . ' línea ' . __LINE__ . ':' . $e->getMessage());
+            Log::error('Error en ' . __METHOD__ . ' línea ' . $e->getLine() . ':' . $e->getMessage());
             return ejsend_error(['code' => 500, 'type' => 'Sistema', 'message' => 'Error al obtener el recurso: ' . $e->getMessage()]);
         }
     }
@@ -234,7 +238,7 @@ class UsuarioController extends Controller
             $oUsuario->update($oRequest->all());
             return ejsend_success(['usuario' => $oUsuario]);
         } catch (\Exception $e) {
-            Log::error('Error en ' . __METHOD__ . ' línea ' . __LINE__ . ':' . $e->getMessage());
+            Log::error('Error en ' . __METHOD__ . ' línea ' . $e->getLine() . ':' . $e->getMessage());
             return ejsend_error(['code' => 500, 'type' => 'Sistema', 'message' => 'Error al actualizar el recurso: ' . $e->getMessage()]);
         }
     }
@@ -262,7 +266,7 @@ class UsuarioController extends Controller
             // Regresa resultado
             return ejsend_success(['usuario' => $oUsuario]);
         } catch (\Exception $e) {
-            Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ':' . $e->getMessage());
+            Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
             return ejsend_error(['code' => 500, 'type' => 'Sistema', 'message' => 'Error al borrar el recurso: ' . $e->getMessage()]);
         }
     }
@@ -289,7 +293,7 @@ class UsuarioController extends Controller
             // Regresa resultado
             return ejsend_success([], 204);
         } catch (\Exception $e) {
-            Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ':' . $e->getMessage());
+            Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
             return ejsend_error(['code' => 500, 'type' => 'Sistema', 'message' => 'Error al destruir el recurso: ' . $e->getMessage()]);
         }
     }
