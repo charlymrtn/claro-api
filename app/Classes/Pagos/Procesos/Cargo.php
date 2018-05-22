@@ -14,6 +14,8 @@ use App\Classes\Sistema\Mensaje;
 use App\Classes\Pagos\Base\Error;
 use App\Classes\Pagos\Parametros\PeticionCargo;
 use App\Classes\Pagos\Parametros\RespuestaCargo;
+use App\Classes\Pagos\Parametros\PeticionAntifraude;
+use App\Classes\Pagos\Parametros\RespuestaAntifraude;
 
 /**
  * Procesador de pagos para American Express
@@ -141,7 +143,8 @@ class Cargo
         if ($oTrx->prueba) {
             // 2.1 Si es prueba, determina resultado dependiendo del mes de expiracion
             if ($oPeticionCargo->tarjeta->expiracion_mes == '01') {
-                $oTrx->datos_antifraude = ['resultado' => 'rojo', 'score' => 90, 'response_code' => '220', 'response_description' => 'Transacción muy riesgoza'];
+                #$oMensajeResultadoA = $this->oMensaje->envia('antifraude', '/api/v1/transaccion', 'POST', $oTrx->toJson());
+                $oTrx->datos_antifraude = ['resultado' => 'rojo', 'score' => 90, 'codigo' => '220', 'descripcion' => 'Transacción muy riesgoza'];
                 $oTrx->estatus = 'rechazada-antifraude';
                 $oError = new Error([
                     'codigo' => '220',
@@ -149,7 +152,7 @@ class Cargo
                     'descripcion' => 'Transacción muy riesgoza',
                 ]);
             } else if ($oPeticionCargo->tarjeta->expiracion_mes == '02') {
-                $oTrx->datos_antifraude = ['resultado' => 'rojo', 'score' => 100, 'response_code' => '205', 'response_description' => 'Tarjeta reportada como robada'];
+                $oTrx->datos_antifraude = ['resultado' => 'rojo', 'score' => 100, 'codigo' => '205', 'descripcion' => 'Tarjeta reportada como robada'];
                 $oTrx->estatus = 'rechazada-antifraude';
                 $oError = new Error([
                     'codigo' => '205',
@@ -157,12 +160,12 @@ class Cargo
                     'descripcion' => 'Tarjeta reportada como robada',
                 ]);
             } else {
-                $oTrx->datos_antifraude = ['resultado' => 'verde', 'score' => 25, 'response_code' => '100', 'response_description' => 'Transaction de bajo riesgo'];
+                $oTrx->datos_antifraude = ['resultado' => 'verde', 'score' => 25, 'codigo' => '100', 'descripcion' => 'Transaction de bajo riesgo'];
                 $oTrx->estatus = 'aprobada-antifraude';
             }
         } else {
             // 2.2 @todo: Envía transacción a antifraude
-            $oTrx->datos_antifraude = ['resultado' => 'verde', 'score' => 20, 'response_code' => '100', 'response_description' => 'Transaction de bajo riesgo'];
+            $oTrx->datos_antifraude = ['resultado' => 'verde', 'score' => 20, 'codigo' => '100', 'descripcion' => 'Transaction de bajo riesgo'];
             $oTrx->estatus = 'aprobada-antifraude';
         }
         $oTrx->save();
@@ -193,7 +196,7 @@ class Cargo
                 // @todo: Define afiliación a usar
                 $cAfiliaciones = collect($usuario->getAfiliaciones());
 
-                if ($oPeticionCargo->tarjeta->marca == 'amex' && $cAfiliacionesAmex->contains('procesador', 'amex')) {
+                if ($oPeticionCargo->tarjeta->marca == 'amex' && $cAfiliaciones->contains('procesador', 'amex')) {
                     // @todo: Define afiliación a usar
                     $oAfiliacion = $cAfiliaciones->firstWhere('procesador', 'amex');
                     // Procesa transacción con procesador de pagos
@@ -228,7 +231,7 @@ class Cargo
                         $oTrx->estatus = 'completada';
                     }
 
-//                } else if ($cAfiliacionesAmex->contains('procesador', 'eglobal')) {
+//                } else if ($cAfiliaciones->contains('procesador', 'eglobal')) {
 //                    // @todo: Define afiliación a usar
 //                    $oAfiliacion = $cAfiliaciones->firstWhere('procesador', 'eglobal');
 //                    // Procesa transacción con procesador de pagos
@@ -272,7 +275,7 @@ class Cargo
 //                            'descripcion' => 'Rechazada por el banco',
 //                        ]);
 //                    }
-                } else if ($cAfiliacionesAmex->contains('procesador', 'prosa')) {
+                } else if ($cAfiliaciones->contains('procesador', 'prosa')) {
                     // @todo: Define afiliación a usar
                     $oAfiliacion = $cAfiliaciones->firstWhere('procesador', 'prosa');
                     // Procesa transacción con procesador de pagos

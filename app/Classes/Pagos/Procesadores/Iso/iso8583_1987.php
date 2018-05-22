@@ -855,7 +855,7 @@ class iso8583_1987
         } else {
             $aResultado['contenido']['valor_sin_formato'] = rtrim($aResultado['contenido']['valor'], $aResultado['formato']['relleno']);
         }
-        // Evalua alidez del contenido
+        // Evalua validez del contenido
         if (!empty($aDef['values']) && is_array($aDef['values'])) {
             if (array_key_exists($aResultado['contenido']['valor'], $aDef['values'])) {
                 $aResultado['contenido']['valido'] = true;

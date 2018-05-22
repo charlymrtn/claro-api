@@ -12,7 +12,7 @@ use App\Classes\Pagos\Parametros\PeticionCargo;
  * Clase para parámetros de entrada para cargos
  *
  */
-class RespuestaCargo extends Model
+class Respuestaantifraude extends Model
 {
     // {{{ properties
 
@@ -23,11 +23,10 @@ class RespuestaCargo extends Model
         'id', // ID de la transacción en Claro Pagos
         'prueba', // Booleano que indica si es una transacción de prueba o no
         'monto', // Numérico (mayor a cero con dos decimales). Monto de la transacción
-        'autorizacion', // String. Identificador de autorización del procesador de pago
-        'tipo', // String. Tipo de transacción (“cargo”)
-        'orden_id', // String. Identificador del orden del comercio
-        'cliente_id', // String. Identificador de cliente del comercio
-        'estatus', // String. Estatus de la transacción
+        'score', // Int. Resultado numérico de la evaluación de la transacción [0 (Bajo riesgo), 100 (Alto riesgo)]
+        'evaluacion', // String. Resultado de la evaluación de la transacción ['rojo', 'amarillo', 'verde']
+        'codigo', // Int. Código de respuesta
+        'descripcion', // String. Descripción de la respuesta.
         'error', // Objeto. Objeto de tipo Error
     ];
 

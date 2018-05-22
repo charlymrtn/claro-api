@@ -103,7 +103,7 @@ class CargoController extends Controller
         try {
             $oPeticionCargo = new PeticionCargo([
                 'comercio_uuid' => $oRequest->input('comercio_uuid'),
-                'prueba' => $oRequest->input('prueba', false),
+                'prueba' => $oRequest->input('prueba', true),
                 'descripcion' => $oRequest->input('descripcion', ''),
                 'monto' => $oRequest->input('monto', '0.00'),
                 'puntos' => $oRequest->input('puntos', 0),

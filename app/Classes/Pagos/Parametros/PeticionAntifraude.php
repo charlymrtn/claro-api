@@ -6,7 +6,6 @@ use Jenssegers\Model\Model;
 use Exception;
 use Validator;
 use Carbon\Carbon;
-use Webpatser\Uuid\Uuid;
 use App\Classes\Pagos\Base\Pedido;
 use App\Classes\Pagos\Base\Contacto;
 use App\Classes\Pagos\Base\Direccion;
