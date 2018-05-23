@@ -676,7 +676,7 @@ class InterredProxy
         $oMensaje->setData(17, date('md')); // Date & time - Día en el cual la transacción es registrada por el Adquirente
         $oMensaje->setData(22, '012'); // PoS Entry Mode
         #$oMensaje->setData(23, ''); //
-        if (in_array($oPeticionCargo->plan->plan, ['msi', 'mci', 'diferido'])) {
+        if (in_array($oPeticionCargo->plan->plan ?? [], ['msi', 'mci', 'diferido'])) {
             // Deaparece el campo 25... Puff! Motivo: Pos nomas.
         } else {
             $oMensaje->setData(25, '59'); // Point of Service Condition Code - 59 = Comercio Electrónico
@@ -693,7 +693,7 @@ class InterredProxy
         $oMensaje->setData(48, '5462742            00000000'); // Additional DataRetailer Data - Define la afiliación del Establecimiento
         $oMensaje->setData(49, '484'); // Transaction Currency Code.
         if (!empty($aTipo['tipo']) && $aTipo['tipo'] == 'puntos_compra') {
-            if (in_array($oPeticionCargo->plan->plan, ['msi', 'mci', 'diferido'])) {
+            if (in_array($oPeticionCargo->plan->plan ?? [], ['msi', 'mci', 'diferido'])) {
                 $oMensaje->setData(58, $oMensaje->formateaCampo58(['importe_total' => 0, 'importe_puntos' => 0]));
             } else {
                 $oMensaje->setData(58,
@@ -713,9 +713,9 @@ class InterredProxy
             'cvv2' => $oPeticionCargo->tarjeta->cvv2,
             'indicador_cvv2' => $oPeticionCargo->tarjeta->cvv2 ? 'presente' : 'no_presente',
             // Q6
-            'parcialidades' => $oPeticionCargo->plan->parcialidades,
-            'diferimiento' => $oPeticionCargo->diferido,
-            'plan' => $oPeticionCargo->plan->plan,
+            'parcialidades' => $oPeticionCargo->plan->parcialidades ?? 0,
+            'diferimiento' => $oPeticionCargo->diferido ?? 0,
+            'plan' => $oPeticionCargo->plan->plan ?? 's',
         ], $aTipo)); // POS Additional Data
         #$oMensaje->setData(103, ''); //
         if ($bEcho) {
@@ -739,7 +739,7 @@ class InterredProxy
         $oMensaje->setData(15, date('md')); // Settlement Date: MMDD - Día en el cual se esta contabilizando la transacción
         $oMensaje->setData(17, date('md')); //  Capture Date: MMDD - Día en el cual la transacción es registrada por el Adquirente
         $oMensaje->setData(22, '012'); // PoS Entry Mode
-        if (in_array($oPeticionCargo->plan->plan, ['msi', 'mci', 'diferido'])) {
+        if (in_array($oPeticionCargo->plan->plan ?? [], ['msi', 'mci', 'diferido'])) {
             // Deaparece el campo 25... Puff! Motivo: Pos nomas.
         } else {
             $oMensaje->setData(25, '59'); // Point of Service Condition Code - 59 = Comercio Electrónico
@@ -747,7 +747,7 @@ class InterredProxy
         $oMensaje->setData(32, '12'); // Acquiring Institution Identification Code
         $oMensaje->setData(35, $oMensaje->formateaCampo35($oPeticionCargo->tarjeta)); // Track 2 Data
         $oMensaje->setData(37, $aTipo['referencia']); // Retrieval Reference Number
-        $oMensaje->setData(38, $aTipo['autorizacion'] ?? '000000'); // Authorization Identification Response
+        $oMensaje->setData(38, $aTipo['autorizacion'] ?? '      '); // Authorization Identification Response
         $oMensaje->setData(39, $oMensaje->formateaCampo39($aTipo['cancelacion_motivo'] ?? 'cancelacion')); // Motivo cancelación
         $oMensaje->setData(41, '0000CP01        '); // Card Acceptor Terminal Identification
         $oMensaje->setData(48, '5462742            00000000'); // Additional DataRetailer Data - Define la afiliación del Establecimiento
@@ -765,9 +765,9 @@ class InterredProxy
                 'cvv2' => $oPeticionCargo->tarjeta->cvv2,
                 'indicador_cvv2' => $oPeticionCargo->tarjeta->cvv2 ? 'presente' : 'no_presente',
                 // Q6
-                'parcialidades' => $oPeticionCargo->plan->parcialidades,
-                'diferimiento' => $oPeticionCargo->diferido,
-                'plan' => $oPeticionCargo->plan->plan,
+                'parcialidades' => $oPeticionCargo->plan->parcialidades ?? 0,
+                'diferimiento' => $oPeticionCargo->plan->diferido ?? 0,
+                'plan' => $oPeticionCargo->plan->plan ?? '',
             ], $aTipo)); // POS Additional Data
         $oMensaje->setData(90, $oMensaje->formateaCampo90($aTipo)); // Motivo cancelación
         #$oMensaje->setData(103, ''); //
@@ -792,7 +792,7 @@ class InterredProxy
         $oMensaje->setData(15, date('md')); // Settlement Date: MMDD - Día en el cual se esta contabilizando la transacción
         $oMensaje->setData(17, date('md')); //  Capture Date: MMDD - Día en el cual la transacción es registrada por el Adquirente
         $oMensaje->setData(22, '012'); // PoS Entry Mode
-        if (in_array($oPeticionCargo->plan->plan, ['msi', 'mci', 'diferido'])) {
+        if (in_array($oPeticionCargo->plan->plan ?? [], ['msi', 'mci', 'diferido'])) {
             // Deaparece el campo 25... Puff! Motivo: Pos nomas.
         } else {
             $oMensaje->setData(25, '59'); // Point of Service Condition Code - 59 = Comercio Electrónico
@@ -800,7 +800,7 @@ class InterredProxy
         $oMensaje->setData(32, '12'); // Acquiring Institution Identification Code
         $oMensaje->setData(35, $oMensaje->formateaCampo35($oPeticionCargo->tarjeta)); // Track 2 Data
         $oMensaje->setData(37, $aOpciones['referencia']); // Retrieval Reference Number
-        $oMensaje->setData(38, $aOpciones['autorizacion'] ?? '000000'); // Authorization Identification Response
+        $oMensaje->setData(38, $aOpciones['autorizacion'] ?? '      '); // Authorization Identification Response
         $oMensaje->setData(39, $oMensaje->formateaCampo39($aOpciones['cancelacion_motivo'] ?? 'timeout')); // Motivo cancelación
         $oMensaje->setData(41, '0000CP01        '); // Card Acceptor Terminal Identification
         $oMensaje->setData(48, '5462742            00000000'); // Additional DataRetailer Data - Define la afiliación del Establecimiento
@@ -818,9 +818,9 @@ class InterredProxy
                 'cvv2' => $oPeticionCargo->tarjeta->cvv2,
                 'indicador_cvv2' => $oPeticionCargo->tarjeta->cvv2 ? 'presente' : 'no_presente',
                 // Q6
-                'parcialidades' => $oPeticionCargo->plan->parcialidades,
+                'parcialidades' => $oPeticionCargo->plan->parcialidades ?? 0,
                 'diferimiento' => $oPeticionCargo->diferido,
-                'plan' => $oPeticionCargo->plan->plan,
+                'plan' => $oPeticionCargo->plan->plan ?? '',
             ], $aOpciones)); // POS Additional Data
         $oMensaje->setData(90, $oMensaje->formateaCampo90($aOpciones)); // Motivo cancelación
         #$oMensaje->setData(103, ''); //

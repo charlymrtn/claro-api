@@ -307,6 +307,14 @@ class BbvaController extends Controller
             $respuesta[] = $aMensajeISO['iso_parsed'];
         }
 
+        $totales = [
+            'compras' => 0,
+            'monto_compras' => 0,
+            'cargos' => 0,
+            'monto_cargos' => 0,
+            'negocio' => 1,
+        ];
+
         $aTrxs = [];
         foreach($respuesta as $res) {
             if (empty($res[39])) {
@@ -347,30 +355,24 @@ class BbvaController extends Controller
                         $aTrxs[$res[38]] = $linea;
                     }
                 }
-//                if ($res[3] == '180000' || $res[3] == '000000') {
-//                        $totales['compras'] += 1;
-//                        $totales['monto_compras'] += $aTrx[5];
-//                } else if ($res[3] == '000000') {
-//                    $totales['cargos'] += 1;
-//                    $totales['monto_cargos'] += $res[4];
-//                }
+                if ($res[3] == '180000' || $res[3] == '000000') {
+                    $totales['compras'] += 1;
+                    $totales['monto_compras'] += $res[4];
+                } else if ($res[3] == '200000') {
+                    $totales['cargos'] += 1;
+                    $totales['monto_cargos'] += $res[4];
+                }
+                $totales['negocio'] += 1;
             }
         }
         // Escribe registros en batch
         $registros = 0;
-        $totales = [
-            'compras' => 0,
-            'monto_compras' => 0,
-            'cargos' => 0,
-            'monto_cargos' => 0,
-            'negocio' => 0,
-        ];
         $batch_linea = [];
         foreach($aTrxs as $iTrxId => $aTrx) {
             $aTrx[0] = sprintf("%06s", $i++); // REGCAD-NUM-REG [6] Número consecutivo de registro
             $batch_linea[] = implode('', $aTrx) . "\n";
-            $totales['compras'] += 1;
-            $totales['monto_compras'] += $aTrx[5];
+            #$totales['compras'] += 1;
+            #$totales['monto_compras'] += $aTrx[5];
             $registros += 1;
         }
 
@@ -379,8 +381,8 @@ class BbvaController extends Controller
             '4', // [1] Tipo de registro. Fijo: 4
             sprintf("%07s", $totales['compras']), // [7] Número de compras en el archivo
             sprintf("%014s", $totales['monto_compras']), // [14] Monto de las compras del archivo
-            sprintf("%07s", $totales['cargos']), // [7] Número de cargos del archivo
-            sprintf("%014s", $totales['monto_cargos']), // [14] Monto de los cargos del archivo
+            sprintf("%07s", $totales['cargos']), // TRCAD-NUM-DEB [7] Número de cargos del archivo
+            sprintf("%014s", $totales['monto_cargos']), // TRCAD-IMP-DEB [14] Monto de los cargos del archivo
             sprintf("%06s", $totales['negocio']), // [6] Número de Header`s de Negocio (registros tipo 2) y de Detalle (registros tipo3)
             '000000', // [6] Hora en que BBVA Bancomer recibió el archivo  de entrada (HHMMSS). La Interred enviará el valor fijo: 000000
             '000000', // [6] Hora en que BBVA Bancomer finalizó el proceso del archivo de entrada y generó el archivo de Retorno con los rechazos (HHMMSS). La Interred enviará el valor fijo: 000000
