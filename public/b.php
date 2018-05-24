@@ -48,7 +48,7 @@ class BbvaTest
         ]);
         $this->oTarjetaCreditoVisa = new TarjetaCredito([
             // Crédito
-            'pan' => '4761739001011133',
+            'pan' => '4761739001010416', // '4761739001011133',
             'nombre' => 'Juan Perez Lopez',
             'cvv2' => '201',
             'expiracion_mes' => '12',
@@ -64,7 +64,15 @@ class BbvaTest
             'expiracion_anio' => '17',
             'lealtad' => true,
         ]);
-        // Construye petición de cargo
+        $this->oTarjetaCreditoVisa3 = new TarjetaCredito([
+            // Crédito
+            'pan' => '4761739001011133',
+            'nombre' => 'Juan Perez Lopez',
+            'cvv2' => '201',
+            'expiracion_mes' => '12',
+            'expiracion_anio' => '22',
+            'lealtad' => true,
+        ]);        // Construye petición de cargo
         $this->oPeticionCargo = new PeticionCargo([
             'prueba' => true,
             'id' => Uuid::generate(4)->string,
@@ -402,6 +410,15 @@ class BbvaTest
             $aMensajeTrxReq = $oInterredTrx->procesaMensaje($sTrxReq);
             $aMensajeTrxResp = $oInterredTrx->procesaMensaje($sTrxResp);
             unset($oInterredTrx);
+            // Verifica si el plan tiene
+            $aPlan = $this->obtienePlan($aMensajeTrxReq['iso_parsed']['63']);
+            if (in_array($aPlan['plan'], ['03'])) {
+                $this->oPeticionCargo->plan = new PlanPago(['plan' => 'msi', 'parcialidades' => $aPlan['parcialidades']]);
+            } else if (in_array($aPlan['plan'], ['05'])) {
+                $this->oPeticionCargo->plan = new PlanPago(['plan' => 'mci', 'parcialidades' => $aPlan['parcialidades']]);
+            } else if (in_array($aPlan['plan'], ['07'])) {
+                $this->oPeticionCargo->plan = new PlanPago(['plan' => 'diferido', 'parcialidades' => $aPlan['parcialidades'], 'diferimiento' => $aPlan['diferido']]);
+            }
             $aOpcionesCancelacion = [
                 'tipo' => 'cancelacion',
                 'tipo_original' => $aOpciones['tipo'],
@@ -580,6 +597,31 @@ class BbvaTest
         return $aResultado;
     }
 
+    private function obtienePlan($sCampo63): array
+    {
+        $aPlan = [
+            'plan' => '00',
+            'parcialidades' => '00',
+            'diferido' => '00',
+        ];
+        if (!empty($sCampo63)) {
+            // Obtiene data de tokens
+            $sTokens = substr($sCampo63, 15);
+            // Separa campo de tokens
+            $aTmpTokens = explode('! ', $sTokens);
+            $aTokens = [];
+            foreach($aTmpTokens as $sTmpToken) {
+                $aTokens[substr($sTmpToken, 0, 2)] = substr($sTmpToken, 2);
+            }
+            // Obtiene plan de pagos
+            if (isset($aTokens['Q6'])) {
+                $aPlan['plan'] = substr($aTokens['Q6'], -2, 2);
+                $aPlan['parcialidades'] = substr($aTokens['Q6'], 8, 2);
+                $aPlan['diferido'] = substr($aTokens['Q6'], 6, 2);
+            }
+        }
+        return $aPlan;
+    }
 }
 
 class InterredProxy
@@ -739,11 +781,7 @@ class InterredProxy
         $oMensaje->setData(15, date('md')); // Settlement Date: MMDD - Día en el cual se esta contabilizando la transacción
         $oMensaje->setData(17, date('md')); //  Capture Date: MMDD - Día en el cual la transacción es registrada por el Adquirente
         $oMensaje->setData(22, '012'); // PoS Entry Mode
-        if (in_array($oPeticionCargo->plan->plan ?? [], ['msi', 'mci', 'diferido'])) {
-            // Deaparece el campo 25... Puff! Motivo: Pos nomas.
-        } else {
-            $oMensaje->setData(25, '59'); // Point of Service Condition Code - 59 = Comercio Electrónico
-        }
+        $oMensaje->setData(25, '59'); // Point of Service Condition Code - 59 = Comercio Electrónico
         $oMensaje->setData(32, '12'); // Acquiring Institution Identification Code
         $oMensaje->setData(35, $oMensaje->formateaCampo35($oPeticionCargo->tarjeta)); // Track 2 Data
         $oMensaje->setData(37, $aTipo['referencia']); // Retrieval Reference Number
@@ -774,12 +812,12 @@ class InterredProxy
         if ($bEcho) {
             echo "<pre>" . print_r($oMensaje->getDataArray(), true) . "</pre>";
         }
-
         return $oMensaje;
     }
 
     private function isoTipoReverso(PeticionCargo $oPeticionCargo, array $aOpciones = [], $bEcho = false)
     {
+        if (isset($aOpciones['autorizacion']) && $aOpciones['autorizacion'] == '000000') { $aOpciones['autorizacion'] = '      '; }
         // Define campos
         $oMensaje = new Mensaje();
         $oMensaje->setMTI('0420');

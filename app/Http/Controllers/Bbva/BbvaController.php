@@ -135,14 +135,19 @@ class BbvaController extends Controller
     {
         $i = 1;
         $fecha = '2018-05-11';
-        $batch_filename = 'rmd1' . date('dmy', strtotime($fecha)) . '.txt';
+        $dFecha = strtotime($fecha);
+        $fecha_ymd = date('ymd', $dFecha);
+
+        $sFechaProc = strtotime("+1 day", $dFecha);
+        $fecha_proc_ymd = date('ymd', $sFechaProc);
+        $batch_filename = 'rmd1' . date('dmy', $sFechaProc) . '.txt';
 
         $batch_header_1 = [
 
             sprintf("%06s", $i++), // [6] Número de registro
             '1', // [1] Tipo de registro. Fijo: 1
             'EGLO', // [4] Número de sistema. Fijo: EGLO
-            date('ymd', strtotime($fecha)), // [6] Fecha de transmisión (AAMMDD)
+            $fecha_proc_ymd, // [6] Fecha de transmisión (AAMMDD)
             'STS     ', // [8] Nombre de la cadena (convenido con BBVA Bancomer)
             '01', // [2] Número NN fijo. Número asignado por BBVA Bancomer a la Interred
             '01', // [2] Número de ventana que corresponde en el día
@@ -193,7 +198,7 @@ class BbvaController extends Controller
             '000', // [3] Número de tienda donde se efectuó la transacción
         ];
 
-        $aTrx = [
+        $aTrx['180511'] = [
             'AcdJU08wMjQwMDAwNzcwMjEwMzIzQTg0ODAyRTgxODA1MjE4MDAwMDAwMDAwMDE4MzEwMDA1MTExNDMzMDkxODU5MDkwOTMzMDkwNTExMDUxMTA1MTEwMTI1OTIxNDc3MjEzNTAwMDAwMzU4ND0yMDA1MTgwNTExMDkzMzA5MDI1MDI1MDAwMDAwQ1AwMSAgICAgICAgMDI3NTQ2Mjc0MiAgICAgICAgICAgIDAwMDAwMDAwNDg0MTM5MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxMDAwMDAwMjAwMDAwMDAwMDAyMDAwMDAwMDAwMDIwMDAwMCAgICAgIDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMjAxMDAwMDAwMDAwMDAxNTIwMDAwMDIwMDAwNDg0MDAwMDEyNCYgMDAwMDYwMDEyNCEgUTEwMDAwMiAwMCEgUTIwMDAwMiAwOSEgQzQwMDAxMiAxMDI1MTAwMDM2MDAhIDA0MDAwMjAgICAgICAgICAgICAgWSAgICAgICAhIEMwMDAwMjYgMzQwICAwMDEgICAgICAgICAgNyAgMSAwIDA=',
             'ATlJU08wMjQwMDAwNzcwMjEwMzIzQTg0ODAyRTgxODAxMjAwMDAwMDAwMDAwMDAyMjQwMDA1MTExNDM2NDAyNDUwMzkwOTM2NDAwNTExMDUxMTA1MTEwMTI1OTIxNDE1MjMxNTAwMDEyMjY5Nz0yMDA1MTgwNTExMDkzNjQwMDI1MDI4MDAwMDAwQ1AwMSAgICAgICAgMDI3NTQ2Mjc0MiAgICAgICAgICAgIDAwMDAwMDAwNDg0MDAwMTI0JiAwMDAwNjAwMTI0ISBRMTAwMDAyIDAwISBRMjAwMDAyIDA5ISBDNDAwMDEyIDEwMjUxMDAwMzYwMCEgMDQwMDAyMCAgICAgICAgICAgICBPICAgICAgICEgQzAwMDAyNiA0MjcgIDAwMSAgICAgICAgICA3ICAxIDAgMA==',
             'ATlJU08wMjQwMDAwNzcwMjEwMzIzQTg0ODAyRTgxODAxMjAwMDAwMDAwMDAwMDA1MzM1NTA1MTExNDM4MjUwNzE0NDAwOTM4MjUwNTExMDUxMTA1MTEwMTI1OTIxNDE1MjMxNTAwMDEyMjY5Nz0yMDA1MTgwNTExMDkzODI1MDI1MDI5MDAwMDAwQ1AwMSAgICAgICAgMDI3NTQ2Mjc0MiAgICAgICAgICAgIDAwMDAwMDAwNDg0MDAwMTI0JiAwMDAwNjAwMTI0ISBRMTAwMDAyIDAwISBRMjAwMDAyIDA5ISBDNDAwMDEyIDEwMjUxMDAwMzYwMCEgMDQwMDAyMCAgICAgICAgICAgICBPICAgICAgICEgQzAwMDAyNiA0MjcgIDAwMSAgICAgICAgICA3ICAxIDAgMA==',
@@ -212,14 +217,9 @@ class BbvaController extends Controller
             'ATlJU08wMjQwMDAwNzcwMjEwMzIzQTg0ODAyRTgxODAxMjAwMDAwMDAwMDAwMDAxNTcwMDA1MTExNjI3MDQyNzg3NjExMTI3MDQwNTExMDUxMTA1MTEwMTI1OTIxNTQxMzMzMDA4OTAyMDA4Nj0yNTEyMTgwNTExMTEyNzA0MDA1NjYzMDAwMDAwQ1AwMSAgICAgICAgMDI3NTQ2Mjc0MiAgICAgICAgICAgIDAwMDAwMDAwNDg0MDAwMTI0JiAwMDAwNjAwMTI0ISBRMTAwMDAyIDkgISBRMjAwMDAyIDA5ISBDNDAwMDEyIDEwMjUxMDAwMzYwMCEgMDQwMDAyMCAgICAgICAgICAgICAgICAgICAgICEgQzAwMDAyNiAyMDEgIDAwMSAgICAgICAgICA3ICAxIDAgIA==',
             'ATlJU08wMjQwMDAwNzcwMjEwMzIzQTg0ODAyRTgxODAxMjAwMDAwMDAwMDAwMDEzMDcwMDA1MTExNjI4MTEwMDE5MjUxMTI4MTEwNTExMDUxMTA1MTEwMTI1OTIxNTQxMzMzMDA4OTAxMDQ4Mz0yNTEyMTgwNTExMTEyODExMDA1NjY0MDAwMDAwQ1AwMSAgICAgICAgMDI3NTQ2Mjc0MiAgICAgICAgICAgIDAwMDAwMDAwNDg0MDAwMTI0JiAwMDAwNjAwMTI0ISBRMTAwMDAyIDkgISBRMjAwMDAyIDA5ISBDNDAwMDEyIDEwMjUxMDAwMzYwMCEgMDQwMDAyMCAgICAgICAgICAgICAgICAgICAgICEgQzAwMDAyNiAyMDEgIDAwMSAgICAgICAgICA3ICAxIDAgIA==',
             'ATlJU08wMjQwMDAwNzcwMjEwMzIzQTg0ODAyRTgxODAxMjAwMDAwMDAwMDAwMDA0NTIwMDA1MTExNjI5MjI4NTUzNzgxMTI5MjIwNTExMDUxMTA1MTEwMTI1OTIxNTQxMzMzMDA4OTAxMDQ0Mj0yNTEyMTgwNTExMTEyOTIyMDA1NjY1MDAwMDAwQ1AwMSAgICAgICAgMDI3NTQ2Mjc0MiAgICAgICAgICAgIDAwMDAwMDAwNDg0MDAwMTI0JiAwMDAwNjAwMTI0ISBRMTAwMDAyIDkgISBRMjAwMDAyIDA5ISBDNDAwMDEyIDEwMjUxMDAwMzYwMCEgMDQwMDAyMCAgICAgICAgICAgICAgICAgICAgICEgQzAwMDAyNiAyMDEgIDAwMSAgICAgICAgICA3ICAxIDAgIA==',
-            '',
-            '',
-            '',
-            '',
-            '',
         ];
 
-        $aTrx1 = [
+        $aTrx['180504'] = [
             'AcdJU08wMjQwMDAwNzcwMjEwMzIzQTg0ODAyRTgxODA1MjE4MDAwMDAwMDAwMDE4MzAwMDA1MDQxNDE1Mzk0OTYxNDIwOTE1MzkwNTA0MDUwNDA1MDQwMTI1OTIxNDc3MjEzNTAwMDAwMzU4ND0yMDA1MTgwNTA0MDkxNTM5OTI1MDE5MDAwMDAwQ1AwMSAgICAgICAgMDI3NTQ2Mjc0MiAgICAgICAgICAgIDAwMDAwMDAwNDg0MTM5MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxMDAwMDAwMDI3NzUwMDAwMDAwMjc3NTAwMDAwMDAyNzc1MCAgICAgIDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMjAxMDAwMDAwMDAwMDAxNTIwMDAwMDAyNzc1NDg0MDAwMDEyNCYgMDAwMDYwMDEyNCEgUTEwMDAwMiAwMCEgUTIwMDAwMiAwOSEgQzQwMDAxMiAxMDI1MTAwMDM2MDAhIDA0MDAwMjAgICAgICAgICAgICAgWSAgICAgICAhIEMwMDAwMjYgMzQwICAwMDEgICAgICAgICAgNyAgMSAwIDA=',
             'ATlJU08wMjQwMDAwNzcwMjEwMzIzQTg0ODAyRTgxODAxMjAwMDAwMDAwMDAwMDAyMjMwMDA1MDQxNDIwMzU1MzAyNzgwOTIwMzUwNTA0MDUwNDA1MDQwMTI1OTIxNDE1MjMxNTAwMDEyMjY5Nz0yMDA1MTgwNTA0MDkyMDM1OTI1MDI0MDAwMDAwQ1AwMSAgICAgICAgMDI3NTQ2Mjc0MiAgICAgICAgICAgIDAwMDAwMDAwNDg0MDAwMTI0JiAwMDAwNjAwMTI0ISBRMTAwMDAyIDAwISBRMjAwMDAyIDA5ISBDNDAwMDEyIDEwMjUxMDAwMzYwMCEgMDQwMDAyMCAgICAgICAgICAgICBPICAgICAgICEgQzAwMDAyNiA0MjcgIDAwMSAgICAgICAgICA3ICAxIDAgMA==',
             'ATlJU08wMjQwMDAwNzcwMjEwMzIzQTg0ODAyRTgxODAxMjAwMDAwMDAwMDAwMDAyMjMwMDA1MDQxNDIwMzk5ODU2MzcwOTIwMzkwNTA0MDUwNDA1MDQwMTI1OTIxNDE1MjMxNTAwMDEyMjY5Nz0yMDA1MTgwNTA0MDkyMDM5OTI1MDI1MDAwMDAwQ1AwMSAgICAgICAgMDI3NTQ2Mjc0MiAgICAgICAgICAgIDAwMDAwMDAwNDg0MDAwMTI0JiAwMDAwNjAwMTI0ISBRMTAwMDAyIDAwISBRMjAwMDAyIDA5ISBDNDAwMDEyIDEwMjUxMDAwMzYwMCEgMDQwMDAyMCAgICAgICAgICAgICBPICAgICAgICEgQzAwMDAyNiA0MjcgIDAwMSAgICAgICAgICA3ICAxIDAgMA==',
@@ -300,7 +300,7 @@ class BbvaController extends Controller
         ];
 
         $respuesta = [];
-        foreach($aTrx as $sTrx) {
+        foreach($aTrx[$fecha_ymd] as $sTrx) {
             $sRespuesta = base64_decode($sTrx);
             $oInterred = new BBVAInterred();
             $aMensajeISO = $oInterred->procesaMensaje($sRespuesta);
@@ -351,26 +351,34 @@ class BbvaController extends Controller
                 if (!empty($res[38])) {
                     if (!empty($aTrxs[$res[38]])) {
                         unset($aTrxs[$res[38]]);
+                        if ($res[3] == '180000' || $res[3] == '000000') {
+                            $totales['compras'] -= 1;
+                            $totales['monto_compras'] -= $res[4];
+                        } else if ($res[3] == '200000') {
+                            $totales['cargos'] -= 1;
+                            $totales['monto_cargos'] -= $res[4];
+                        }
+                        $totales['negocio'] -= 1;
                     } else {
                         $aTrxs[$res[38]] = $linea;
+                        if ($res[3] == '180000' || $res[3] == '000000') {
+                            $totales['compras'] += 1;
+                            $totales['monto_compras'] += $res[4];
+                        } else if ($res[3] == '200000') {
+                            $totales['cargos'] += 1;
+                            $totales['monto_cargos'] += $res[4];
+                        }
+                        $totales['negocio'] += 1;
                     }
                 }
-                if ($res[3] == '180000' || $res[3] == '000000') {
-                    $totales['compras'] += 1;
-                    $totales['monto_compras'] += $res[4];
-                } else if ($res[3] == '200000') {
-                    $totales['cargos'] += 1;
-                    $totales['monto_cargos'] += $res[4];
-                }
-                $totales['negocio'] += 1;
             }
         }
         // Escribe registros en batch
         $registros = 0;
         $batch_linea = [];
-        foreach($aTrxs as $iTrxId => $aTrx) {
-            $aTrx[0] = sprintf("%06s", $i++); // REGCAD-NUM-REG [6] Número consecutivo de registro
-            $batch_linea[] = implode('', $aTrx) . "\n";
+        foreach($aTrxs as $iTrxId => $aTrnx) {
+            $aTrnx[0] = sprintf("%06s", $i++); // REGCAD-NUM-REG [6] Número consecutivo de registro
+            $batch_linea[] = implode('', $aTrnx) . "\n";
             #$totales['compras'] += 1;
             #$totales['monto_compras'] += $aTrx[5];
             $registros += 1;
