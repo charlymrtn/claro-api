@@ -38,7 +38,12 @@ class VentaManualService
         // Define si es prueba
         $this->bPrueba = $prueba;
 
+// Producción
+$prueba = false;
+$this->bPrueba = false;
+
         // Datos de prueba
+        $this->client = new Client;
         if ($prueba){
             $this->merchantId = "0000000000000012";
             $this->reqIv = "b35d01d060a5799cf0777a084437fa16";
@@ -52,7 +57,6 @@ class VentaManualService
             $this->affilation = "9165713";
             $this->userId = "jmosco1";
             $this->password = "1Qazxsw2..";
-            $this->client = new Client;
             $this->host1 = "http://54.203.245.137:10080/atna";
             $this->host2 = "http://54.203.245.137";
         } else {
@@ -69,7 +73,6 @@ class VentaManualService
             $this->userId = "CLAROSHOPCOM";
             //todo: este dato no viene en el correo
             $this->password = "1Qazxsw2..";
-            $this->client = new Client;
             $this->host1 = "https://www.feenicia.com/atena-swa-services-0.1";
             $this->host2 = "https://www.feenicia.com";
         }

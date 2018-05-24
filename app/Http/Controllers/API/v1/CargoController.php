@@ -3,29 +3,32 @@
 namespace app\Http\Controllers\API\v1;
 
 use Log;
+use Exception;
 use Validator;
+use Webpatser\Uuid\Uuid;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Models\Transaccion;
 use App\Classes\Pagos\Parametros\PeticionCargo;
-use App\Classes\Sistema\Mensaje;
-use Webpatser\Uuid\Uuid;
+use App\Classes\Pagos\Base\Contacto;
+use App\Classes\Pagos\Base\Pedido;
+use App\Classes\Pagos\Base\Direccion;
+use App\Classes\Pagos\Base\Telefono;
+use App\Classes\Pagos\Medios\TarjetaCredito;
+use App\Classes\Pagos\Procesos\Cargo;
 
 class CargoController extends Controller
 {
 
-    protected $mTransaccion;
-    protected $oMensaje;
+    protected $oCargo;
 
     /**
      * Crea nueva instancia.
      *
      * @return void
      */
-    public function __construct(Transaccion $transaccion, Mensaje $mensaje)
+    public function __construct(Cargo $cargo)
     {
-        $this->mTransaccion = $transaccion;
-        $this->oMensaje = $mensaje;
+        $this->oCargo = $cargo;
     }
 
     /**
@@ -57,125 +60,149 @@ class CargoController extends Controller
     public function store(Request $oRequest)
     {
 
-        /**
-         * @todo: IMPORTANTE: Versión para demo, cambiar pasando el demo!
-         */
-
-        // Encapsula, valida y formatea datos en PeticionCargo
-        $oPeticionCargo = new PeticionCargo($oRequest->all());
-
-        // @todo: Cambiar Procesadores\Amex\InternetDirect por Procesadores\sProcesadorAmex
-
-        // Inicializa transaccion
-        $aTrx = [
-            'prueba' => $oPeticionCargo->prueba,
-            'operacion' => 'pago',
-            'monto' => $oPeticionCargo->monto,
-            'forma_pago' => 'tarjeta',
-            'datos_pago' => json_encode([
-                'nombre' => $oPeticionCargo->tarjeta->nombre,
-                'pan' => $oPeticionCargo->tarjeta->pan,
-                'pan_hash' => $oPeticionCargo->tarjeta->pan_hash,
-                'marca' => $oPeticionCargo->tarjeta->marca,
-            ]),
-            // Comercio
-            'comercio_orden_id' => $oPeticionCargo->pedido['id'],
-            'datos_comercio' => json_encode([
-                'pedido' => $oPeticionCargo->pedido,
-                'cliente' => $oPeticionCargo->cliente,
-            ]),
-            'datos_antifraude' => json_encode([]),
-            'datos_claropagos' => json_encode([]),
-            'datos_procesador' => json_encode([]),
-            'datos_destino' => json_encode([]),
-            // Catálogos
-            'comercio' => $oPeticionCargo->comercio_uuid,
-            'transaccion_estatus_id' => 4,
-            'pais' => $oPeticionCargo->pedido['direccion_cargo']->pais,
-            'moneda' => 'MXN',
-            // Fechas
-            'created_at' => date('Y-m-d H:i:s'),
-        ];
-
-//dump($oPeticionCargo->toArray());
-//dump($aTrx);
-//die;
-
-//$oProcesador = new \App\Classes\Pagos\Procesadores\ProcesadorAmex();
-//$oResultado = $oProcesador->carga($oPeticionCargo);
-//dump($oResultado);
-//die;
-
-
-        // Evalúa en Antifraude
-        if ($oPeticionCargo->tarjeta->_pan == '4111111111111111') {
-            // Card OK 4111111111111111
-            $aTrx['datos_antifraude'] = json_encode(['response_code' => '100', 'response_description' => 'Transaction OK', 'error' => false]);
-        } if ($oPeticionCargo->tarjeta->_pan == '4222222222222220') {
-            // Card declined 4222222222222220
-            $aTrx['estatus'] = 'declinada';
-            $aTrx['datos_antifraude'] = json_encode(['error' => true, 'response_code' => '220', 'response_description' => 'Decline - Generic Decline.']);
-        } if ($oPeticionCargo->tarjeta->_pan == '4000000000000069') {
-            // Card expired 4000000000000069 -> Declinada por fraude
-            $aTrx['estatus'] = 'rechazada-antifraude';
-            $aTrx['datos_antifraude'] = json_encode(['error' => true, 'response_code' => '205', 'response_description' => 'Decline - Stolen or lost card.']);
-        } else {
-            $aTrx['datos_antifraude'] = json_encode(['response_code' => '100', 'response_description' => 'Transaction OK', 'error' => false]);
+         // Valida datos de entrada
+        $oValidator = Validator::make($oRequest->toArray(), [
+            'comercio_uuid' => 'required|string',
+            'descripcion' => 'max:250',
+            'prueba' => 'boolean',
+            'monto' => 'required',
+            'parcialidades' => 'numeric|min:0|max:48',
+            // TARJETA 'tarjeta' => 'required|array',
+                'tarjeta.pan' => 'required|numeric',
+                'tarjeta.nombre' => 'required|min:3|max:60',
+                'tarjeta.cvv2' => 'required|numeric',
+                'tarjeta.expiracion_mes' => 'required|numeric',
+                'tarjeta.expiracion_anio' => 'required|numeric',
+                'tarjeta.inicio_mes' => 'numeric',
+                'tarjeta.inicio_anio' => 'numeric',
+                'tarjeta.nombres' => 'required_without:tarjeta.nombre|min:3|max:30',
+                'tarjeta.apellido_paterno' => 'required_without:tarjeta.nombre|min:3|max:30',
+                'tarjeta.apellido_materno' => 'required_without:tarjeta.nombre|min:3|max:30',
+                'tarjeta.direccion' => 'array',
+            // PEDIDO 'pedido' => 'required|array',
+                'pedido.id' => 'max:48',
+                'pedido.direccion_envio' => 'array',
+                'pedido.articulos' => 'numeric',
+            // CLIENTE 'cliente' => 'required|array',
+                'cliente.id' => 'required|string',
+                'cliente.nombre' => 'required|min:3|max:30',
+                'cliente.apellido_paterno' => 'required|min:3|max:30',
+                'cliente.apellido_materno' => 'min:3|max:30',
+                'cliente.email' => 'required|email',
+                'cliente.telefono' => 'string',
+                'cliente.direccion' => 'array',
+                'cliente.creacion' => 'date',
+        ]);
+        if ($oValidator->fails()) {
+            $sCode = '400';
+            Log::error('Error de validación de parámetros: ' . json_encode($oValidator->errors()));
+            return ejsend_fail(['code' => $sCode, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], $sCode, ['errors' => $oValidator->errors()]);
         }
 
-        // Procesa cargo
-        if ($oPeticionCargo->tarjeta->marca == 'amex') {
-            // Procesa transacción con procesador de pagos
-            $oProcesador = new \App\Classes\Pagos\Procesadores\Amex\InternetDirect();
-            $aAmexPago = [
-                'pan' => $oPeticionCargo->tarjeta->_pan,
-                'amount' => $oPeticionCargo->monto,
-                'datetime' => date('ymdhis'),
-                'date_exp' => $oPeticionCargo->tarjeta->expiracion_anio . $oPeticionCargo->tarjeta->expiracion_mes,
-                'cvv' => $oPeticionCargo->tarjeta->cvv2,
-                'direccion' => $oPeticionCargo->pedido['direccion_cargo'],
-                'direccion_envio' => $oPeticionCargo->pedido['direccion_envio'],
-            ];
-            $aTrx['datos_procesador'] = json_encode($oProcesador->sendTransaction($aAmexPago));
-            $aTrx['estatus'] = 'completada'; // @todo: Cambiar acorde a la respuesta del procesador
-        } else {
-            // Procesa transacción con procesador de pagos
-            $oProcesador = new \App\Classes\Pagos\Procesadores\Prosa\VentaManualService($aTrx['prueba']);
-            $aProsaPago = [
-                'nombre' => $oPeticionCargo->tarjeta->nombre,
-                'pan' => $oPeticionCargo->tarjeta->_pan,
-                'amount' => $oPeticionCargo->monto,
-                'datetime' => date('ymdhis'),
-                'date_exp' => $oPeticionCargo->tarjeta->expiracion_anio . $oPeticionCargo->tarjeta->expiracion_mes,
-                'cvv' => $oPeticionCargo->tarjeta->cvv2,
-                'direccion' => $oPeticionCargo->pedido['direccion_cargo'],
-                'email' => $oPeticionCargo->cliente['email'],
-                'productos' => [
-                    [
-                        'Quantity' => $oPeticionCargo->pedido['articulos'],
-                        'description' => $oPeticionCargo->descripcion,
-                        'nombre' => $oPeticionCargo->cliente['nombre'],
-                        'unitPrice' => $oPeticionCargo->monto,
-                        'amount' => $oPeticionCargo->monto,
-                        'Id' => $oPeticionCargo->pedido['id'],
-                    ],
-                ],
-            ];
-            $aTrx['datos_procesador'] = json_encode($oProcesador->sendTransaction($aProsaPago['amount'], $aProsaPago['productos'], $aProsaPago['pan'], $aProsaPago['nombre'], $aProsaPago['cvv'], $aProsaPago['date_exp']));
-            //$aTrx['datos_procesador'] = '{"headers":{},"original":{"status":"success","data":{"message":"Venta generada correctamente","response_code":"00","importantData":{"orderId":25198,"authNum":"152099","transactionId":27172},"prueba":true}},"exception":null}';
-            $aTrx['estatus'] = 'completada'; // @todo: Cambiar acorde a la respuesta del procesador
+        // Formatea y encapsula datos en PeticionCargo
+        try {
+            $oPeticionCargo = new PeticionCargo([
+                'comercio_uuid' => $oRequest->input('comercio_uuid'),
+                'prueba' => $oRequest->input('prueba', true),
+                'descripcion' => $oRequest->input('descripcion', ''),
+                'monto' => $oRequest->input('monto', '0.00'),
+                'puntos' => $oRequest->input('puntos', 0),
+                'parcialidades' => $oRequest->input('parcialidades', 0),
+                'diferido' => $oRequest->input('diferido', 0),
+                'tarjeta' => new TarjetaCredito([
+                    'pan' => $oRequest->input('tarjeta.pan'),
+                    'nombre' => $oRequest->input('tarjeta.nombre'),
+                    'cvv2' => $oRequest->input('tarjeta.cvv2'),
+                    'expiracion_mes' => $oRequest->input('tarjeta.expiracion_mes'),
+                    'expiracion_anio' => $oRequest->input('tarjeta.expiracion_anio'),
+                ]),
+                'pedido' => new Pedido([
+                    'id' => $oRequest->input('pedido.id', 1),
+                    'articulos' => $oRequest->input('pedido.articulos', 1),
+                    'peso' => $oRequest->input('pedido.peso', 0),
+                    'total' => $oRequest->input('pedido.total', $oRequest->input('monto', '0.00')),
+                    'direccion_envio' => new Direccion([
+                        'pais' => $oRequest->input('pedido.direccion.pais', 'MEX'),
+                        'estado' => $oRequest->input('pedido.direccion.estado', 'CMX'),
+                        'ciudad' => $oRequest->input('pedido.direccion.ciudad', 'CDMX'),
+                        'municipio' => $oRequest->input('pedido.direccion.municipio', 'Delegación'),
+                        'linea1' => $oRequest->input('pedido.direccion.linea1', ''),
+                        'linea2' => $oRequest->input('pedido.direccion.linea2', ''),
+                        'linea3' => $oRequest->input('pedido.direccion.linea3', ''),
+                        'cp' => $oRequest->input('pedido.direccion.cp', '0000'),
+                        'telefono' => new Telefono([
+                            'tipo' => $oRequest->input('pedido.direccion.telefono.tipo', 'desconocido'),
+                            'codigo_pais' => $oRequest->input('pedido.direccion.telefono.codigo_pais', '52'),
+                            'codigo_area' => $oRequest->input('pedido.direccion.telefono.codigo_area', '55'),
+                            'numero' => $oRequest->input('pedido.direccion.telefono', '0000000000'),
+                            'extension' => $oRequest->input('pedido.direccion.extension', null),
+                        ]),
+                    ]),
+                ]),
+                'direccion_cargo' => new Direccion([
+                    'pais' => $oRequest->input('pedido.direccion.pais', 'MEX'),
+                    'estado' => $oRequest->input('pedido.direccion.estado', 'CMX'),
+                    'ciudad' => $oRequest->input('pedido.direccion.ciudad', 'CDMX'),
+                    'municipio' => $oRequest->input('pedido.direccion.municipio', 'Delegación'),
+                    'linea1' => $oRequest->input('pedido.direccion.linea1', ''),
+                    'linea2' => $oRequest->input('pedido.direccion.linea2', ''),
+                    'linea3' => $oRequest->input('pedido.direccion.linea3', ''),
+                    'cp' => $oRequest->input('pedido.direccion.cp', '0000'),
+                    'telefono' => new Telefono([
+                        'tipo' => $oRequest->input('pedido.direccion.telefono.tipo', 'desconocido'),
+                        'codigo_pais' => $oRequest->input('pedido.direccion.telefono.codigo_pais', '52'),
+                        'codigo_area' => $oRequest->input('pedido.direccion.telefono.codigo_area', '55'),
+                        'numero' => $oRequest->input('pedido.direccion.telefono', '0000000000'),
+                        'extension' => $oRequest->input('pedido.direccion.extension', null),
+                    ]),
+                ]),
+                'cliente' => new Contacto([
+                    'id' => $oRequest->input('cliente.id', 0),
+                    'nombre' => $oRequest->input('cliente.nombre'),
+                    'apellido_paterno' => $oRequest->input('cliente.apellido_paterno'),
+                    'apellido_materno' => $oRequest->input('cliente.apellido_materno'),
+                    'genero' => $oRequest->input('cliente.genero', 'Desconocido'),
+                    'email' => $oRequest->input('cliente.email'),
+                    'telefono' => new Telefono([
+                        'tipo' => $oRequest->input('cliente.telefono.tipo', 'desconocido'),
+                        'codigo_pais' => $oRequest->input('cliente.telefono.codigo_pais', '52'),
+                        'codigo_area' => $oRequest->input('cliente.telefono.codigo_area', '55'),
+                        'numero' => $oRequest->input('cliente.telefono', '0000000000'),
+                        'extension' => $oRequest->input('cliente.extension', null),
+                    ]),
+                    'nacimiento' => $oRequest->input('cliente.nacimiento', null),
+                    'creacion' => $oRequest->input('cliente.creacion', null),
+                    'cliente.direccion' => new Direccion([
+                        'pais' => $oRequest->input('pedido.direccion.pais', 'MEX'),
+                        'estado' => $oRequest->input('pedido.direccion.estado', 'CMX'),
+                        'ciudad' => $oRequest->input('pedido.direccion.ciudad', 'CDMX'),
+                        'municipio' => $oRequest->input('pedido.direccion.municipio', 'Delegación'),
+                        'linea1' => $oRequest->input('pedido.direccion.linea1', ''),
+                        'linea2' => $oRequest->input('pedido.direccion.linea2', ''),
+                        'linea3' => $oRequest->input('pedido.direccion.linea3', ''),
+                        'cp' => $oRequest->input('pedido.direccion.cp', '0000'),
+                        'telefono' => new Telefono([
+                            'tipo' => $oRequest->input('pedido.direccion.telefono.tipo', 'desconocido'),
+                            'codigo_pais' => $oRequest->input('pedido.direccion.telefono.codigo_pais', '52'),
+                            'codigo_area' => $oRequest->input('pedido.direccion.telefono.codigo_area', '55'),
+                            'numero' => $oRequest->input('pedido.direccion.telefono', '0000000000'),
+                            'extension' => $oRequest->input('pedido.direccion.extension', null),
+                        ]),
+                    ]),
+                ]),
+            ]);
+        } catch (\Exception $e) {
+            if (empty($e->getCode())) {
+                $sCode = '400';
+            } else {
+                $sCode = $e->getCode();
+            }
+            Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ':' . $e->getMessage());
+            return ejsend_fail(['code' => $sCode, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], $sCode, ['errors' => $e->getMessage()]);
         }
 
-        // Genera transacción
-        $oTrx = $this->mTransaccion->create($aTrx);
-
-        // Envía transacción a Admin y Clientes
-        // @todo: Cambiar envío a tareas y mensajes únicamente para que ese sistema envíe estos mensajes a los otros sistemas.
-        $oMensajeResultado = $this->oMensaje->envia('clientes', '/api/admin/transaccion', 'POST', $oTrx->toJson());
-        $oMensajeResultado = $this->oMensaje->envia('admin', '/api/admin/transaccion', 'POST', $oTrx->toJson());
-
-        // Regresa resultado
-print $oTrx->toJson();
+        // Envía petición a proceso de cargo
+        return $this->oCargo->carga($oPeticionCargo);
 
     }
 

@@ -21,6 +21,8 @@ class Kernel extends ConsoleKernel
         Commands\EglobalSocketServerMockCommand::class,
         // BBVA Socket Proxy
         Commands\EglobalSocketProxyCommand::class,
+        // Comando para otimizar reemplazando el anterior de laravel 5.5
+        Commands\OptimizeCommand::class,
     ];
 
     /**

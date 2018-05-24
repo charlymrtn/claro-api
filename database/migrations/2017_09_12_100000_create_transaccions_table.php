@@ -16,11 +16,14 @@ class CreateTransaccionsTable extends Migration
         Schema::connection('mysql_sa')->create('transaccion', function (Blueprint $table) {
             // Identificador
             $table->uuid('uuid');
+            $table->primary('uuid');
             //Catalogos
-            $table->string('comercio');
+            $table->uuid('comercio_uuid');
             $table->enum('estatus', [
-                'pendiente', 'completada', 'reembolsada', 'reembolso-parcial', 'autorizada',
-                'cancelada', 'rechazada-banco', 'rechazada-antifraude', 'contracargo-pendiente', 'contracargo-rechazado',
+                'pendiente',
+                'aprobada-antifraude', 'rechazada-antifraude',
+                'completada', 'reembolsada', 'reembolso-parcial', 'autorizada',
+                'cancelada', 'rechazada-banco', 'contracargo-pendiente', 'contracargo-rechazado',
                 'contracargada', 'fallida', 'declinada'
             ]);
             $table->string('pais', 3);
@@ -29,15 +32,13 @@ class CreateTransaccionsTable extends Migration
             $table->boolean('prueba');
             $table->decimal('monto',19, 4);
             $table->enum('operacion', ['pago', 'preautorizacion', 'autorizacion', 'cancelacion']);
-            $table->enum('forma_pago', ['tarjeta', 'telmex-recibo', 'telcel-recibo', 'paypal', 'applepay', 'androidpay', 'visa-checkout', 'masterpass']);
+            $table->enum('forma_pago', ['tarjeta', 'telmex-recibo', 'telcel-recibo', 'paypal', 'applepay', 'androidpay', 'visa-checkout', 'masterpass', 'mercadopago']);
             $table->json('datos_pago');
             $table->json('datos_antifraude');
             $table->json('datos_comercio');
             $table->json('datos_claropagos');
             $table->json('datos_procesador');
             $table->json('datos_destino');
-            $table->primary('uuid');
-            $table->string('comercio_orden_id');
                 //Traits
             $table->timestamps();
         });

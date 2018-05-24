@@ -6,9 +6,9 @@ use Jenssegers\Model\Model;
 use Exception;
 use Validator;
 use Carbon\Carbon;
+use App\Classes\Pagos\Base\Pedido;
 use App\Classes\Pagos\Base\Contacto;
-use App\Classes\Pagos\Base\Direccion;
-use App\Classes\Pagos\Base\Telefono;
+use App\Classes\Pagos\Base\PlanPago;
 use App\Classes\Pagos\Medios\TarjetaCredito;
 
 /**
@@ -17,21 +17,20 @@ use App\Classes\Pagos\Medios\TarjetaCredito;
  */
 class PeticionCargo extends Model
 {
-
     // {{{ properties
 
     /*
      * @var array $fillable Atributos asignables
      */
     protected $fillable = [
-        'id', // Id de la transacción en Claro Pagos
-        'prueba',
-        'tarjeta',
-        'monto',
+        'prueba', // Booleano que indica si es una transacción de prueba o no
+        'tarjeta', // Objeto tipo TarjetaCredito
+        'monto', // Monto total de la transacción
         'descripcion',
-        'pedido',
-        'cliente',
-        'parcialidades',
+        'pedido', // Objeto tipo Pedido
+        'cliente', // Objeto tipo Contacto
+        'plan', // Objeto tipo PlanPago
+        'direccion_cargo', // Objeto tipo Direccion
         'comercio_uuid',
     ];
 
@@ -41,31 +40,41 @@ class PeticionCargo extends Model
     protected $guarded = [
         'created_at', // Fecha de creación del objeto tipo Carbon
         'updated_at', // Fecha de actualización del objeto tipo Carbon
+        'deleted_at', // Fecha de borrado lógico del objeto tipo Carbon
     ];
 
     /*
      * Atributos escondidos
      */
-    //protected $hidden = [];
+    protected $hidden = [
+    ];
 
     /*
      * Atributos mutables
      */
     protected $casts = [
-        'parcialidades' => 'integer',
         'prueba' => 'boolean',
     ];
 
     /*
-     * Atributos mutables a fechas
+     * @var array $dates Atributos mutables a fechas
      */
     protected $dates = [
-        'created_at', 'updated_at', 'deleted_at',
+        'created_at', 'updated_at', 'deleted_at'
     ];
 
     /*
-     * Atributos de clases
+     * @var array $rules Reglas de validación
      */
+    protected $rules = [
+            'prueba' => 'boolean',
+            'tarjeta' => 'required',
+            'monto' => 'required',
+            'puntos' => 'numeric',
+            'descripcion' => 'max:250',
+            'comercio_uuid' => 'required|string',
+    ];
+
     // }}}}
 
     /**
@@ -74,7 +83,6 @@ class PeticionCargo extends Model
      * --------------------------------------------------------------------------------------------------------
      */
     // {{{ protected functions
-
     // }}}
 
     /**
@@ -83,50 +91,6 @@ class PeticionCargo extends Model
      * --------------------------------------------------------------------------------------------------------
      */
     // {{{ private functions
-
-    private function validaDatos()
-    {
-         // Valida datos de entrada
-        $oValidator = Validator::make($this->toArray(), [
-            'prueba' => 'boolean',
-            'tarjeta' => 'required',
-            'monto' => 'required',
-            'descripcion' => 'max:250',
-            'pedido' => 'required|array',
-                'pedido.id' => 'max:48',
-                'pedido.direccion_envio' => 'array',
-                'pedido.direccion_cargo' => 'required|array',
-                'pedido.articulos' => 'numeric',
-            'cliente' => 'required|array',
-                'cliente.id' => 'required|string',
-                'cliente.nombre' => 'required|min:3|max:30',
-                'cliente.apellido_paterno' => 'required|min:3|max:30',
-                'cliente.apellido_materno' => 'min:3|max:30',
-                'cliente.email' => 'required|email',
-                'cliente.telefono' => 'string',
-                'cliente.direccion' => 'array',
-                'cliente.creacion' => 'date',
-            'parcialidades' => 'numeric|min:0|max:48',
-            'comercio_uuid' => 'required|string',
-        ]);
-        if ($oValidator->fails()) {
-            throw new Exception('Error en parámetros de entrada: ' . $oValidator->errors());
-        }
-    }
-
-    /**
-     * Formatea datos de entrada
-     *
-     * @return void
-     */
-    private function formateaDatos()
-    {
-        $this->attributes['pedido']['direccion_envio'] = new Direccion($this->attributes['pedido']['direccion_envio']);
-        $this->attributes['pedido']['direccion_cargo'] = new Direccion($this->attributes['pedido']['direccion_cargo']);
-        $this->attributes['cliente']['direccion'] = new Direccion($this->attributes['cliente']['direccion']);
-        $this->attributes['cliente']['telefono'] = new Telefono(['numero' => $this->attributes['cliente']['telefono']]);
-        $this->attributes['cliente'] = new Contacto($this->attributes['cliente']);
-    }
 
     // }}}
 
@@ -140,29 +104,76 @@ class PeticionCargo extends Model
     /**
      * Constructor
      */
-    public function __construct($aAttributes)
+    public function __construct($aAttributes = [])
     {
         // Define fecha de creación
         $this->attributes['created_at'] = Carbon::now();
         $this->attributes['prueba'] = true;
+        // Valida entradas
+        $this->valida($aAttributes);
         // Ejecuta constructor padre
         parent::__construct($aAttributes);
-        // Valida datos
-        $this->validaDatos();
-        // Formatea datos
-        $this->formateaDatos();
     }
 
     /**
-     * Convierte datos de tarjeta a objeto TarjetaCredito
-     * (Validaciones de datos en el objeto)
+     * Valida input con las reglas de validación del modelo
      *
-     * @param  string  $aTarjeta
+     * @param array $aAttributes Arreglo con valores de los campos
+     *
      * @return void
      */
-    public function setTarjetaAttribute($aTarjeta)
+    public function valida($aAttributes)
     {
-        $this->attributes['tarjeta'] = new TarjetaCredito($aTarjeta);
+        $oValidator = Validator::make($aAttributes, $this->rules);
+        if ($oValidator->fails()) {
+            throw new Exception($oValidator->errors(), 400);
+        }
+    }
+
+    // --------------------------------------------------------------------------------------------------------
+
+    /**
+     * Mutator a objeto TarjetaCredito
+     *
+     * @param TarjetaCredito $oTarjeta
+     * @return void
+     */
+    public function setTarjetaAttribute(TarjetaCredito $oTarjeta)
+    {
+        $this->attributes['tarjeta'] = $oTarjeta;
+    }
+
+    /**
+     * Mutator a objeto Contacto
+     *
+     * @param Contacto $oCliente
+     * @return void
+     */
+    public function setClienteAttribute(Contacto $oCliente)
+    {
+        $this->attributes['cliente'] = $oCliente;
+    }
+
+    /**
+     * Mutator a objeto Pedido
+     *
+     * @param Pedido $oPedido
+     * @return void
+     */
+    public function setPedidoAttribute(Pedido $oPedido)
+    {
+        $this->attributes['pedido'] = $oPedido;
+    }
+
+    /**
+     * Mutator a objeto PlanPago
+     *
+     * @param PlanPago $oPlanPago
+     * @return void
+     */
+    public function setPlanAttribute(PlanPago $oPlanPago)
+    {
+        $this->attributes['plan'] = $oPlanPago;
     }
 
     // }}}

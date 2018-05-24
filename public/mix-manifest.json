@@ -1,4 +1,16 @@
 {
   "/js/app.js": "/js/app.js",
-  "/css/app.css": "/css/app.css"
+  "/css/app.css": "/css/app.css",
+  "/css/fonts.css": "/css/fonts.css",
+  "/css/ui.css": "/css/ui.css",
+  "/css/vendor.css": "/css/vendor.css",
+  "/css/login.css": "/css/login.css",
+  "/js/mix/datatables.js": "/js/mix/datatables.js",
+  "/css/mix/datatables.css": "/css/mix/datatables.css",
+  "/js/mix/forms.js": "/js/mix/forms.js",
+  "/css/mix/forms.css": "/css/mix/forms.css",
+  "/js/mix/charts.js": "/js/mix/charts.js",
+  "/css/mix/charts.css": "/css/mix/charts.css",
+  "/js/mix/ui.js": "/js/mix/ui.js",
+  "/css/mix/ui.css": "/css/mix/ui.css"
 }

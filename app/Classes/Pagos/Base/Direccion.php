@@ -6,6 +6,7 @@ use Jenssegers\Model\Model;
 use Exception;
 use Validator;
 use Carbon\Carbon;
+use App\Classes\Pagos\Base\Telefono;
 
 /**
  * Clase para direcciones
@@ -89,12 +90,11 @@ class Direccion extends Model
             'linea2' => 'string|max:120',
             'linea3' => 'string|max:120',
             'cp' => 'string|min:3|max:10', // Pueden ser alfanuméricos https://en.wikipedia.org/wiki/Postal_code
-            'telefono' => 'string|max:20',
             'longitud' => 'numeric|min:-180|max:180',
             'latitud' => 'numeric|min:-90|max:90',
         ]);
         if ($oValidator->fails()) {
-            throw new Exception('Error en parámetros de entrada: ' . $oValidator->errors());
+            throw new Exception($oValidator->errors(), 400);
         }
     }
 
@@ -140,6 +140,17 @@ class Direccion extends Model
     public function setEstadoAttribute($sEstado)
     {
         $this->attributes['estado'] = strtoupper($sEstado);
+    }
+
+    /*
+     * Mutator telefono
+     *
+     * @param Direccion $oDireccion Objeto Direccion
+     * @return void
+     */
+    public function setTelefonoAttribute(Telefono $oTelefono): void
+    {
+        $this->attributes['telefono'] = $oTelefono;
     }
 
     // }}}

@@ -1,6 +1,6 @@
 <?php
 
-Route::group(['namespace' => 'API\v1', 'prefix' => 'v1', 'as' => 'api.v1.', 'middleware' => ['client.credentials']], function () {
+Route::group(['namespace' => 'API\v1', 'prefix' => 'v1', 'as' => 'api.v1.'], function () {
 
     // API v1 Principal
     Route::any('/', 'APIv1Controller@index')->name('default');

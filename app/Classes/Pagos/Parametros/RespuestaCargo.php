@@ -4,9 +4,9 @@ namespace App\Classes\Pagos\Parametros;
 
 use Jenssegers\Model\Model;
 use Exception;
+use Validator;
 use Carbon\Carbon;
-use App\Classes\Pagos\Base\Contacto;
-use App\Classes\Pagos\Base\Direccion;
+use App\Classes\Pagos\Parametros\PeticionCargo;
 
 /**
  * Clase para parámetros de entrada para cargos
@@ -14,14 +14,21 @@ use App\Classes\Pagos\Base\Direccion;
  */
 class RespuestaCargo extends Model
 {
-
     // {{{ properties
 
     /*
      * @var array $fillable Atributos asignables
      */
     protected $fillable = [
-        'id', // Id de la transacción en Claro Pagos
+        'id', // ID de la transacción en Claro Pagos
+        'prueba', // Booleano que indica si es una transacción de prueba o no
+        'monto', // Numérico (mayor a cero con dos decimales). Monto de la transacción
+        'autorizacion', // String. Identificador de autorización del procesador de pago
+        'tipo', // String. Tipo de transacción (“cargo”)
+        'orden_id', // String. Identificador del orden del comercio
+        'cliente_id', // String. Identificador de cliente del comercio
+        'estatus', // String. Estatus de la transacción
+        'error', // Objeto. Objeto de tipo Error
     ];
 
     /*
@@ -52,4 +59,7 @@ class RespuestaCargo extends Model
     /*
      * Atributos de clases
      */
+
+    // --------------------------------------------------------------------------------------------------------
+
 }

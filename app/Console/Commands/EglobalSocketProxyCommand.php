@@ -58,7 +58,7 @@ class EglobalSocketProxyCommand extends Command
             $oLoop = LoopFactory::create();
             $server = IoServer::factory(new SocketServerProxy($oLoop), $this->aConfig['proxy']['puerto']);
             // Agrega timer
-            $server->loop->addPeriodicTimer($this->aConfig['keepalive'], function () use ($server) {
+            $server->loop->addPeriodicTimer($this->aConfig['keepalive'] / 3, function () use ($server) {
                 $server->app->keepalive();
             });
             // Corre servidor

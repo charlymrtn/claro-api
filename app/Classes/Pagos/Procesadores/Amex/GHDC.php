@@ -40,7 +40,7 @@ class GHDC extends iso8583_1993
         37 =>  ['type' => 'ans', 'size' => 12,  'fixed' => true,  'usage' => 'Retrieval reference number'],
         38 =>  ['type' => 'anp', 'size' => 6,   'fixed' => true,  'usage' => 'Approval code'],
         40 =>  ['type' => 'n',   'size' => 3,   'fixed' => true,  'usage' => 'Service code'],
-        42 =>  ['justify' => 'left'],
+        42 =>  ['format' => ['pad_type' => 'right', 'pad_string' => ' ']],
         43 =>  ['type' => 'ans', 'size' => 101, 'fixed' => false, 'usage' => 'Card acceptor name/location'],
         44 =>  ['type' => 'ans', 'size' => 27,  'fixed' => false, 'usage' => 'Additional response data'],
         45 =>  ['type' => 'ans', 'size' => 78,  'fixed' => false, 'usage' => 'Track 1 Data'],

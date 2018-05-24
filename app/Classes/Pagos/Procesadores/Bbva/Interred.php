@@ -6,17 +6,11 @@ use App;
 use Log;
 use Exception;
 use App\Classes\Pagos\Procesadores\Bbva\Mensaje;
-use GuzzleHttp\Client as GuzzleClient;
 
 class Interred
 {
 
     // {{{ properties
-
-    /*
-     * @var GuzzleHttp\Client $this->oHttpClient Cliente Guzzle para transmisión de datos HTTP.
-     */
-    protected $oHttpClient;
 
     /*
      * @var Bbva\Mensaje
@@ -47,16 +41,6 @@ class Interred
      *
      * @return Client
      */
-    protected function getDefaultHttpClient()
-    {
-        return new GuzzleClient();
-    }
-
-    /**
-     * Obtiene el cliente HTTP por default (guzzle).
-     *
-     * @return Client
-     */
     protected function getDefaultMensaje()
     {
         return new Mensaje();
@@ -73,51 +57,106 @@ class Interred
 
     private function sendData(string $hEbcdicMessage)
     {
-        // Config
-        $sUrl = $this->aConfig['api_url']; // "https://qwww318.americanexpress.com/IPPayments/inter/CardAuthorization.do";
-
-        // Prepare content
-        $sMessage = $hEbcdicMessage;
-        $sHeader = strlen($hEbcdicMessage);
-        $sRequestMessage = "AuthorizationRequestParam=" . $hEbcdicMessage;
-
-        // Envía request
-        try {
-        } catch (\GuzzleHttp\Exception\ConnectException $e) {
-            $sErrorMessage = $e->getMessage();
-            //Log::error('Error on '.__METHOD__.' line '.__LINE__.':' . $sErrorMessage);
-            //echo "\n<br>Error on " . __METHOD__ . ' line ' . __LINE__ . ':' . $sErrorMessage;
-            if (strpos($sErrorMessage, 'cURL error 28') !== false) {
-                $aResponseResult = [
-                    'status' => 'fail',
-                    'status_message' => 'Gateway Timeout.',
-                    'status_code' => '504',
-                    'response' => null,
-                ];
-            } else {
-                $aResponseResult = [
-                    'status' => 'fail',
-                    'status_message' => 'Connection error, bad gateway: ' . $sErrorMessage,
-                    'status_code' => '502',
-                    'response' => null,
-                ];
-            }
-        } catch (Exception $e) {
-            $sErrorMessage = $e->getMessage();
-            Log::error('Error on '.__METHOD__.' line '.__LINE__.':' . $sErrorMessage);
-            //echo "\n<br>Error on " . __METHOD__ . ' line ' . __LINE__ . ':' . $sErrorMessage;
-            //echo "\n<br>Exception: " .  get_class($e) . "";
-            $aResponseResult = [
-                'status' => 'fail',
-                'status_message' => 'Unknown error: ' . $sErrorMessage,
-                'status_code' => '520',
-                'response' => null,
-            ];
-        }
-
-        // Regresa objeto con respuesta
-        return (object) $aResponseResult;
     }
+
+	public function preparaMensaje(Mensaje $oMensaje)
+	{
+        $sIso = $oMensaje->getISO(false);
+		$sMensaje = 'ISO023400070' . $sIso;
+		return $this->isoLength(strlen('00' . $sMensaje)) . $sMensaje;
+	}
+
+	private function isoLength(int $size)
+	{
+		$part = str_split(sprintf("%04s", dechex($size)), 2);
+		return chr(hexdec($part[0])) . chr(hexdec($part[1]));
+	}
+
+
+	private function mensajeTipoRed($sNMICode, $sMTI = '0800', $aOpt = [])
+	{
+		// Define campos
+		$oMensaje = new Mensaje();
+		$oMensaje->setMTI($sMTI);
+		$oMensaje->setData(7, gmdate('mdHis')); // Date & time
+		$oMensaje->setData(11, $aOpt['stan'] ?? $oMensaje->generateSystemsTraceAuditNumber()); // Systems Trace Audit Number
+		$oMensaje->setData(15, date('md')); // Date & time
+        if ($sMTI == '0810') {
+            $oMensaje->setData(39, '00'); // Date & time
+        } else {
+            if ($sNMICode != '301') {
+                $oMensaje->setData(48, '50NNNY2010000   '); // Additional DataRetailer Data - Define la afiliación del Establecimiento
+            }
+        }
+		$oMensaje->setData(70, $sNMICode); // Network Management Information Code
+		return $oMensaje;
+	}
+
+	private function mensajeTipoCompra(PeticionCargo $oPeticionCargo, array $aTipo = [])
+	{
+		// Define campos
+		$oMensaje = new Mensaje();
+		$oMensaje->setMTI('0200');
+		$oMensaje->setData(3, $oMensaje->formateaCampo3($aTipo)); // Processing Code
+		$oMensaje->setData(4, $oMensaje->formateaCampo4($oPeticionCargo->monto)); // Transaction Amount - Monto de la transacción con centavos
+		$oMensaje->setData(7, gmdate('mdHis')); // Date & time
+		$oMensaje->setData(11, $oMensaje->generateSystemsTraceAuditNumber()); // Systems Trace Audit Number
+		$oMensaje->setData(12, date('his')); // Hora local de la transacción
+		$oMensaje->setData(13, date('md')); // Date & time - Día local de la transacción
+		$oMensaje->setData(17, date('md')); // Date & time - Día en el cual la transacción es registrada por el Adquirente
+		$oMensaje->setData(22, '012'); // PoS Entry Mode
+		#$oMensaje->setData(23, ''); //
+        if (in_array($oPeticionCargo->plan, ['msi', 'mci', 'diferido'])) {
+            // Deaparece el campo 25... Puff! Motivo: Pos nomas.
+        } else {
+            $oMensaje->setData(25, '59'); // Point of Service Condition Code - 59 = Comercio Electrónico
+        }
+		$oMensaje->setData(32, '12'); // Acquiring Institution Identification Code
+		$oMensaje->setData(35, $oMensaje->formateaCampo35($oPeticionCargo->tarjeta)); // Track 2 Data
+        $oMensaje->setData(37, date('ymdhis')); // Retrieval Reference Number
+		$oMensaje->setData(41, '0000CP01        '); // Card Acceptor Terminal Identification
+		//$oMensaje->setData(43, 'Radiomovil DIPSA SA CVCMXCMXMX'); //  Card Acceptor Name/Location
+		$oMensaje->setData(48, '5462742            00000000'); // Additional DataRetailer Data - Define la afiliación del Establecimiento
+		$oMensaje->setData(49, '484'); // Transaction Currency Code.
+		//$oMensaje->setData(54, '000000000000')); // Additional Amounts - Monto del cash advance/back con centavos
+		#$oMensaje->setData(55, ''); //
+        if (!empty($aTipo['tipo']) && $aTipo['tipo'] == 'puntos_compra') {
+            if (in_array($oPeticionCargo->plan, ['msi', 'mci', 'diferido'])) {
+                $oMensaje->setData(58, $oMensaje->formateaCampo58(['importe_total' => 0, 'importe_puntos' => 0]));
+            } else {
+                $oMensaje->setData(58,
+                $oMensaje->formateaCampo58([
+                    'importe_total' => $oMensaje->formateaCampo4($oPeticionCargo->monto),
+                    //'importe_puntos' => $oPeticionCargo->puntos, // Cantidad de puntos debe enviarse con ceros a petición de EGlobal y BBVA
+                    'importe_puntos' => 0,
+                ]));
+            }
+        }
+		#$oMensaje->setData(59, ''); //
+		$oMensaje->setData(60, 'CLPGTES1+0000000'); // POS Terminal Data
+		$oMensaje->setData(63, $oMensaje->formateaCampo63([
+            'mti' => '0200',
+            // C0
+            'cvv2' => $oPeticionCargo->tarjeta->cvv2,
+            'indicador_cvv2' => $oPeticionCargo->tarjeta->cvv2 ? 'presente' : 'no_presente',
+            // Q6
+            'parcialidades' => $oPeticionCargo->parcialidades,
+            'diferimiento' => $oPeticionCargo->diferido,
+            'plan' => $oPeticionCargo->plan,
+        ], $aTipo)); // POS Additional Data
+		#$oMensaje->setData(103, ''); //
+		return $oMensaje;
+	}
+
+	public function ascii2hex($ascii) {
+	  $hex = '';
+	  for ($i = 0; $i < strlen($ascii); $i++) {
+		$byte = strtoupper(dechex(ord($ascii{$i})));
+		$byte = str_repeat('0', 2 - strlen($byte)).$byte;
+		$hex.=$byte." ";
+	  }
+	  return $hex;
+	}
 
     // }}}
 
@@ -131,18 +170,70 @@ class Interred
     /**
      * Constructor
      *
-     * @param GHDC $oGhdc Contenedor de mensaje GHDC necesario para Bbva (ISO-8583)
-     * @param GuzzleClient $oGuzzleClient  Cliente HTTP para hacer las llamadas al API
+     * @param Mensaje $oMensaje Contenedor de mensaje BBVA (ISO-8583)
      */
-    public function __construct(Mensaje $oMensaje = null, GuzzleClient $oGuzzleClient = null)
+    public function __construct(Mensaje $oMensaje = null)
     {
         $this->oMensaje = $oMensaje ?? $this->getDefaultMensaje();
-        $this->oHttpClient = $oGuzzleClient ?? $this->getDefaultHttpClient();
         // Define variables comunes
         $this->sEnv = App::environment();
         // Carga configuración de servidores dependiendo del ambiente
-        $this->aConfig = config('claropagos.' . $this->sEnv . '.procesadores_pago.amex');
+        $this->aConfig = config('claropagos.' . $this->sEnv . '.procesadores_pago.eglobal');
     }
+
+    public function procesaMensaje($sMensaje): array
+    {
+        // Tamaño del mensaje
+        $iMensajeBytes = hexdec($this->ascii2hex(substr($sMensaje, 0, 2)));
+        // Encabezado de mensaje
+        $sMensajeHeader = substr($sMensaje, 2, 12);
+        // ISO
+        $sMensajeIso = substr($sMensaje, 14, $iMensajeBytes - 14); #, $iMensajeBytes);
+        // Parsea ISO
+        $oParsedIso = new Mensaje();
+        $oParsedIso->setISO($sMensajeIso);
+        // Formatea resultado
+        $aResultado = [
+            'bytes' => $iMensajeBytes,
+            'header' => $sMensajeHeader,
+            'iso' => $oParsedIso,
+            'iso_string' => $sMensajeIso,
+            'iso_mti' => $oParsedIso->getMTI(),
+            'iso_parsed' => $oParsedIso->getDataArray(),
+            'iso_validation' => $oParsedIso->getIsoValidation(),
+        ];
+        return $aResultado;
+    }
+
+	public function mensajeEcho(): string
+	{
+		return $this->preparaMensaje($this->mensajeTipoRed('301'));
+	}
+
+	public function mensajeSignOn(): string
+	{
+		return $this->preparaMensaje($this->mensajeTipoRed('001'));
+	}
+
+	public function mensajeSignOff(): string
+	{
+		return $this->preparaMensaje($this->mensajeTipoRed('002'));
+	}
+
+	public function mensajeCutoff(): string
+	{
+		return $this->preparaMensaje($this->mensajeTipoRed('201'));
+	}
+
+	public function respuestaSignOn($aOpt = []): string
+	{
+		return $this->preparaMensaje($this->mensajeTipoRed('001', '0810', $aOpt));
+	}
+
+	public function respuestaEcho($aOpt = []): string
+	{
+		return $this->preparaMensaje($this->mensajeTipoRed('301', '0810', $aOpt));
+	}
 
     /**
      * @todo: Cambiar arreglos por objeto de pago amex
@@ -384,11 +475,11 @@ class Interred
 
         // Atributos de sistema
         if (in_array($aBbvaOverride['mti'], ['1100', '1200'])) {
-            $this->oMensaje->setData(7, date('mdhis')); // Date & time
+            $this->oMensaje->setData(7, gmdate('mdHis')); // Date & time
         }
         $this->oMensaje->setData(11, $sSystemsTraceAuditNumber); // Systems Trace Audit Number
         if (in_array($aBbvaOverride['mti'], ['1200', '1420'])) {
-            $this->oMensaje->setData(28, date('ymd')); // Date, Reconciliation
+            $this->oMensaje->setData(28, gmdate('ymd')); // Date, Reconciliation
         }
         $this->oMensaje->setData(33, 111); // Forwarding Institution ID Code
         $this->oMensaje->setData(42, $nMerchantNumber);  // Card Acceptor Identification Code

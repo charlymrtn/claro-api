@@ -22,6 +22,7 @@ class CreateUsersTable extends Migration
             $table->uuid('comercio_uuid')->unique(); // Comercio id
             $table->string('comercio_nombre'); // Nombre del usuario API
             $table->boolean('activo')->default(true);
+            $table->json('config')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
