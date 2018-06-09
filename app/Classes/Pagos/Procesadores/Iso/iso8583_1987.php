@@ -850,7 +850,7 @@ class iso8583_1987
             $aResultado['contenido']['tamanio'] = (int) substr($sContenido, 0, $aResultado['tamanio_posiciones']);
         }
         $aResultado['contenido']['tamanio_real'] = strlen($aResultado['contenido']['valor']);
-        if ($aDef['format']['pad_type'] ?? 'left' == 'left') {
+        if ('left' == ($aDef['format']['pad_type'] ?? 'left')) {
             $aResultado['contenido']['valor_sin_formato'] = ltrim($aResultado['contenido']['valor'], $aResultado['formato']['relleno']);
         } else {
             $aResultado['contenido']['valor_sin_formato'] = rtrim($aResultado['contenido']['valor'], $aResultado['formato']['relleno']);

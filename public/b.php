@@ -48,31 +48,32 @@ class BbvaTest
         ]);
         $this->oTarjetaCreditoVisa = new TarjetaCredito([
             // Crédito
-            'pan' => '4761739001010416', // '4761739001011133',
+            'pan' => '4761739001010010', // '4761739001010416', '4761739001010119', '4761739001011133',
             'nombre' => 'Juan Perez Lopez',
-            'cvv2' => '201',
+            'cvv2' => '221',
             'expiracion_mes' => '12',
             'expiracion_anio' => '22',
             'lealtad' => true,
         ]);
-        $this->oTarjetaCreditoVisa2 = new TarjetaCredito([
-            // Crédito
-            'pan' => '4761739001010119',
-            'nombre' => 'Juan Perez Lopez',
-            'cvv2' => '830',
-            'expiracion_mes' => '12',
-            'expiracion_anio' => '17',
-            'lealtad' => true,
-        ]);
-        $this->oTarjetaCreditoVisa3 = new TarjetaCredito([
-            // Crédito
-            'pan' => '4761739001011133',
-            'nombre' => 'Juan Perez Lopez',
-            'cvv2' => '201',
-            'expiracion_mes' => '12',
-            'expiracion_anio' => '22',
-            'lealtad' => true,
-        ]);        // Construye petición de cargo
+//        $this->oTarjetaCreditoVisa = new TarjetaCredito([
+//            // Crédito
+//            'pan' => '4761739001010119',
+//            'nombre' => 'Juan Perez Lopez',
+//            'cvv2' => '830',
+//            'expiracion_mes' => '12',
+//            'expiracion_anio' => '17',
+//            'lealtad' => true,
+//        ]);
+//        $this->oTarjetaCreditoVisa = new TarjetaCredito([
+//            // Crédito
+//            'pan' => '4761739001011133',
+//            'nombre' => 'Juan Perez Lopez',
+//            'cvv2' => '201',
+//            'expiracion_mes' => '12',
+//            'expiracion_anio' => '22',
+//            'lealtad' => true,
+//        ]);
+        // Construye petición de cargo
         $this->oPeticionCargo = new PeticionCargo([
             'prueba' => true,
             'id' => Uuid::generate(4)->string,
@@ -90,46 +91,46 @@ class BbvaTest
         // Pruebas
         if ($sPrueba == '1') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1;
-            $this->oPeticionCargo->monto = 1831.00;
+            $this->oPeticionCargo->monto = 1835.00;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VENTAS NORMALES';
             $aOpciones = ['tipo' => 'puntos_compra'];
         } else if ($sPrueba == '2') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaDebito1; // Debito
-            $this->oPeticionCargo->monto = 224.00;
+            $this->oPeticionCargo->monto = 227.00;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VENTAS NORMALES';
             $aOpciones = ['tipo' => 'compra'];
         } else if ($sPrueba == '3') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaDebito1; // Debito
-            $this->oPeticionCargo->monto = 533.55;
+            $this->oPeticionCargo->monto = 537.55;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VENTAS NORMALES';
             $aOpciones = ['tipo' => 'compra'];
         } else if ($sPrueba == '4') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1;
-            $this->oPeticionCargo->monto = 729.00;
+            $this->oPeticionCargo->monto = 733.00;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VENTAS NORMALES';
             $aOpciones = ['tipo' => 'puntos_compra'];
         } else if ($sPrueba == '5') {
             $this->oTarjetaCredito1->cvv2 = '123';
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1;
-            $this->oPeticionCargo->monto = 413.00;
+            $this->oPeticionCargo->monto = 417.00;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VALIDACIÓN DE CVV2';
             $aOpciones = ['tipo' => 'puntos_compra'];
         } else if ($sPrueba == '6') {
             $this->oTarjetaDebito1->cvv2 = '';
             $this->oPeticionCargo->tarjeta = $this->oTarjetaDebito1; // Debito
-            $this->oPeticionCargo->monto = 379.70;
+            $this->oPeticionCargo->monto = 383.70;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VALIDACIÓN DE CVV2';
             $aOpciones = ['tipo' => 'compra'];
         } else if ($sPrueba == '7') {
             $this->oTarjetaDebito1->cvv2 = '456';
             $this->oPeticionCargo->tarjeta = $this->oTarjetaDebito1; // Debito
-            $this->oPeticionCargo->monto = 813.00;
+            $this->oPeticionCargo->monto = 817.00;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VALIDACIÓN DE CVV2';
             $aOpciones = ['tipo' => 'compra'];
         } else if ($sPrueba == '8') {
             $this->oTarjetaCredito1->cvv2 = '';
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
-            $this->oPeticionCargo->monto = 831.00;
+            $this->oPeticionCargo->monto = 835.00;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VALIDACIÓN DE CVV2';
             $aOpciones = ['tipo' => 'puntos_compra'];
         } else if ($sPrueba == '9o') {
@@ -139,78 +140,78 @@ class BbvaTest
             $aOpciones = ['tipo' => 'puntos_consulta'];
         } else if ($sPrueba == '9') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
-            $this->oPeticionCargo->monto = 361;
-            $this->oPeticionCargo->puntos = 361;
+            $this->oPeticionCargo->monto = 365;
+            $this->oPeticionCargo->puntos = 365;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VENTAS CON PUNTOS - Venta con Puntos';
             $aOpciones = ['tipo' => 'puntos_compra'];
         } else if ($sPrueba == '10') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
-            $this->oPeticionCargo->monto = 1363.55;
-            $this->oPeticionCargo->puntos = 1363.50;
+            $this->oPeticionCargo->monto = 1367.55;
+            $this->oPeticionCargo->puntos = 1367.50;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VENTAS CON PUNTOS - Venta Con Puntos Mixta';
             $aOpciones = ['tipo' => 'puntos_compra'];
         } else if ($sPrueba == '11') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaDebito1; // Débito
-            $this->oPeticionCargo->monto = 873.00;
+            $this->oPeticionCargo->monto = 877.00;
             $this->oPeticionCargo->puntos = 0;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VENTAS CON PUNTOS - Venta con Puntos';
             $aOpciones = ['tipo' => 'compra'];
         } else if ($sPrueba == '12') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
-            $this->oPeticionCargo->monto = 509.00;
+            $this->oPeticionCargo->monto = 513.00;
             $this->oPeticionCargo->plan = new PlanPago(['plan' => 'msi', 'parcialidades' => 6]);
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VENTA CON PROMOCIÓN - Venta 6 MSI';
             $aOpciones = ['tipo' => 'puntos_compra'];
         } else if ($sPrueba == '13') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
-            $this->oPeticionCargo->monto = 835.80;
+            $this->oPeticionCargo->monto = 839.80;
             $this->oPeticionCargo->plan = new PlanPago(['plan' => 'msi', 'parcialidades' => 12]);
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VENTA CON PROMOCIÓN - Venta 12 MSI';
             $aOpciones = ['tipo' => 'puntos_compra'];
         } else if ($sPrueba == '14') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
-            $this->oPeticionCargo->monto = 936.00;
+            $this->oPeticionCargo->monto = 941.00;
             $this->oPeticionCargo->plan = new PlanPago(['plan' => 'msi', 'parcialidades' => 18]);
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VENTA CON PROMOCIÓN - Venta 18 MSI';
             $aOpciones = ['tipo' => 'puntos_compra'];
         } else if ($sPrueba == '15') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
-            $this->oPeticionCargo->monto = 83.00;
+            $this->oPeticionCargo->monto = 87.00;
             $this->oPeticionCargo->plan = new PlanPago(['plan' => 'msi', 'parcialidades' => 6]);
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VENTA CON PROMOCIÓN - 6 MSI - Declinada';
             $aOpciones = ['tipo' => 'puntos_compra'];
         } else if ($sPrueba == '16') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaDebito1;
-            $this->oPeticionCargo->monto = 2543.00;
+            $this->oPeticionCargo->monto = 2547.00;
             $this->oPeticionCargo->plan = new PlanPago(['plan' => 'msi', 'parcialidades' => 6]);
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VENTA CON PROMOCIÓN - 6 MSI - Declinada Débito';
             $aOpciones = ['tipo' => 'compra'];
         } else if ($sPrueba == '17') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaDebito1;
-            $this->oPeticionCargo->monto = 224.00;
+            $this->oPeticionCargo->monto = 227.00;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' DEVOLUCIONES - Devolución del caso 2';
             $aOpciones = ['tipo' => 'devolucion'];
         } else if ($sPrueba == '18') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
-            $this->oPeticionCargo->monto = 1363.55;
+            $this->oPeticionCargo->monto = 1367.55;
             //$this->oPeticionCargo->puntos = 1362.50;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' DEVOLUCIONES - Devolución del caso 10';
             $aOpciones = ['tipo' => 'devolucion'];
         } else if ($sPrueba == '19') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
-            $this->oPeticionCargo->monto = 835.80;
+            $this->oPeticionCargo->monto = 513.00;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' DEVOLUCIONES - Devolución del caso 12?';
             $aOpciones = ['tipo' => 'devolucion'];
         } else if ($sPrueba == '20') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
-            $this->oPeticionCargo->monto = 351;
-            $this->oPeticionCargo->puntos = 351;
+            $this->oPeticionCargo->monto = 355;
+            $this->oPeticionCargo->puntos = 355;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' CANCELACIONES - Venta Con Puntos';
             $aOpciones = ['tipo' => 'puntos_compra'];
         } else if ($sPrueba == '21') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
-            $this->oPeticionCargo->monto = 351;
-            $this->oPeticionCargo->puntos = 351;
+            $this->oPeticionCargo->monto = 355;
+            $this->oPeticionCargo->puntos = 355;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' CANCELACIONES - Venta Con Puntos - Cancelaión';
             $aOpciones = [
                 'tipo' => 'cancelacion',
@@ -223,12 +224,12 @@ class BbvaTest
             ];
         } else if ($sPrueba == '22') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaDebito1;
-            $this->oPeticionCargo->monto = 763.15;
+            $this->oPeticionCargo->monto = 768.15;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' CANCELACIONES - Venta normal';
             $aOpciones = ['tipo' => 'compra'];
         } else if ($sPrueba == '23') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaDebito1; // Credito
-            $this->oPeticionCargo->monto = 763.15;
+            $this->oPeticionCargo->monto = 768.15;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' CANCELACIONES - Venta normal - Cancelaión';
             $aOpciones = [
                 'tipo' => 'cancelacion',
@@ -241,13 +242,13 @@ class BbvaTest
             ];
         } else if ($sPrueba == '24') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
-            $this->oPeticionCargo->monto = 508.00;
+            $this->oPeticionCargo->monto = 513.00;
             $this->oPeticionCargo->plan = new PlanPago(['plan' => 'msi', 'parcialidades' => 6]);
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' CANCELACIONES - Venta 6 MSI';
             $aOpciones = ['tipo' => 'puntos_compra'];
         } else if ($sPrueba == '25') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
-            $this->oPeticionCargo->monto = 508.00;
+            $this->oPeticionCargo->monto = 513.00;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' CANCELACIONES - Venta 6 MSI - Cancelaión';
             $aOpciones = [
                 'tipo' => 'cancelacion',
@@ -260,35 +261,35 @@ class BbvaTest
             ];
         } else if ($sPrueba == '26') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaDebito1;
-            $this->oPeticionCargo->monto = 618.20;
+            $this->oPeticionCargo->monto = 622.20;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . '  REVERSOS AUTOMÁTICOS COMERCIO - Venta normal';
             $aOpciones = ['tipo' => 'compra'];
         } else if ($sPrueba == '27') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
-            $this->oPeticionCargo->monto = 510.00;
+            $this->oPeticionCargo->monto = 516.00;
             $this->oPeticionCargo->plan = new PlanPago(['plan' => 'msi', 'parcialidades' => 6]);
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' REVERSOS AUTOMÁTICOS COMERCIO - Venta 6 MSI';
             $aOpciones = ['tipo' => 'puntos_compra', 'tipo_original' => 'puntos_compra'];
         } else if ($sPrueba == '28') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
-            $this->oPeticionCargo->monto = 762;
-            $this->oPeticionCargo->puntos = 762;
+            $this->oPeticionCargo->monto = 766;
+            $this->oPeticionCargo->puntos = 766;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' REVERSOS AUTOMÁTICOS COMERCIO - Venta con Puntos';
             $aOpciones = ['tipo' => 'puntos_compra', 'tipo_original' => 'puntos_compra'];
         } else if ($sPrueba == '29') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaDebito1;
-            $this->oPeticionCargo->monto = 2129.00;
+            $this->oPeticionCargo->monto = 2135.00;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . '  REVERSOS AUTOMÁTICOS EG - Venta normal';
             $aOpciones = ['tipo' => 'compra', 'tipo_original' => 'compra'];
         } else if ($sPrueba == '30') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
-            $this->oPeticionCargo->monto =  1208.00 ;
-            $this->oPeticionCargo->puntos = 1208.00;
+            $this->oPeticionCargo->monto =  1213.00 ;
+            $this->oPeticionCargo->puntos = 1213.00;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' REVERSOS AUTOMÁTICOS EG - Venta con Puntos';
             $aOpciones = ['tipo' => 'puntos_compra', 'tipo_original' => 'puntos_compra'];
         } else if ($sPrueba == '31') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCredito1; // Credito
-            $this->oPeticionCargo->monto = 1108.50;
+            $this->oPeticionCargo->monto = 1112.50;
             $this->oPeticionCargo->plan = new PlanPago(['plan' => 'msi', 'parcialidades' => 6]);
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' REVERSOS AUTOMÁTICOS EG - Venta 6 MSI';
             $aOpciones = ['tipo' => 'puntos_compra', 'tipo_original' => 'puntos_compra'];
@@ -298,32 +299,32 @@ class BbvaTest
 
         } else if ($sPrueba == '1v') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCreditoVisa; // Credito
-            $this->oPeticionCargo->monto = 571.50;
+            $this->oPeticionCargo->monto = 574.50;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VISA - VENTAS NORMALES - Venta normal';
             $aOpciones = ['tipo' => 'compra'];
         } else if ($sPrueba == '2v') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCreditoVisa; // Credito
-            $this->oPeticionCargo->monto = 332.00;
+            $this->oPeticionCargo->monto = 335.00;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VISA - VENTAS NORMALES - Venta normal';
             $aOpciones = ['tipo' => 'compra'];
         } else if ($sPrueba == '3v') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCreditoVisa; // Credito
-            $this->oPeticionCargo->monto = 650.55;
+            $this->oPeticionCargo->monto = 653.55;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VISA - REVERSOS AUTOMÁTICOS COMERCIO - Venta normal con reversos';
             $aOpciones = ['tipo' => 'compra'];
         } else if ($sPrueba == '4v') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCreditoVisa; // Credito
-            $this->oPeticionCargo->monto = 829.00;
+            $this->oPeticionCargo->monto = 832.00;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VISA - REVERSOS AUTOMÁTICOS COMERCIO - Venta normal con reversos';
             $aOpciones = ['tipo' => 'compra'];
         } else if ($sPrueba == '5v') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCreditoVisa; // Credito
-            $this->oPeticionCargo->monto = 382.82;
+            $this->oPeticionCargo->monto = 385.82;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VISA - REVERSOS AUTOMÁTICOS EG - Venta normal con reversos';
             $aOpciones = ['tipo' => 'compra'];
         } else if ($sPrueba == '6v') {
             $this->oPeticionCargo->tarjeta = $this->oTarjetaCreditoVisa; // Credito
-            $this->oPeticionCargo->monto = 1969.80;
+            $this->oPeticionCargo->monto = 1972.80;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' VISA - REVERSOS AUTOMÁTICOS EG - Venta normal con reversos';
             $aOpciones = ['tipo' => 'compra'];
 
@@ -340,7 +341,7 @@ class BbvaTest
                 'expiracion_anio' => '25',
                 'lealtad' => false,
             ]);
-            $this->oPeticionCargo->monto = 228.50;
+            $this->oPeticionCargo->monto = 231.50;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' MC - VENTAS NORMALES';
             $aOpciones = ['tipo' => 'compra'];
         } else if ($sPrueba == '2m') {
@@ -353,7 +354,7 @@ class BbvaTest
                 'expiracion_anio' => '25',
                 'lealtad' => false,
             ]);
-            $this->oPeticionCargo->monto = 303.00;
+            $this->oPeticionCargo->monto = 306.00;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' MC - VENTAS NORMALES';
             $aOpciones = ['tipo' => 'compra'];
         } else if ($sPrueba == '3m') {
@@ -366,7 +367,7 @@ class BbvaTest
                 'expiracion_anio' => '25',
                 'lealtad' => false,
             ]);
-            $this->oPeticionCargo->monto = 157.00;
+            $this->oPeticionCargo->monto = 160.00;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' MC - VENTAS NORMALES';
             $aOpciones = ['tipo' => 'compra'];
         } else if ($sPrueba == '4m') {
@@ -379,7 +380,7 @@ class BbvaTest
                 'expiracion_anio' => '25',
                 'lealtad' => false,
             ]);
-            $this->oPeticionCargo->monto = 1307.00;
+            $this->oPeticionCargo->monto = 1310.00;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' MC - VENTAS NORMALES';
             $aOpciones = ['tipo' => 'compra'];
         } else if ($sPrueba == '5m') {
@@ -392,7 +393,7 @@ class BbvaTest
                 'expiracion_anio' => '25',
                 'lealtad' => false,
             ]);
-            $this->oPeticionCargo->monto = 452.00;
+            $this->oPeticionCargo->monto = 455.00;
             $this->oPeticionCargo->descripcion = 'Prueba ' . $sPrueba . ' MC - VENTAS NORMALES';
             $aOpciones = ['tipo' => 'compra'];
         } else {

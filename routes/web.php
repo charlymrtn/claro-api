@@ -20,4 +20,4 @@
 
 // BBVA Pruebas
 Route::any('/bbva', 'Bbva\BbvaController@index')->name('bbva');
-Route::any('/bbva/batch', 'Bbva\BbvaController@batch')->name('bbva.batch');
+Route::any('/bbva/batch/{fecha}', 'Bbva\BbvaController@batch')->name('bbva.batch');

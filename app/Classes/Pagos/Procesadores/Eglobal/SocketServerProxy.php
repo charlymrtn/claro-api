@@ -222,11 +222,11 @@ class SocketServerProxy implements MessageComponentInterface
     private function enviaEglobal($from, string $sTrxId, string $sStan, string $sMensaje): bool
     {
         // Valida conexión
-        if ($this->aStats['eglobal']['conectado'] == false) {
+        if (!$this->aStats['eglobal']['conectado']) {
             $this->conectaEglobal();
         }
         // Si no hay conexión regresa fallo en envío
-        if ($this->aStats['eglobal']['conectado'] == false) {
+        if (!$this->aStats['eglobal']['conectado']) {
             return false;
         }
         // Envía mensaje
@@ -260,7 +260,6 @@ class SocketServerProxy implements MessageComponentInterface
     private function escuchaEglobal(): void
     {
         // Prepara variables
-        $oTime = Carbon::now();
         $bMensajes = true;
         // Recibe datos
         $this->loguea("      Esperando respuesta de eglobal...", 'debug');
@@ -412,7 +411,7 @@ class SocketServerProxy implements MessageComponentInterface
         $this->loguea("Nuevo cliente conectado: {$conn->resourceId}", 'debug');
         // Envía mensaje de bienvenida
         $this->sendMessage($conn, ['conexion' => 'success', 'mensaje' => 'Conectado a Eglobal Socket Server Proxy']);
-        #$this->loguea(json_encode($this->getEstadisticasProxy()), 'debug');
+        // $this->loguea(json_encode($this->getEstadisticasProxy()), 'debug');
     }
 
     public function onMessage(ConnectionInterface $from, $sMensaje)
@@ -421,7 +420,7 @@ class SocketServerProxy implements MessageComponentInterface
         // Decodifica mensaje
         $jMensaje = json_decode($sMensaje);
         if (empty($jMensaje)) {
-            $this->loguea("Mensaje desconocido de {$conn->resourceId}:" . $sMensaje, 'debug');
+            $this->loguea("Mensaje desconocido de {$from->resourceId}:" . $sMensaje, 'debug');
         }
         // Revisa encoding
         if ($jMensaje->encoding == 'base64') {

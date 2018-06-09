@@ -606,8 +606,8 @@ class Mensaje extends iso8583_1987
         // 9-12 Terminal Time Offset. Time Offset correspondiente a la zona en que se ubica la Terminal.
         $sResultado .= $aData['offset'] ?? '+000';
         // 13-16 Pseudo Terminal ID. Identificador de la Terminal involucrada en la transacción.
-        $sResultado .= $aData['offset'] ?? '0000';
-
+        $sResultado .= $aData['terminal_id'] ?? '0000';
+        //
         return $sResultado;
     }
 
