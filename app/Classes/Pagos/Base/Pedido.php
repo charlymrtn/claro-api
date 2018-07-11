@@ -21,12 +21,18 @@ class Pedido extends Model
      */
     protected $fillable = [
         'id', // Id del pedido
-        'creacion', // Fecha de creación del pedido
-        'envio', // Fecha de envío del pedido
-        'total', // Monto total del pedido
-        'direccion_envio', // Dirección de envío del pedido
-        'peso', // Peso total del pedido
+        'fecha_creacion', // Fecha de creación del pedido del comercio
+        'total_monto', // Monto total del pedido
+        'total_peso', // Peso total del pedido
+        'total_articulos', // Total de artículos del pedido
+        'monto_articulos', // Monto total de artículs del pedido
         'articulos', // Artículos del pedido tipo objeto PedidoArticulo
+        'direccion_envio', // Dirección de envío del pedido
+        'envio_empresa', //
+        'envio_numero_guia', //
+        'envio_monto', //
+        'es_regalo', // El pedido es un regalo. Booleano
+        'fecha_entrega', // Fecha de entrega estimada
     ];
 
     /*

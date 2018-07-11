@@ -36,7 +36,7 @@ class PlanPago extends Model
      * @var array $rules Reglas de validación
      */
     protected $rules = [
-            'plan' => 'string   ',
+            'plan' => 'string', // normal, msi, mci, diferido, diferido_msi, diferido_mci
             'puntos' => 'numeric',
             'parcialidades' => 'numeric|min:0|max:60',
             'diferido' => 'numeric|min:0|max:12',

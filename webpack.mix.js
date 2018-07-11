@@ -44,6 +44,8 @@ mix
         'node_modules/titatoggle/dist/titatoggle-dist-min.css',
         'node_modules/select2/dist/css/select2.min.css',
         'resources/assets/sass/forms.scss',
+        'node_modules/ion-rangeslider/csss/ion.rangeSlider.css', // ion.rangeSlider
+        'node_modules/ion-rangeslider/csss/ion.rangeSlider.skinModern.css', // ion.rangeSlider
     ], 'public/css/mix/forms.css')
 
     // Charts

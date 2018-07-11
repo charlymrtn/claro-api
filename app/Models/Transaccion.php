@@ -66,7 +66,7 @@ class Transaccion extends Model
      * Se quita el autoincrementable
      * @var $incrementing string
      */
-    public $incrementing = 'false';
+    public $incrementing = false;
     protected $primaryKey = 'uuid';
     protected $keyType = 'uuid';
 
@@ -78,7 +78,7 @@ class Transaccion extends Model
         parent::boot();
         self::creating(function ($model) {
             if (empty($model->uuid)) {
-                $model->uuid = (string) Uuid::generate(4);
+                $model->uuid = Uuid::generate(4)->string;
             }
         });
     }

@@ -21,6 +21,7 @@ class Telefono extends Model
     protected $fillable = [
         'tipo', // Tipo de teléfono. [$enum_telefono_tipos]
         'codigo_pais', //  ITU-T E.123 y E.164 (ISD)
+        'prefijo', // Prefijo opcional. ()
         'codigo_area', // ITU
         'numero', // Teléfono del cliente
         'extension', // Extensión
@@ -67,7 +68,7 @@ class Telefono extends Model
         'Casa' => ['casa', 'hogar'],
         'Oficina' => ['oficina', 'trabajo'],
         'Facturación' => ['facturacion', 'pago'],
-        'Mensajes' => ['mensajes', 'whats'],
+        'Mensajería' => ['mensajeria', 'mensajes', 'whats'],
         'Temporal' => ['temporal', 'tmp'],
     ];
 

@@ -84,11 +84,11 @@ class CargoController extends Controller
                 'pedido.direccion_envio' => 'array',
                 'pedido.articulos' => 'numeric',
             // CLIENTE 'cliente' => 'required|array',
-                'cliente.id' => 'required|string',
-                'cliente.nombre' => 'required|min:3|max:30',
-                'cliente.apellido_paterno' => 'required|min:3|max:30',
+                'cliente.id' => 'string',
+                'cliente.nombre' => 'min:3|max:30',
+                'cliente.apellido_paterno' => 'min:3|max:30',
                 'cliente.apellido_materno' => 'min:3|max:30',
-                'cliente.email' => 'required|email',
+                'cliente.email' => 'email',
                 'cliente.telefono' => 'string',
                 'cliente.direccion' => 'array',
                 'cliente.creacion' => 'date',
@@ -197,13 +197,12 @@ class CargoController extends Controller
             } else {
                 $sCode = $e->getCode();
             }
-            Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ':' . $e->getMessage());
+            Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
             return ejsend_fail(['code' => $sCode, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], $sCode, ['errors' => $e->getMessage()]);
         }
 
         // Envía petición a proceso de cargo
         return $this->oCargo->carga($oPeticionCargo);
-
     }
 
     /**

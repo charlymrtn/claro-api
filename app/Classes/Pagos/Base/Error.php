@@ -19,9 +19,10 @@ class Error extends Model
      * @var array $fillable Atributos asignables
      */
     protected $fillable = [
-        'codigo', // Nombre descriptivo de la afiliación
-        'tipo', // Id de afiliación
+        'codigo', // Código de error Claro Pagos
+        'tipo', // Categoría del error
         'descripcion', // Identificador de banco
+        'http_code', // Código HTTP
     ];
 
     /*

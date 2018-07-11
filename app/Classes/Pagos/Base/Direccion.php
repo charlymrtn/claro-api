@@ -32,6 +32,8 @@ class Direccion extends Model
         'telefono', // Teléfono de/en la dirección
         'longitud', // Localización: Longitud
         'latitud', // Localización: Latitud
+        'referencia_1', // Referencia, entre calles, etc
+        'referencia_2', // Referencia, entre calles, etc
     ];
 
     /*

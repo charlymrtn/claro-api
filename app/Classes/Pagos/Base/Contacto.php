@@ -25,7 +25,7 @@ class Contacto extends Model
         'nombre', // Nombre/s del contacto
         'apellido_paterno', // Apellido paterno del contacto
         'apellido_materno', // Apellido materno del contacto
-        'genero', // Género del cliente
+        'sexo', // Sexo del cliente
         'email', // Email del cliente
         'telefono', // Teléfono del cliente
         'nacimiento', // Fecha de nacimiento

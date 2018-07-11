@@ -24,6 +24,7 @@ class TarjetaCredito extends Model
      * @var array $fillable Atributos asignables
      */
     protected $fillable = [
+        'token', // Token dado por la bóveda
         'pan', // Número de tarjeta sanitizado
         'terminacion', // Terminación o últimos cuatro dígitos
         'nombre', // Nombre como aparece en la tarjeta
@@ -44,7 +45,7 @@ class TarjetaCredito extends Model
      */
     protected $guarded = [
         'iin', // Issuer Identification Number (bin)
-        'marca', // Marca de la tarjeta: visa, mastercard, carnet or american express.
+        'marca', // Marca de la tarjeta: visa, mastercard, carnet, amex (american express).
         'terminacion', // Terminación o últimos cuatro dígitos
         'pan_hash', // Identificador de la tarjeta
         'created_at', // Fecha de creación del objeto tipo Carbon
