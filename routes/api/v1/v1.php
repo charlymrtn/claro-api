@@ -15,4 +15,8 @@ Route::group(['namespace' => 'API\v1', 'prefix' => 'v1', 'as' => 'api.v1.'], fun
         Route::resource('/cargo', 'CargoController');
     });
 
+    // Clientes
+    Route::group(['middleware' => ['scope:superadmin']], function () {
+        Route::resource('/cliente', 'ClienteController');
+    });
 });

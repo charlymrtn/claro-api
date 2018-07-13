@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Classes\Pagos\Base\Direccion;
+use App\Classes\Pagos\Base\Telefono;
 use Webpatser\Uuid\Uuid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
