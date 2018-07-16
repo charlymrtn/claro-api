@@ -112,7 +112,7 @@ class Plan extends Model
      */
     public function suscripciones()
     {
-        return $this->hasMany('App\Models\Suscripciones\Suscripciones', 'plan_uuid', 'uuid');
+        return $this->hasMany('App\Models\Suscripciones\Suscripcion', 'plan_uuid', 'uuid');
     }
 
     /* --------------------------------------------------------------

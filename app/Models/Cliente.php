@@ -101,7 +101,7 @@ class Cliente extends Model
      */
     public function suscripciones()
     {
-        return $this->hasMany('App\Models\Suscripciones\Suscripciones', 'cliente_uuid', 'uuid');
+        return $this->hasMany('App\Models\Suscripciones\Suscripcion', 'cliente_uuid', 'uuid');
     }
 
     /* --------------------------------------------------------------

@@ -27,7 +27,7 @@ $factory->define(App\Models\Transaccion::class, function (Faker\Generator $faker
             'contracargada', 'fallida'
         ]),
         'moneda' => $faker->randomElement(['MXN']),
-        'monto' => $faker->numberBetween(4,19),
+        'monto' => $faker->numberBetween(26, 1500),
         'forma_pago' => $faker->randomElement([
             'tarjeta', 'telmex-recibo', 'telcel-recibo', 'paypal', 'applepay', 'androidpay', 'visa-chekout', 'masterpass'
         ]),
