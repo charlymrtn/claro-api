@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Suscripciones extends Model
+class Suscripcion extends Model
 {
     // Traits
     use Notifiable, SoftDeletes;
