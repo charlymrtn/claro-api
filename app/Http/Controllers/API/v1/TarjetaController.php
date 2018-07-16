@@ -40,7 +40,7 @@ class TarjetaController extends Controller
                 'sort' => 'in:asc,desc',
             ]);
             if ($oValidator->fails()) {
-                return ejsend_fail(['code' => $sCode, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], $sCode, ['errors' => $oValidator->errors()]);
+                return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
             }
             // Filtro
             $sFiltro = $oRequest->input('search', false);
