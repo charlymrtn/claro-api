@@ -1,4 +1,4 @@
-<?php
+    <?php
 
 Route::group(['namespace' => 'API\v1', 'prefix' => 'v1', 'as' => 'api.v1.'], function () {
 

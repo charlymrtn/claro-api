@@ -6,6 +6,7 @@ use Webpatser\Uuid\Uuid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Classes\Pagos\Base\Direccion;
 
 class Tarjeta extends Model
 {
