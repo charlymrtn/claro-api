@@ -75,17 +75,13 @@ class TarjetaController extends Controller
             return ejsend_success(['tarjeta' => $aRespuesta]);
         } catch (\Exception $e) {
             if (empty($e->getCode())) {
-                $sCode = '400';
+                $sCode = 400;
             } else {
-                $sCode = $e->getCode();
+                $sCode = (int) $e->getCode();
             }
             Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
             return ejsend_fail(['code' => $sCode, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], $sCode, ['errors' => $e->getMessage()]);
         }
-
-        return ejsend_success(['tarjeta' => $oTarjeta->toArray(), 'request_user' => $oRequest->user(), 'request_token' => $oRequest->user()->token()]);
-
-
     }
 
     /**

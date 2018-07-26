@@ -68,17 +68,19 @@ if (!function_exists("ejsend_fail")) {
      */
     function ejsend_fail($error, $status = 400, $data = null, $extraHeaders = [])
     {
+        // Formato de variables
+        $iHttpCode = (int) $status;
         // Formato de respuesta
         $aResponse = [
             'status' => 'fail',
             'error' => $error,
-            'http_code' => $status,
+            'http_code' => $iHttpCode,
             'datetime' => Carbon\Carbon::now()->toRfc3339String(), // Cambio API 1.2.20180718 de toDateTimeString()
             'timestamp' => time(),
         ];
         if ($data !== null) {
             $aResponse['data'] = $data;
         }
-        return response()->json($aResponse, $status, $extraHeaders);
+        return response()->json($aResponse, $iHttpCode, $extraHeaders);
     }
 }
