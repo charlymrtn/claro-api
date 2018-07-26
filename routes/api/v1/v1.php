@@ -7,12 +7,12 @@ Route::group(['namespace' => 'API\v1', 'prefix' => 'v1', 'as' => 'api.v1.'], fun
 
     // API Tarjetas
     Route::group(['middleware' => ['scope:superadmin,cliente-tarjetas']], function () {
-        Route::resource('/tarjeta', 'TarjetaController');
+        Route::apiResource('/tarjeta', 'TarjetaController');
     });
 
     // API Cargos
     Route::group(['middleware' => ['scope:superadmin,cliente-transacciones']], function () {
-        Route::resource('/cargo', 'CargoController');
+        Route::apiResource('/cargo', 'CargoController');
     });
 
     // API Suscripciones
