@@ -8,18 +8,22 @@ $factory->define(App\Models\Suscripciones\Plan::class, function (Faker\Generator
     if (empty($aComercioIds)) {
         $sComercioId = Webpatser\Uuid\Uuid::generate(4)->string;
     } else {
-        $sComercioId = $faker->randomElement($aComercioIds)["uuid"];
+        $sComercioId = $faker->randomElement($aComercioIds)["comercio_uuid"];
     }
+
+    // Datos fake
+    $iMonto = $faker->numberBetween(10, 300) * 10;
+    $sTipoPeriodo = $faker->randomElement(['dia', 'semana', 'mes', 'anio']);
 
     return [
         'uuid' => Webpatser\Uuid\Uuid::generate(4)->string,
         // Datos del comercio
         'comercio_uuid' => $sComercioId,
         // Datos del plan
-        'nombre' => $faker->catchPhrase,
-        'monto' => $faker->numberBetween(20, 300),
+        'nombre' => 'Plan ' . $iMonto . ' por ' . $sTipoPeriodo,
+        'monto' => $iMonto,
         'frecuencia' => $faker->randomElement([1, 2, 3, 6, 9]),
-        'tipo_periodo' => $faker->randomElement(['dia', 'semana', 'mes', 'anio']),
+        'tipo_periodo' => $sTipoPeriodo,
         'max_reintentos' => $faker->numberBetween(1, 10),
         'prueba_frecuencia' => $faker->randomElement([1, 2, 3, 6, 9]),
         'prueba_tipo_periodo' => $faker->randomElement(['dia', 'semana', 'mes', 'anio']),

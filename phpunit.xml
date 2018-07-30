@@ -7,7 +7,8 @@
          convertNoticesToExceptions="true"
          convertWarningsToExceptions="true"
          processIsolation="false"
-         stopOnFailure="false">
+         stopOnFailure="false"
+         beStrictAboutCoversAnnotation="false">
     <testsuites>
         <testsuite name="Feature Tests">
             <directory suffix="Test.php">./tests/Feature</directory>
@@ -28,4 +29,12 @@
         <env name="SESSION_DRIVER" value="array"/>
         <env name="QUEUE_DRIVER" value="sync"/>
     </php>
+    <logging>
+        <log type="coverage-html" target="./public/coverage-report" lowUpperBound="35" highLowerBound="75" />
+        <log type="coverage-text" target="php://stdout" showUncoveredFiles="false" showOnlySummary="true" />
+        <log type="coverage-clover" target="./public/coverage-report/codeCoverage.xml" />
+        <log type="testdox-xml" target="./public/coverage-report/testdox.xml" />
+        <log type="testdox-text" target="./public/coverage-report/testdox.txt"/>
+        <log type="junit" target="./public/coverage-report/logfile.xml"/>
+    </logging>
 </phpunit>

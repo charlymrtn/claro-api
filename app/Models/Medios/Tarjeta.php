@@ -6,6 +6,7 @@ use Webpatser\Uuid\Uuid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Classes\Pagos\Base\Direccion;
 
 class Tarjeta extends Model
 {
@@ -45,6 +46,7 @@ class Tarjeta extends Model
         'pan_hash', // Hash de la tarjeta
         'token', // Token dado por la bóveda
         'default', // Booleano si es el método de pago por default
+        'cargo_unico', // Booleano que indica si la tarjeta sólo se puede usar una vez
         // Objetos JSON
         'direccion', // Objeto de tipo Dirección
     ];
@@ -71,6 +73,7 @@ class Tarjeta extends Model
     protected $casts = [
         'direccion' => 'array',
         'default' => 'boolean',
+        'cargo_unico' => 'boolean',
     ];
 
     /* --------------------------------------------------------------

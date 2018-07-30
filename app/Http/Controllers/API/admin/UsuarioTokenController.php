@@ -60,7 +60,7 @@ class UsuarioTokenController extends Controller
             }
             // Filtros
             $sFiltro = $oRequest->input('search', false);
-            $sRevoked = $oRequest->input('revoked', 'no');
+            $sRevoked = $oRequest->input('revoked', 'yes');
             $cTokens = $this->mToken
                 ->where('user_id', $oUsuario->id)
                 ->where(
@@ -88,7 +88,7 @@ class UsuarioTokenController extends Controller
             // Envía datos paginados
             return ejsend_success(['tokens' => $cTokens]);
         } catch (\Exception $e) {
-            Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ':' . $e->getMessage());
+            Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
             return ejsend_error(['code' => 500, 'type' => 'Sistema', 'message' => 'Error al obtener el recurso: ' . $e->getMessage()]);
         }
     }
@@ -96,24 +96,24 @@ class UsuarioTokenController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param int $uid Identificador de usuario
+     * @param int $id Identificador de usuario
      * @param  \Illuminate\Http\Request  $oRequest
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function store($uid, Request $oRequest): JsonResponse
+    public function store($id, Request $oRequest): JsonResponse
     {
         // Valida datos
         try {
             // Verifica usuario
-            $oValidator = Validator::make(['id' => $uid], [
+            $oValidator = Validator::make(['id' => $id], [
                 'id' => 'required|numeric',
             ]);
             if ($oValidator->fails()) {
                 return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
             }
             // Busca usuario
-            $oUsuario = $this->mUsuario->withTrashed()->find($uid);
+            $oUsuario = $this->mUsuario->withTrashed()->find($id);
             if ($oUsuario == null) {
                 Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': Usuario no encontrado');
                 return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Objeto no encontrado.'], 404);
@@ -130,7 +130,7 @@ class UsuarioTokenController extends Controller
             $oToken = $oUsuario->createToken($oRequest->input('name', 'Token'), $oRequest->input('scopes', []));
             return ejsend_success(['token' => $oToken]);
         } catch (\Exception $e) {
-            Log::error('Error en ' . __METHOD__ . ' línea ' . __LINE__ . ':' . $e->getMessage());
+            Log::error('Error en ' . __METHOD__ . ' línea ' . $e->getLine() . ':' . $e->getMessage());
             return ejsend_error(['code' => 500, 'type' => 'Sistema', 'message' => 'Error al crear el recurso: ' . $e->getMessage()]);
         }
     }
@@ -165,7 +165,7 @@ class UsuarioTokenController extends Controller
             return ejsend_success(['token' => $oToken]);
         } catch (\Exception $e) {
             // Registra error
-            Log::error('Error en ' . __METHOD__ . ' línea ' . __LINE__ . ':' . $e->getMessage());
+            Log::error('Error en ' . __METHOD__ . ' línea ' . $e->getLine() . ':' . $e->getMessage());
             return ejsend_error(['code' => 500, 'type' => 'Sistema', 'message' => 'Error al obtener el recurso: ' . $e->getMessage()]);
         }
     }
@@ -212,7 +212,7 @@ class UsuarioTokenController extends Controller
             $oToken->update($update_params);
             return ejsend_success(['token' => $oToken]);
         } catch (\Exception $e) {
-            Log::error('Error en ' . __METHOD__ . ' línea ' . __LINE__ . ':' . $e->getMessage());
+            Log::error('Error en ' . __METHOD__ . ' línea ' . $e->getLine() . ':' . $e->getMessage());
             return ejsend_error(['code' => 500, 'type' => 'Sistema', 'message' => 'Error al crear el recurso: ' . $e->getMessage()]);
         }
     }
@@ -246,7 +246,7 @@ class UsuarioTokenController extends Controller
             $oToken->revoke();
             return ejsend_success(['token' => $oToken]);
         } catch (\Exception $e) {
-            Log::error('Error en ' . __METHOD__ . ' línea ' . __LINE__ . ':' . $e->getMessage());
+            Log::error('Error en ' . __METHOD__ . ' línea ' . $e->getLine() . ':' . $e->getMessage());
             return ejsend_error(['code' => 500, 'type' => 'Sistema', 'message' => 'Error: ' . $e->getMessage()]);
         }
     }
@@ -281,7 +281,7 @@ class UsuarioTokenController extends Controller
             $oToken->delete();
             return ejsend_success([], 204);
         } catch (\Exception $e) {
-            Log::error('Error en ' . __METHOD__ . ' línea ' . __LINE__ . ':' . $e->getMessage());
+            Log::error('Error en ' . __METHOD__ . ' línea ' . $e->getLine() . ':' . $e->getMessage());
             return ejsend_error(['code' => 500, 'type' => 'Sistema', 'message' => 'Error al crear el recurso: ' . $e->getMessage()]);
         }
     }
