@@ -49,7 +49,6 @@ class Telefono extends Model
      * Atributos mutables a fechas
      */
     protected $dates = [
-        'nacimiento',
         'created_at', 'updated_at', 'deleted_at',
     ];
 

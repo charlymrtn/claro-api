@@ -53,14 +53,14 @@ class Cliente extends Model
      *
      * @var array
      */
-    protected $hidden = [];
+    protected $hidden = ['comercio_uuid'];
 
     /**
      * Atributos mutables a fechas.
      *
      * @var array
      */
-    protected $dates = ['deleted_at', 'created_at', 'updated_at', 'creacion_externa'];
+    protected $dates = ['deleted_at', 'created_at', 'updated_at', 'creacion_externa', 'nacimiento'];
 
     /**
      * Atributos mutables.
@@ -68,7 +68,25 @@ class Cliente extends Model
      * @var array
      */
     protected $casts = [
+        'telefono' => 'array',
+        'direccion' => 'array',
+    ];
+
+    /* --------------------------------------------------------------
+     * Reglas de validación
+     * @var array $rules Reglas de validación
+     */
+    public $rules = [
+        'comercio_uuid' => 'required|uuid|size:36',
+        'id_externo' => 'max:30',
+        'creacion_externa' => 'date',
+        'nombre' => 'min:2|max:255',
+        'apellido_paterno' => 'min:2|max:255',
+        'apellido_materno' => 'min:2|max:255',
+        'sexo' => 'in:masculino,femenino',
+        'email' => 'required|email',
         'nacimiento' => 'date',
+        'estado' => 'in:activo,suspendido,inactivo',
         'telefono' => 'array',
         'direccion' => 'array',
     ];

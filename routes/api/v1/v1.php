@@ -23,6 +23,6 @@ Route::group(['namespace' => 'API\v1', 'prefix' => 'v1', 'as' => 'api.v1.'], fun
 
     // Clientes
     Route::group(['middleware' => ['scope:superadmin']], function () {
-        Route::resource('/cliente', 'ClienteController');
+        Route::apiResource('/cliente', 'ClienteController');
     });
 });
