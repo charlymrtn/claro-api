@@ -40,6 +40,7 @@ class Direccion extends Model
      * Atributos no asignables en masa
      */
     protected $guarded = [
+        'creacion', // Fecha de creación del objeto en ISO 8601
         'created_at', // Fecha de creación del objeto tipo Carbon
         'updated_at', // Fecha de actualización del objeto tipo Carbon
     ];
@@ -47,7 +48,11 @@ class Direccion extends Model
     /*
      * Atributos escondidos
      */
-    //protected $hidden = [];
+    protected $hidden = [
+        'created_at', // Fecha de creación del objeto tipo Carbon
+        'updated_at', // Fecha de actualización del objeto tipo Carbon
+        'deleted_at', // Fecha de borrado del objeto tipo Carbon
+    ];
 
     /*
      * Atributos mutables
@@ -116,6 +121,7 @@ class Direccion extends Model
     {
         // Define fecha de creación
         $this->attributes['created_at'] = Carbon::now();
+        $this->attributes['creacion'] = $this->attributes['created_at']->toIso8601String();
         // Ejecuta constructor padre
         parent::__construct($aAttributes);
         // Valida datos

@@ -56,7 +56,7 @@ class Tarjeta extends Model
      *
      * @var array
      */
-    protected $hidden = [];
+    protected $hidden = ['comercio_uuid', 'pan_hash'];
 
     /**
      * Atributos mutables a fechas.

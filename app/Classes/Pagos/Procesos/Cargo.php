@@ -141,23 +141,15 @@ class Cargo
 
         // 2. Evalua transacción con antifraude
         if ($oTrx->prueba) {
-            // 2.1 Si es prueba, determina resultado dependiendo del mes de expiracion
-            if ($oPeticionCargo->tarjeta->expiracion_mes == '01') {
-                #$oMensajeResultadoA = $this->oMensaje->envia('antifraude', '/api/v1/transaccion', 'POST', $oTrx->toJson());
-                $oTrx->datos_antifraude = ['resultado' => 'rojo', 'score' => 90, 'codigo' => '220', 'descripcion' => 'Transacción muy riesgoza'];
+            // 2.1 Si es prueba, determina resultado dependiendo de la tarjeta
+            if ($oPeticionCargo->tarjeta->pan_hash == 'd365f00d9f327b170214485dc6f72b22971521cb5647fa95f10ae827441ea7b0') {
+                // Tarjeta rechazada por sistema antifraude 4000000000000044
+                $oTrx->datos_antifraude = ['resultado' => 'rojo', 'score' => 90, 'codigo' => '220', 'descripcion' => 'Transacción muy riesgosa'];
                 $oTrx->estatus = 'rechazada-antifraude';
                 $oError = new Error([
                     'codigo' => '220',
                     'tipo' => 'Antifraude',
                     'descripcion' => 'Transacción muy riesgoza',
-                ]);
-            } else if ($oPeticionCargo->tarjeta->expiracion_mes == '02') {
-                $oTrx->datos_antifraude = ['resultado' => 'rojo', 'score' => 100, 'codigo' => '205', 'descripcion' => 'Tarjeta reportada como robada'];
-                $oTrx->estatus = 'rechazada-antifraude';
-                $oError = new Error([
-                    'codigo' => '205',
-                    'tipo' => 'Antifraude',
-                    'descripcion' => 'Tarjeta reportada como robada',
                 ]);
             } else {
                 $oTrx->datos_antifraude = ['resultado' => 'verde', 'score' => 25, 'codigo' => '100', 'descripcion' => 'Transaction de bajo riesgo'];
@@ -174,21 +166,59 @@ class Cargo
         if ($oTrx->estatus == 'aprobada-antifraude') {
             // 3.1 Evalua si es una prueba
             if ($oTrx->prueba) {
-                // 3.1 Si es prueba, determina resultado dependiendo hash de tarjeta
-                if ($oPeticionCargo->tarjeta->pan_hash == 'dddaa7c91adedadebec87310c5e83977cac4b4d0e924c6cc34fd8d947fbf4686') {
-                    $oTrx->datos_procesador = ['status' => "success", 'data' => ['message' => "Venta generada correctamente","response_code" => "00","importantData" => ["orderId" => 25198,"authNum" => "152099","transactionId" => 27172]]];
-                    $oTrx->estatus = 'completada';
-                } else if ($oPeticionCargo->tarjeta->pan_hash == '9f88e9918393352639b4da04c8327e8af33d9433b09b3ebff7b070bb21c6cd87') {
-                    $oTrx->datos_procesador = ['status' => "fail", 'data' => ['response_code' => '12', 'message' => "No se puede realizar la venta.", 'prueba' => false]];
-                    //$oTrx->datos_procesador = ['status' => "fail", 'data' => ['response_code' => '05', 'message' => "Venta rechazada", "importantData" => ["orderId" => 25198,"authNum" => "0","transactionId" => 27172]]];
+                // 3.1.1 Si es prueba, determina resultado dependiendo hash de tarjeta
+                if ($oPeticionCargo->tarjeta->pan_hash == '9f88e9918393352639b4da04c8327e8af33d9433b09b3ebff7b070bb21c6cd87') {
+                    // 4222222222222220 Tarjeta rechazada
                     $oTrx->estatus = 'rechazada-banco';
-                    $oError = new Error([
-                        'codigo' => '12',
-                        'tipo' => 'Banco',
-                        'descripcion' => 'No se puede realizar la venta',
-                    ]);
+                    $oError = new Error(['codigo' => '05', 'tipo' => 'Banco', 'descripcion' => 'Rechazada por el banco']);
+                    $oTrx->datos_procesador = ['status' => "fail", 'data' => ['message' => "Tarjeta rechazada. No se puede realizar el cargo.", "response_code" => "05", "importantData" => ["transactionId" => rand(100000, 999999), "prueba" => true]]];
+                } else if ($oPeticionCargo->tarjeta->pan_hash == '19568e82af57bc0aa78afc6d720baadd1aec8a6796b5f15ae1362ce9453bbd3d') {
+                    // 4000000000000069 Tarjeta expirada
+                    $oTrx->estatus = 'rechazada-banco';
+                    $oError = new Error(['codigo' => '54', 'tipo' => 'Banco', 'descripcion' => 'Tarjeta Expirada']);
+                    $oTrx->datos_procesador = ['status' => "fail", 'data' => ['message' => "Tarjeta rechazada. No se puede realizar el cargo.", "response_code" => "54", "importantData" => ["transactionId" => rand(100000, 999999), "prueba" => true]]];
+                } else if ($oPeticionCargo->tarjeta->pan_hash == 'd401ec386a00fd893ca2b55a5a4e9a5410265df6c2c4aa25886c68b6c76deedc') {
+                    // 4444444444444448 Tarjeta sin fondos suficientes
+                    $oTrx->estatus = 'rechazada-banco';
+                    $oError = new Error(['codigo' => '51', 'tipo' => 'Banco', 'descripcion' => 'Saldo insuficiente']);
+                    $oTrx->datos_procesador = ['status' => "fail", 'data' => ['message' => "Tarjeta rechazada. Tarjeta sin fondos suficientes.", "response_code" => "51", "importantData" => ["transactionId" => rand(100000, 999999), "prueba" => true]]];
+                } else if ($oPeticionCargo->tarjeta->pan_hash == 'a0bb05ca01a2e6a38c3c8ea7f474a9841ea6e86f9a4f02d0e1dd1d8a56da15d1') {
+                    // 4000000000000119 Tarjeta robada
+                    $oTrx->estatus = 'rechazada-banco';
+                    $oError = new Error(['codigo' => '43', 'tipo' => 'Banco', 'descripcion' => 'Recoger Tarjeta (Stolen Card)']);
+                    $oTrx->datos_procesador = ['status' => "fail", 'data' => ['message' => "Tarjeta rechazada. Tarjeta reportada como robada.", "response_code" => "43", "importantData" => ["transactionId" => rand(100000, 999999), "prueba" => true]]];
+                } else if ($oPeticionCargo->tarjeta->pan_hash == 'b15c095826c5c28840e7e9d3cec2e95fcfacc21d085e704e90c233697941a601') {
+                    // 340000000000009 Tarjeta rechazada
+                    $oTrx->estatus = 'rechazada-banco';
+                    $oError = new Error(['codigo' => '05', 'tipo' => 'Banco', 'descripcion' => 'Rechazada por el banco']);
+                    $oTrx->datos_procesador = ['status' => "fail", 'data' => ['message' => "Tarjeta rechazada. No se puede realizar el cargo.", "response_code" => "05", "importantData" => ["transactionId" => rand(100000, 999999), "prueba" => true]]];
+                } else if ($oPeticionCargo->tarjeta->pan_hash == 'af50ee3a63d1619deb1c0361e89699f15be695023d510839cc1819a2627a7082') {
+                    // 373737373737374 Tarjeta expirada
+                    $oTrx->estatus = 'rechazada-banco';
+                    $oError = new Error(['codigo' => '54', 'tipo' => 'Banco', 'descripcion' => 'Tarjeta expirada']);
+                    $oTrx->datos_procesador = ['status' => "fail", 'data' => ['message' => "Tarjeta rechazada. No se puede realizar el cargo.", "response_code" => "54", "importantData" => ["transactionId" => rand(100000, 999999), "prueba" => true]]];
+                } else if ($oPeticionCargo->tarjeta->pan_hash == '1927c2a318b0288088e995f17a5b8924b8284632efbb87997c3657d738ebaafd') {
+                    // 370000000000002 Tarjeta sin fondos suficientes
+                    $oTrx->estatus = 'rechazada-banco';
+                    $oError = new Error(['codigo' => '51', 'tipo' => 'Banco', 'descripcion' => 'Saldo insuficiente']);
+                    $oTrx->datos_procesador = ['status' => "fail", 'data' => ['message' => "Tarjeta rechazada. Tarjeta sin fondos suficientes.", "response_code" => "51", "importantData" => ["transactionId" => rand(100000, 999999), "prueba" => true]]];
+                } else if ($oPeticionCargo->tarjeta->pan_hash == 'dddaa7c91adedadebec87310c5e83977cac4b4d0e924c6cc34fd8d947fbf4686') {
+                    // 4111111111111111 Tarjeta aprobada visa
+                    $oTrx->datos_procesador = ['status' => "success", 'data' => ['message' => "Venta generada correctamente", "response_code" => "00", "importantData" => ["orderId" => str_random(6), "authNum" => rand(100000, 999999), "transactionId" => rand(100000, 999999), "prueba" => true]]];
+                    $oTrx->estatus = 'completada';
+                } else if ($oPeticionCargo->tarjeta->pan_hash == 'c546462fd30ac7c17d2594e583ba8420cfd88e3e4914c0d88d40342f2e9fbfe0') {
+                    // 5105105105105100 Tarjeta aprobada mastercard
+                    $oTrx->datos_procesador = ['status' => "success", 'data' => ['message' => "Venta generada correctamente", "response_code" => "00", "importantData" => ["orderId" => str_random(6), "authNum" => rand(100000, 999999), "transactionId" => rand(100000, 999999), "prueba" => true]]];
+                    $oTrx->estatus = 'completada';
+                } else if ($oPeticionCargo->tarjeta->pan_hash == '428ed9725b7c878bcaedc4eb40b41fd345a4ea9b7ca42330a2a446cc0cc61f95') {
+                    // 341111111111111 Tarjeta aprobada amex
+                    $oTrx->datos_procesador = ['status' => "success", 'data' => ['message' => "Venta generada correctamente", "response_code" => "00", "importantData" => ["orderId" => str_random(6), "authNum" => rand(100000, 999999), "transactionId" => rand(100000, 999999), "prueba" => true]]];
+                    $oTrx->estatus = 'completada';
                 } else {
-                    $oTrx->datos_antifraude = ['resultado' => 'verde', 'score' => 22, 'response_code' => '100', 'response_description' => 'Transaction de bajo riesgo'];
+                    // Default - Tarjeta rechazada
+                    $oTrx->estatus = 'rechazada-banco';
+                    $oError = new Error(['codigo' => '05', 'tipo' => 'Banco', 'descripcion' => 'Rechazada por el banco']);
+                    $oTrx->datos_procesador = ['status' => "fail", 'data' => ['message' => "Tarjeta rechazada. No se puede realizar el cargo.", "response_code" => "05", "importantData" => ["transactionId" => rand(100000, 999999), "prueba" => true]]];
                 }
             } else {
                 // 3.2 Define procesador a usar dependiendo de la afiliación y tarjeta proporcionada
@@ -351,7 +381,12 @@ class Cargo
             $aRespuesta['error'] = $oError;
         }
         $oRespuestaCargo = new RespuestaCargo($aRespuesta);
-        #dump($oTrx->toArray());
+        // Prepara tarjeta en respuesta
+        $oRespuestaTarjeta = $oPeticionCargo->tarjeta;
+        unset($oRespuestaTarjeta->pan_hash);
+        $oRespuestaCargo->tarjeta = $oRespuestaTarjeta;
+
+        #dump($oRespuestaCargo->toArray());
         return $oRespuestaCargo;
     }
 
