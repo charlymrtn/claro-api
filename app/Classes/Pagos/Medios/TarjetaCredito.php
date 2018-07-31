@@ -48,6 +48,7 @@ class TarjetaCredito extends Model
         'marca', // Marca de la tarjeta: visa, mastercard, carnet, amex (american express).
         'terminacion', // Terminación o últimos cuatro dígitos
         'pan_hash', // Identificador de la tarjeta
+        'creacion', // Fecha de creación del objeto en ISO 8601
         'created_at', // Fecha de creación del objeto tipo Carbon
         'updated_at', // Fecha de actualización del objeto tipo Carbon
     ];
@@ -59,6 +60,9 @@ class TarjetaCredito extends Model
         '_pan', // Número de tarjeta (16-19)
         'cvv2', // CVV2 (3-4)
         'nip', // NIP
+        'created_at', // Fecha de creación del objeto tipo Carbon
+        'updated_at', // Fecha de actualización del objeto tipo Carbon
+        'deleted_at', // Fecha de borrado del objeto tipo Carbon
     ];
 
     /*
@@ -72,7 +76,7 @@ class TarjetaCredito extends Model
      * @var array $rules Reglas de validación
      */
     protected $rules = [
-        'pan' => 'required|numeric',
+        'pan' => 'sometimes|required|numeric',
         'nombre' => 'required_without:nombres|min:3|max:60',
         'cvv2' => 'numeric|min:0|max:9999',
         'nip' => 'numeric|min:0|max:99999999',
@@ -213,6 +217,7 @@ class TarjetaCredito extends Model
 
         // Define fecha de creación
         $this->attributes['created_at'] = Carbon::now();
+        $this->attributes['creacion'] = $this->attributes['created_at']->toIso8601String();
         // Valida entradas
         $this->valida($aAttributes);
         // Ejecuta constructor padre

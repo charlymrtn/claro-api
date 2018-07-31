@@ -17,9 +17,9 @@ class TarjetaController extends Controller
 {
 
     /**
-     * Comercio instance.
+     * Tarjeta instance.
      *
-     * @var \App\Models\Comercio
+     * @var \App\Models\Medios\Tarjeta
      */
     protected $mTarjeta;
 
