@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="" tests="1" assertions="4" errors="0" failures="1" skipped="0" time="3.195983">
+    <testsuite name="Unit Tests" tests="1" assertions="4" errors="0" failures="1" skipped="0" time="3.195983">
+      <testsuite name="Tests\Unit\App\Http\Controllers\API\v1\ClienteControllerTest" file="/home/vagrant/claropay/api/tests/Unit/App/Http/Controllers/API/v1/ClienteControllerTest.php" tests="1" assertions="4" errors="0" failures="1" skipped="0" time="3.195983">
+        <testcase name="test_store" class="Tests\Unit\App\Http\Controllers\API\v1\ClienteControllerTest" classname="Tests.Unit.App.Http.Controllers.API.v1.ClienteControllerTest" file="/home/vagrant/claropay/api/tests/Unit/App/Http/Controllers/API/v1/ClienteControllerTest.php" line="126" assertions="4" time="3.195983">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Unit\App\Http\Controllers\API\v1\ClienteControllerTest::test_store
+Expected status code 200 but received 400.
+Failed asserting that false is true.
+
+/home/vagrant/claropay/api/vendor/laravel/framework/src/Illuminate/Foundation/Testing/TestResponse.php:124
+/home/vagrant/claropay/api/tests/Unit/App/Http/Controllers/API/v1/ClienteControllerTest.php:145
+</failure>
+        </testcase>
+      </testsuite>
+    </testsuite>
+  </testsuite>
+</testsuites>

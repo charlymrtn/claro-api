@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tests>
+  <test className="Tests\Unit\App\Http\Controllers\API\v1\ClienteControllerTest" methodName="test_store" prettifiedClassName="Unit\App\Http\Controllers\API\v1\ClienteController" prettifiedMethodName="Store" status="4" time="3.1959829330444" size="-1" groups="default" exceptionLine="145" exceptionMessage="Expected status code 200 but received 400.&#10;Failed asserting that false is true."/>
+</tests>
