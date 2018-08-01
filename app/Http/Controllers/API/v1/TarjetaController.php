@@ -51,12 +51,15 @@ class TarjetaController extends Controller
             if ($oValidator->fails()) {
                 return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
             }
+            // Obtiene usuario del request
+            $oUser = Auth::user();
             // Filtro
             $sFiltro = $oRequest->input('search', false);
             $sDeleted = $oRequest->input('deleted', 'yes');
             // Busca tarjeta
             $aTarjeta = $this->mTarjeta
                 ->withTrashed()
+                ->where('comercio_uuid', $oUser->comercio_uuid)
                 ->where(
                     function ($q) use ($sFiltro) {
                         if ($sFiltro !== false) {
