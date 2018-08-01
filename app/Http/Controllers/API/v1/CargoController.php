@@ -77,7 +77,7 @@ class CargoController extends Controller
                 'monto' => 'required',
                 'parcialidades' => 'numeric|min:0|max:48',
                 // TARJETA
-                    'tarjeta.cvv2' => 'required|numeric',
+                    'tarjeta.cvv2' => 'required_without:tarjeta.token|numeric',
                     // Con token
                     'tarjeta.token' => 'required_without:tarjeta.pan|string',
                     // Sin token
