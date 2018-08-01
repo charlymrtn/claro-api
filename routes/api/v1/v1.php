@@ -12,7 +12,9 @@ Route::group(['namespace' => 'API\v1', 'prefix' => 'v1', 'as' => 'api.v1.'], fun
 
     // API Cargos
     Route::group(['middleware' => ['scope:superadmin,cliente-transacciones']], function () {
-        Route::apiResource('/cargo', 'CargoController');
+        Route::post('/cargo', 'CargoController@cargo')->name('cargo.cargo');
+        Route::post('/cargo/{uuid}/cancelar', 'CargoController@cancel')->name('cargo.cancelar');
+        Route::post('/cargo/{uuid}/reembolsar', 'CargoController@refund')->name('cargo.reembolsar');
     });
 
     // API Suscripciones

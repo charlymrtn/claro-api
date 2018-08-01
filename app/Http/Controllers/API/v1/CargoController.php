@@ -48,32 +48,12 @@ class CargoController extends Controller
     }
 
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index(Request $oRequest)
-    {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $oRequest)
+    public function cargo(Request $oRequest)
     {
         // Formatea y encapsula datos en PeticionCargo
         try {
@@ -249,6 +229,10 @@ class CargoController extends Controller
                     ]),
                 ]),
             ]);
+            // Envía petición a proceso de cargo
+            $oCargo = $this->oCargo->carga($oPeticionCargo);
+            // Regresa resultados
+            return ejsend_success(['cargo' => $oCargo]);
         } catch (\Exception $e) {
             if (empty($e->getCode())) {
                 $sCode = '400';
@@ -258,9 +242,6 @@ class CargoController extends Controller
             Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
             return ejsend_fail(['code' => $sCode, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], $sCode, ['errors' => $e->getMessage()]);
         }
-
-        // Envía petición a proceso de cargo
-        return $this->oCargo->carga($oPeticionCargo);
     }
 
     /**
@@ -280,7 +261,7 @@ class CargoController extends Controller
      * @param  int $id
      * @return \Illuminate\Http\Response
      */
-    public function edit(int $id)
+    public function cancel(Request $request, string $id)
     {
         //
     }
@@ -292,18 +273,7 @@ class CargoController extends Controller
      * @param  int $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, int $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(int $id)
+    public function refund(Request $request, string $id)
     {
         //
     }
