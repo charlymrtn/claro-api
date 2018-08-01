@@ -59,13 +59,11 @@ $factory->define(App\Models\Medios\Tarjeta::class, function (Faker\Generator $fa
             'linea3' => $faker->phoneNumber,
             'cp' => $faker->postcode,
             'telefono' => new Telefono([
-                'tipo' => $faker->randomElement([
-                    'casa', 'oficina'
-                ]),
+                'tipo' => $faker->randomElement(['casa', 'oficina']),
                 'codigo_pais' => 52,
                 'codigo_area' => 55,
                 'numero' => $faker->phoneNumber,
-                'extension' => $faker->numberBetween($min = 10, $max = 99),
+                'extension' => $faker->numberBetween(10, 99),
             ]),
         ]),
         // Traits

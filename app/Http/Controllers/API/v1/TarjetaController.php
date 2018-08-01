@@ -86,13 +86,15 @@ class TarjetaController extends Controller
             // Envía datos paginados
             return ejsend_success(["status" => "success", "data" => ["tarjetas" => $aTarjeta]]);
         } catch (\Exception $e) {
+            // Define error
+            if (empty($e->getCode())) {
+                $sCode = 400; $sErrorType = 'Parámetros';
+            } else {
+                $sCode = (int) $e->getCode(); $sErrorType = 'Sistema';
+            }
             // Registra error
-            Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
-            return ejsend_error([
-                'code' => 500,
-                'type' => 'Tarjeta',
-                'message' => 'Error al obtener el recurso: '.$e->getMessage(),
-            ]);
+            Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
+            return ejsend_error(['code' => $sCode, 'type' => $sErrorType, 'message' => 'Error al obtener el recurso: ' . $e->getMessage()]);
         }
     }
 
@@ -119,13 +121,15 @@ class TarjetaController extends Controller
             // Formatea respuestay regresa resultado
             return ejsend_success(['tarjeta' => $this->tarjetaResponse($oTarjeta)]);
         } catch (\Exception $e) {
+            // Define error
             if (empty($e->getCode())) {
-                $sCode = 400;
+                $sCode = 400; $sErrorType = 'Parámetros';
             } else {
-                $sCode = (int) $e->getCode();
+                $sCode = (int) $e->getCode(); $sErrorType = 'Sistema';
             }
+            // Registra error
             Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
-            return ejsend_fail(['code' => $sCode, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], $sCode, ['errors' => $e->getMessage()]);
+            return ejsend_error(['code' => $sCode, 'type' => $sErrorType, 'message' => 'Error al obtener el recurso: ' . $e->getMessage()]);
         }
     }
 
@@ -157,13 +161,15 @@ class TarjetaController extends Controller
                 return ejsend_success(['tarjeta' => $this->tarjetaResponse($oTarjeta)]);
             }
         } catch (\Exception $e) {
+            // Define error
             if (empty($e->getCode())) {
-                $sCode = 400;
+                $sCode = 400; $sErrorType = 'Parámetros';
             } else {
-                $sCode = (int) $e->getCode();
+                $sCode = (int) $e->getCode(); $sErrorType = 'Sistema';
             }
+            // Registra error
             Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
-            return ejsend_fail(['code' => $sCode, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], $sCode, ['errors' => $e->getMessage()]);
+            return ejsend_error(['code' => $sCode, 'type' => $sErrorType, 'message' => 'Error al obtener el recurso: ' . $e->getMessage()]);
         }
     }
 
@@ -199,13 +205,15 @@ class TarjetaController extends Controller
             // Formatea respuestay regresa resultado
             return ejsend_success(['tarjeta' => $this->tarjetaResponse($oTarjeta)]);
         } catch (\Exception $e) {
+            // Define error
             if (empty($e->getCode())) {
-                $sCode = 400;
+                $sCode = 400; $sErrorType = 'Parámetros';
             } else {
-                $sCode = (int) $e->getCode();
+                $sCode = (int) $e->getCode(); $sErrorType = 'Sistema';
             }
+            // Registra error
             Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
-            return ejsend_error(['code' => $sCode, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], $sCode, ['errors' => $e->getMessage()]);
+            return ejsend_error(['code' => $sCode, 'type' => $sErrorType, 'message' => 'Error al obtener el recurso: ' . $e->getMessage()]);
         }
     }
 
@@ -239,13 +247,15 @@ class TarjetaController extends Controller
                 return ejsend_success(['tarjeta' => $this->tarjetaResponse($oTarjeta)]);
             }
         } catch (\Exception $e) {
+            // Define error
             if (empty($e->getCode())) {
-                $sCode = 400;
+                $sCode = 400; $sErrorType = 'Parámetros';
             } else {
-                $sCode = (int) $e->getCode();
+                $sCode = (int) $e->getCode(); $sErrorType = 'Sistema';
             }
+            // Registra error
             Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
-            return ejsend_fail(['code' => $sCode, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], $sCode, ['errors' => $e->getMessage()]);
+            return ejsend_error(['code' => $sCode, 'type' => $sErrorType, 'message' => 'Error al obtener el recurso: ' . $e->getMessage()]);
         }
     }
 
