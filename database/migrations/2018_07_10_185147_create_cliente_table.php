@@ -22,11 +22,11 @@ class CreateClienteTable extends Migration
             $table->string('id_externo')->nullable();
             $table->timestamp('creacion_externa')->nullable();
             // Datos del cliente
+            $table->string('email');
             $table->string('nombre')->nullable();
             $table->string('apellido_paterno')->nullable();
             $table->string('apellido_materno')->nullable();
             $table->string('sexo')->nullable();
-            $table->string('email');
             $table->date('nacimiento')->nullable();
             $table->string('estado');
             // Objetos JSON
@@ -37,9 +37,9 @@ class CreateClienteTable extends Migration
             $table->softDeletes();
             // -------------------------------------------------------------------------
             // Índices
-            $table->index(['comercio_uuid']);
-            $table->unique('comercio_uuid', 'email');
-            $table->unique('comercio_uuid', 'id_externo');
+            $table->index(['comercio_uuid', 'created_at']);
+            $table->unique(['comercio_uuid', 'email'], 'comercio-email');
+            $table->unique(['comercio_uuid', 'id_externo'], 'comercio-id');
         });
     }
 

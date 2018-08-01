@@ -61,18 +61,36 @@ class UserPermissionsSeeder extends Seeder
         Permission::create(['id' => 140, 'name' => 'listar reembolsos', 'guard_name' => 'api']);
         Permission::create(['id' => 141, 'name' => 'realizar reembolsos', 'guard_name' => 'api']);
         Permission::create(['id' => 142, 'name' => 'cancelar reembolsos', 'guard_name' => 'api']);
+        // Suscripciones - Clientes
+        Permission::create(['id' => 150, 'name' => 'listar clientes', 'guard_name' => 'api']);
+        Permission::create(['id' => 151, 'name' => 'editar clientes', 'guard_name' => 'api']);
+        Permission::create(['id' => 152, 'name' => 'crear clientes', 'guard_name' => 'api']);
+        Permission::create(['id' => 153, 'name' => 'borrar clientes', 'guard_name' => 'api']);
+        // Suscripciones - Planes
+        Permission::create(['id' => 160, 'name' => 'listar planes', 'guard_name' => 'api']);
+        Permission::create(['id' => 161, 'name' => 'editar planes', 'guard_name' => 'api']);
+        Permission::create(['id' => 162, 'name' => 'crear planes', 'guard_name' => 'api']);
+        Permission::create(['id' => 163, 'name' => 'borrar planes', 'guard_name' => 'api']);
+        // Suscripciones - Suscripciones
+        Permission::create(['id' => 170, 'name' => 'listar suscripciones', 'guard_name' => 'api']);
+        Permission::create(['id' => 171, 'name' => 'editar suscripciones', 'guard_name' => 'api']);
+        Permission::create(['id' => 172, 'name' => 'crear suscripciones', 'guard_name' => 'api']);
+        Permission::create(['id' => 173, 'name' => 'borrar suscripciones', 'guard_name' => 'api']);
 
         // Roles
 
         // Superadmin
         $rol = Role::create(['id' => 11, 'name' => 'superadmin', 'guard_name' => 'api']);
         $rol->syncPermissions(Permission::all());
-        // Cliente para tarjetas
+        // Rol de Cliente para tarjetas
         $rol = Role::create(['id' => 100, 'name' => 'cliente-tarjetas', 'guard_name' => 'api']);
         $rol->permissions()->sync([1, 112]);
-        // Cliente para transacciones
+        // Rol de Cliente para transacciones
         $rol = Role::create(['id' => 200, 'name' => 'cliente-transacciones', 'guard_name' => 'api']);
         $rol->permissions()->sync([1, 120, 121, 122, 130, 131, 132, 133, 140, 141, 142]);
+        // Rol de Cliente para suscripciones
+        $rol = Role::create(['id' => 300, 'name' => 'cliente-suscripciones', 'guard_name' => 'api']);
+        $rol->permissions()->sync([1, 120, 150, 151, 152, 153, 160, 161, 162, 163, 170, 171, 172, 173]);
 
         // Usuarios <-> Roles
         DB::table('model_has_roles')->insert([

@@ -37,7 +37,7 @@ class ComercioController extends UsuarioController
             return parent::show($oUsuario->id);
         } catch (\Exception $e) {
             // Registra error
-            Log::error('Error en ' . __METHOD__ . ' línea ' . __LINE__ . ':' . $e->getMessage());
+            Log::error('Error en ' . __METHOD__ . ' línea ' . $e->getLine() . ':' . $e->getMessage());
             return ejsend_error(['code' => 500, 'type' => 'Sistema', 'message' => 'Error al obtener el recurso: ' . $e->getMessage()]);
         }
     }

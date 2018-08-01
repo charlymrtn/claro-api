@@ -43,28 +43,6 @@ class TestappCommand extends Command
         // Inicia pruebas
         $this->info(" Iniciando pruebas de la aplicación...");
 
-        // Revisa ruta de reporte de cobertura
-        try {
-            // Define variabels
-            $fCoverageReportFacadeFile = base_path('vendor/phpunit/php-code-coverage/src/Report/Html/Facade.php');
-            $sOldTemplatePath = '__DIR__ . \'/Renderer/Template/\'';
-            $sNewTemplatePath = "resource_path('views/vendor/coverage-report-html/')";
-            // Abre archivo
-            $sPCRFacade = file_get_contents($fCoverageReportFacadeFile);
-            // Busca path viejo
-            if (strpos($sPCRFacade, $sOldTemplatePath) !== false) {
-                // Reemplaza path
-                file_put_contents($fCoverageReportFacadeFile, str_replace($sOldTemplatePath, $sNewTemplatePath, $sPCRFacade));
-            } else {
-                // Ruta vieja no encontrada, asumimos ya está la nueva.
-            }
-            $oProgressBar->advance();
-            $this->info(" Reporte de cobertura configurado.");
-        } catch (\Exception $e) {
-            $this->error("Error al validar templates de reporte de cobertura:" . $e->getMessage());
-            return 2;
-        }
-
         // Corre pruebas unitarias y genera reporte
         system('vendor/bin/phpunit');
         $oProgressBar->advance();
