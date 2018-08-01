@@ -118,6 +118,7 @@ class Cargo
                 'pan' => $oPeticionCargo->tarjeta->pan,
                 'pan_hash' => $oPeticionCargo->tarjeta->pan_hash,
                 'marca' => $oPeticionCargo->tarjeta->marca,
+                'token' => $oPeticionCargo->tarjeta->token,
             ],
             // Comercio
             'datos_comercio' => [

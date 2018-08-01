@@ -6,6 +6,7 @@ use Log;
 use App;
 use Exception;
 use Validator;
+use Carbon\Carbon;
 use Webpatser\Uuid\Uuid;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -16,7 +17,9 @@ use App\Classes\Pagos\Base\Direccion;
 use App\Classes\Pagos\Base\Telefono;
 use App\Classes\Pagos\Medios\TarjetaCredito;
 use App\Classes\Pagos\Procesos\Cargo;
+use App\Classes\Sistema\Mensaje;
 use App\Models\Medios\Tarjeta;
+use App\Models\Transaccion;
 
 class CargoController extends Controller
 {
@@ -109,9 +112,10 @@ class CargoController extends Controller
             }
 
             // Valida y define tarjeta
-            if (!empty($oRequest->input('tarjeta.token', false))) {
+            $uTarjetaToken = $oRequest->input('tarjeta.token', null);
+            if (!empty($uTarjetaToken)) {
                 // Tarjeta existente
-                $oTarjeta = $this->mTarjeta->where('comercio_uuid', $sComercioUuid)->find($oRequest->input('tarjeta.token'));
+                $oTarjeta = $this->mTarjeta->where('comercio_uuid', $sComercioUuid)->find($uTarjetaToken);
                 if ($oTarjeta == null) {
                     Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': Tarjeta no encontrada');
                     return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Tarjeta no encontrada.'], 404);
@@ -121,6 +125,7 @@ class CargoController extends Controller
                     'cvv2' => $oRequest->input('tarjeta.cvv2'),
                     'expiracion_mes' => $oTarjeta->expiracion_mes,
                     'expiracion_anio' => $oTarjeta->expiracion_anio,
+                    'token' => $uTarjetaToken,
                 ]);
                 $oTarjetaCredito->pan_hash = $oTarjeta->pan_hash;
                 $oTarjetaCredito->iin = $oTarjeta->iin;
@@ -256,25 +261,208 @@ class CargoController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Cancela cargo.
      *
-     * @param  int $id
-     * @return \Illuminate\Http\Response
+     * @param  \Illuminate\Http\Request  $oRequest
+     * @param  string $uuid
+     * @return string Json result string in JSend format
      */
-    public function cancel(Request $request, string $id)
+    public function cancel(Request $oRequest, string $uuid)
     {
-        //
+        // Cancela cargo
+        try {
+            // Obtiene comercio_uuid del token del usuario de la petición
+            $sComercioUuid = $oRequest->user()->comercio_uuid;
+            // Obtiene transacción original
+            $oTrx = Transaccion::find($uuid);
+            if ($oTrx == null) {
+                Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': Transacción no encontrada');
+                return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Transacción no encontrada.'], 404);
+            }
+            // Define valores por default antes de validación
+            $oRequest->merge([
+                'comercio_uuid' => $sComercioUuid,
+            ]);
+            // Valida request
+            $oValidator = Validator::make($oRequest->toArray(), [
+                'comercio_uuid' => 'required|string',
+                'monto' => 'required',
+                'pedido.id' => 'max:48',
+                'cliente.id' => 'string',
+            ]);
+            if ($oValidator->fails()) {
+                $sCode = '400';
+                Log::error('Error de validación de parámetros: ' . json_encode($oValidator->errors()));
+                return ejsend_fail(['code' => $sCode, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], $sCode, ['errors' => $oValidator->errors()]);
+            }
+            // Valida fecha para cancelación
+            $oFechaHoy = Carbon::now();
+            // Valida si ya terminó el día
+            $oFechaDesde = Carbon::now();
+            $oFechaDesde->hour = 6;
+            $oFechaDesde->minute = 0;
+            $oFechaDesde->second = 0;
+            $oFechaLimite = Carbon::now();
+            $oFechaLimite->hour = 21;
+            $oFechaLimite->minute = 0;
+            $oFechaLimite->second = 0;
+            if (!$oFechaHoy->between($oFechaDesde, $oFechaLimite)) {
+                $sCode = '412';
+                Log::error('Error procesando cancelación: Hora de intento de transacción no permitida.');
+                return ejsend_fail(['code' => $sCode, 'type' => 'Reglas', 'message' => 'Error procesando cancelación: Hora de intento de transacción no permitidas.'], $sCode);
+            }
+            // Valida si la trx es del mismo día
+            if ($oFechaHoy->diffInDays($oTrx->created_at) > 0) {
+                $sCode = '412';
+                Log::error('Error procesando cancelación: Fecha de transacción mayor al día límite.');
+                return ejsend_fail(['code' => $sCode, 'type' => 'Precondición', 'message' => 'Error procesando cancelación: Fecha de transacción mayor al día límite.'], $sCode);
+            }
+            // Valida transacción
+            if ($oRequest->input('monto', '0.00') != $oTrx->monto) {
+                $sCode = '400';
+                Log::error('Error procesando cancelación: El monto de la transacción original no coincide.');
+                return ejsend_fail(['code' => $sCode, 'type' => 'Parámetros', 'message' => 'Error procesando cancelación: Error en parámetros de entrada.'], $sCode, ['errors' => ['monto' => 'El monto de la transacción original no coincide.']]);
+            }
+            if ($oTrx->estatus != 'completada') {
+                $sCode = '412';
+                Log::error('Error procesando cancelación: La transacción no se puede cancelar.');
+                return ejsend_fail(['code' => $sCode, 'type' => 'Precondición', 'message' => 'Error procesando cancelación: La transacción no se puede cancelar.'], $sCode, ['errors' => ['estatus' => 'El estatus de la transacción no permite cancelación.']]);
+            }
+            // Realiza cancelación
+            $oTrx->estatus = 'cancelada';
+            $oTrx->save();
+            $oTrx = Transaccion::find($uuid);
+            // ========================================================================
+            // Envía transacciones a admin y clientes
+            $oMensajeCP = new Mensaje();
+            $oMensajeResultadoA = $oMensajeCP->envia('clientes', '/api/admin/transaccion/' . $oTrx->uuid, 'PUT', $oTrx->toJson());
+            #dump($oMensajeResultadoA);
+            $oMensajeResultadoB = $oMensajeCP->envia('admin', '/api/admin/transaccion/' . $oTrx->uuid, 'PUT', $oTrx->toJson());
+            #dump($oMensajeResultadoB);
+            // ========================================================================
+            // Regresa respuesta
+            $aResponse = [
+                'id' => $uuid,
+                'monto' => $oTrx->monto,
+                'cargo' => $uuid,
+                'autorizacion_id' => $oTrx->datos_procesador['data']['importantData']['authNum'],
+                'tipo' => 'cancelacion',
+                'orden_id' => $oRequest->input('orden_id', null),
+                'cliente_id' => $oRequest->input('cliente_id', null),
+                'estatus' => $oTrx->estatus,
+            ];
+            return ejsend_success(['cancelacion' => $aResponse]);
+        } catch (\Exception $e) {
+            if (empty($e->getCode())) {
+                $sCode = '400';
+            } else {
+                $sCode = $e->getCode();
+            }
+            Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
+            return ejsend_fail(['code' => $sCode, 'type' => 'Parámetros', 'message' => 'Error al procesar la cancelación.'], $sCode, ['errors' => $e->getMessage()]);
+        }
     }
 
     /**
-     * Update the specified resource in storage.
+     * REembolsa cargo.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int $id
-     * @return \Illuminate\Http\Response
+     * @param  \Illuminate\Http\Request  $oRequest
+     * @param  string $uuid
+     * @return string Json result string in JSend format
      */
-    public function refund(Request $request, string $id)
+    public function refund(Request $oRequest, string $uuid)
     {
-        //
+        // Reembolsa cargo
+        try {
+            // Obtiene comercio_uuid del token del usuario de la petición
+            $sComercioUuid = $oRequest->user()->comercio_uuid;
+            // Obtiene transacción original
+            $oTrx = Transaccion::find($uuid);
+            if ($oTrx == null) {
+                Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': Transacción no encontrada');
+                return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Transacción no encontrada.'], 404);
+            }
+            // Define valores por default antes de validación
+            $oRequest->merge([
+                'comercio_uuid' => $sComercioUuid,
+            ]);
+            // Valida request
+            $oValidator = Validator::make($oRequest->toArray(), [
+                'comercio_uuid' => 'required|string',
+                'monto' => 'required',
+                'pedido.id' => 'max:48',
+                'cliente.id' => 'string',
+            ]);
+            if ($oValidator->fails()) {
+                $sCode = '400';
+                Log::error('Error de validación de parámetros: ' . json_encode($oValidator->errors()));
+                return ejsend_fail(['code' => $sCode, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], $sCode, ['errors' => $oValidator->errors()]);
+            }
+            // Valida fecha para cancelación
+            $oFechaHoy = Carbon::now();
+            // Valida si ya terminó el día
+            $oFechaDesde = Carbon::now();
+            $oFechaDesde->hour = 6;
+            $oFechaDesde->minute = 0;
+            $oFechaDesde->second = 0;
+            $oFechaLimite = Carbon::now();
+            $oFechaLimite->hour = 21;
+            $oFechaLimite->minute = 0;
+            $oFechaLimite->second = 0;
+            if (!$oFechaHoy->between($oFechaDesde, $oFechaLimite)) {
+                $sCode = '412';
+                Log::error('Error procesando reembolso: Hora de intento de transacción no permitida.');
+                return ejsend_fail(['code' => $sCode, 'type' => 'Reglas', 'message' => 'Error procesando reembolso: Hora de intento de transacción no permitidas.'], $sCode);
+            }
+            // Valida si la trx es del mismo día
+            if ($oFechaHoy->diffInDays($oTrx->created_at) < 1) {
+                $sCode = '412';
+                Log::error('Error procesando reembolso: Fecha de transacción menor al día permitido.');
+                return ejsend_fail(['code' => $sCode, 'type' => 'Precondición', 'message' => 'Error procesando reembolso: Fecha de transacción menor al día permitido.'], $sCode);
+            }
+            // Valida transacción
+            if ($oRequest->input('monto', '0.00') != $oTrx->monto) {
+                $sCode = '400';
+                Log::error('Error procesando reembolso: El monto de la transacción original no coincide.');
+                return ejsend_fail(['code' => $sCode, 'type' => 'Parámetros', 'message' => 'Error procesando reembolso: Error en parámetros de entrada.'], $sCode, ['errors' => ['monto' => 'El monto de la transacción original no coincide.']]);
+            }
+            if ($oTrx->estatus != 'completada') {
+                $sCode = '412';
+                Log::error('Error procesando reembolso: La transacción no se puede reembolsar.');
+                return ejsend_fail(['code' => $sCode, 'type' => 'Precondición', 'message' => 'Error procesando reembolso: La transacción no se puede reembolsar.'], $sCode, ['errors' => ['estatus' => 'El estatus de la transacción no permite reembolso.']]);
+            }
+            // Realiza cancelación
+            $oTrx->estatus = 'reembolsada';
+            $oTrx->save();
+            $oTrx = Transaccion::find($uuid);
+            // ========================================================================
+            // Envía transacciones a admin y clientes
+            $oMensajeCP = new Mensaje();
+            $oMensajeResultadoA = $oMensajeCP->envia('clientes', '/api/admin/transaccion/' . $oTrx->uuid, 'PUT', $oTrx->toJson());
+            #dump($oMensajeResultadoA);
+            $oMensajeResultadoB = $oMensajeCP->envia('admin', '/api/admin/transaccion/' . $oTrx->uuid, 'PUT', $oTrx->toJson());
+            #dump($oMensajeResultadoB);
+            // ========================================================================
+            // Regresa respuesta
+            $aResponse = [
+                'id' => $uuid,
+                'monto' => $oTrx->monto,
+                'cargo' => $uuid,
+                'autorizacion_id' => $oTrx->datos_procesador['data']['importantData']['authNum'],
+                'tipo' => 'reembolso',
+                'orden_id' => $oRequest->input('orden_id', null),
+                'cliente_id' => $oRequest->input('cliente_id', null),
+                'estatus' => $oTrx->estatus,
+            ];
+            return ejsend_success(['reembolso' => $aResponse]);
+        } catch (\Exception $e) {
+            if (empty($e->getCode())) {
+                $sCode = '400';
+            } else {
+                $sCode = $e->getCode();
+            }
+            Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
+            return ejsend_fail(['code' => $sCode, 'type' => 'Parámetros', 'message' => 'Error al procesar el reembolso.'], $sCode, ['errors' => $e->getMessage()]);
+        }
     }
 }
