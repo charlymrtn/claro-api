@@ -245,7 +245,7 @@ class CargoController extends Controller
                 $sCode = $e->getCode();
             }
             Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
-            return ejsend_fail(['code' => $sCode, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], $sCode, ['errors' => $e->getMessage()]);
+            return ejsend_error(['code' => $sCode, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], $sCode, ['errors' => $e->getMessage()]);
         }
     }
 
@@ -359,7 +359,7 @@ class CargoController extends Controller
                 $sCode = $e->getCode();
             }
             Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
-            return ejsend_fail(['code' => $sCode, 'type' => 'Parámetros', 'message' => 'Error al procesar la cancelación.'], $sCode, ['errors' => $e->getMessage()]);
+            return ejsend_error(['code' => $sCode, 'type' => 'Parámetros', 'message' => 'Error al procesar la cancelación.'], $sCode, ['errors' => $e->getMessage()]);
         }
     }
 
@@ -456,13 +456,15 @@ class CargoController extends Controller
             ];
             return ejsend_success(['reembolso' => $aResponse]);
         } catch (\Exception $e) {
+            // Define error
             if (empty($e->getCode())) {
-                $sCode = '400';
+                $sCode = 400; $sErrorType = 'Parámetros';
             } else {
-                $sCode = $e->getCode();
+                $sCode = (int) $e->getCode(); $sErrorType = 'Sistema';
             }
+            // Registra error
             Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
-            return ejsend_fail(['code' => $sCode, 'type' => 'Parámetros', 'message' => 'Error al procesar el reembolso.'], $sCode, ['errors' => $e->getMessage()]);
+            return ejsend_error(['code' => $sCode, 'type' => $sErrorType, 'message' => 'Error al procesar el reembolso: ' . $e->getMessage(), $sCode, ['errors' => $e->getMessage()]]);
         }
     }
 }
