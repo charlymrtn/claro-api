@@ -122,11 +122,13 @@ class CargoController extends Controller
                 }
                 $oTarjetaCredito = new TarjetaCredito([
                     'nombre' => $oTarjeta->nombre,
-                    'cvv2' => $oRequest->input('tarjeta.cvv2'),
                     'expiracion_mes' => $oTarjeta->expiracion_mes,
                     'expiracion_anio' => $oTarjeta->expiracion_anio,
                     'token' => $uTarjetaToken,
                 ]);
+                if ($oRequest->input('tarjeta.cvv2', false)) {
+                    $oTarjetaCredito['cvv2'] = $oRequest->input('tarjeta.cvv2');
+                }
                 $oTarjetaCredito->pan_hash = $oTarjeta->pan_hash;
                 $oTarjetaCredito->iin = $oTarjeta->iin;
                 $oTarjetaCredito->marca = $oTarjeta->marca;
