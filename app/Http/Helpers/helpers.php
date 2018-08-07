@@ -84,3 +84,32 @@ if (!function_exists("ejsend_fail")) {
         return response()->json($aResponse, $iHttpCode, $extraHeaders);
     }
 }
+
+
+// Array replace keys
+if (!function_exists("array_replace_keys")) {
+    /**
+     * Replace keys of given array by values of $keys
+     * $keys format is [$oldKey => $newKey]
+     *
+     * With $filter == true, will remove elements with key not in $keys
+     *
+     * @param  array   $array
+     * @param  array   $keys
+     * @param  boolean $filter
+     *
+     * @return $array
+     */
+    function array_replace_keys(array $array, array $keys, $filter = false)
+    {
+        $aNew = [];
+        foreach($array as $key => $value) {
+            if(isset($keys[$key])) {
+                $aNew[$keys[$key]] = $value;
+            } elseif(!$filter) {
+                $aNew[$key] = $value;
+            }
+        }
+        return $aNew;
+    }
+}

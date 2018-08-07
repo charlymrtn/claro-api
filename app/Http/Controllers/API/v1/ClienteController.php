@@ -12,6 +12,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Cliente;
 use App\Classes\Pagos\Base\Direccion;
 use App\Classes\Pagos\Base\Telefono;
+use App\Http\Resources\v1\ClienteResource;
+use App\Http\Resources\v1\ClienteCollectionResource;
 
 class ClienteController extends Controller
 {
@@ -33,38 +35,40 @@ class ClienteController extends Controller
     }
 
     /**
-     * Obtiene una lista de recursos
+     * Obtiene la lista de clientes creados por el comercio
      *
      * @param \Illuminate\Http\Request $oRequest
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function index(Request $oRequest)
+    public function index(Request $oRequest): JsonResponse
     {
+        // Regresa los registros de tarjeta paginados
         try {
             // Verifica las variables para despliegue de datos
             $oValidator = Validator::make($oRequest->all(), [
-                'per_page' => 'numeric|between:5,100',
-                'order' => 'max:30|in:uuid,comercio_uuid,nombre,apellido_paterno,apellido_materno,sexo,email,nacimiento,estado',
-                'search' => 'max:100',
-                'sort' => 'in:asc,desc',
+                // Datos de filtros
+                'filtro' => 'max:100',
+                // Datos de la paginación
+                'registros_por_pagina' => 'numeric|between:5,100',
+                'pagina' => 'numeric|min:1',
+                'ordenar_por' => 'max:30|in:uuid,comercio_uuid,nombre,apellido_paterno,apellido_materno,sexo,email,nacimiento,estado',
+                'orden' => 'in:asc,desc',
             ]);
             if ($oValidator->fails()) {
-                return ejsend_fail([
-                    'code' => 400,
-                    'type' => 'Parámetros',
-                    'message' => 'Error en parámetros de entrada.',
-                ], 400, ['errors' => $oValidator->errors()]);
+                return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
             }
+            // Obtiene usuario del request
+            $oUser = Auth::user();
             // Filtro
-            $sFiltro = $oRequest->input('search', false);
-            $cClientes = $this->mCliente
-                //->where('comercio_uuid', $oUser->comercio_uuid)
+            $sFiltro = $oRequest->input('filtro', false);
+            // Busca cliente
+            $cClientes = new ClienteCollectionResource($this->mCliente
+                ->where('comercio_uuid', $oUser->comercio_uuid)
                 ->where(
                     function ($q) use ($sFiltro) {
                         if ($sFiltro !== false) {
                             return $q
                                 ->orWhere('uuid', 'like', "%$sFiltro%")
-                                ->orWhere('comercio_uuid', 'like', "%$sFiltro%")
                                 ->orWhere('nombre', 'like', "%$sFiltro%")
                                 ->orWhere('apellido_paterno', 'like', "%$sFiltro%")
                                 ->orWhere('apellido_materno', 'like', "%$sFiltro%")
@@ -75,47 +79,49 @@ class ClienteController extends Controller
                         }
                     }
                 )
-                ->orderBy($oRequest->input('order', 'created_at'), $oRequest->input('sort', 'desc'))
-                ->paginate((int) $oRequest->input('per_page', 25));
+                ->orderBy($oRequest->input('ordenar_por', 'created_at'), $oRequest->input('orden', 'desc'))
+                ->paginate((int) $oRequest->input('registros_por_pagina', 25), ['*'], 'pagina', (int) $oRequest->input('pagina', 1)));
             // Envía datos paginados
             return ejsend_success(['clientes' => $cClientes]);
         } catch (\Exception $e) {
-            Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
-            return ejsend_error([
-                'code' => 500,
-                'type' => 'Sistema',
-                'message' => 'Error al obtener el recurso: '.$e->getMessage(),
-            ]);
+            // Define error
+            if (empty($e->getCode())) {
+                $sCode = 400; $sErrorType = 'Parámetros';
+            } else {
+                $sCode = (int) $e->getCode(); $sErrorType = 'Sistema';
+            }
+            // Registra error
+            Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
+            return ejsend_error(['code' => $sCode, 'type' => $sErrorType, 'message' => 'Error al obtener el recurso: ' . $e->getMessage()]);
         }
     }
 
     /**
-     * Guarda un recurso
+     * Guarda un cliente
      *
      * @param  \Illuminate\Http\Request $oRequest
      * @return \Illuminate\Http\JsonResponse
      */
     public function store(Request $oRequest): JsonResponse
     {
+        // Guarda cliente
         try {
             // Obtiene comercio_uuid del token del usuario de la petición
             $sComercioUuid = $oRequest->user()->comercio_uuid;
             // Define valores por default antes de validación
-            $sRequestEmail = $oRequest->input('email');
             $oRequest->merge([
                 'uuid' => Uuid::generate(4)->string,
                 'comercio_uuid' => $sComercioUuid,
                 'estado' => $oRequest->input('estado', 'activo'),
-                'id_externo' => $oRequest->input('id_externo', $sRequestEmail),
+                'id_externo' => $oRequest->input('id_externo', $oRequest->input('email')),
             ]);
+            if (!empty($oRequest->input('creacion'))) {
+                $oRequest->merge(['creacion_externa' => $oRequest->input('creacion')]);
+            }
             // Valida campos
             $oValidator = Validator::make($oRequest->all(), $this->mCliente->rules);
             if ($oValidator->fails()) {
-                return ejsend_fail([
-                    'code' => 400,
-                    'type' => 'Parámetros',
-                    'message' => 'Error en parámetros de entrada.',
-                ], 400, ['errors' => $oValidator->errors()]);
+                return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
             }
             // Modifica valores
             $aCambios = [];
@@ -145,14 +151,10 @@ class ClienteController extends Controller
             // Valida cliente creado anteriormente con mismo email
             $oCliente = $this->mCliente
                 ->where('comercio_uuid', '=', $sComercioUuid)
-                ->where('email', '=', $sRequestEmail)
+                ->where('email', '=', $oRequest->input('email'))
                 ->first();
             if (!empty($oCliente)) {
-                return ejsend_fail([
-                    'code' => 409,
-                    'type' => 'Parámetros',
-                    'message' => 'Error al crear el recurso: Cliente existente con el mismo email (' . $oCliente->uuid . ')',
-                ]);
+                return ejsend_fail(['code' => 409, 'type' => 'Parámetros', 'message' => 'Error al crear el recurso: Cliente existente con el mismo email (' . $oCliente->uuid . ')']);
             }
             // Valida cliente creado anteriormente con mismo id_externo
             $oCliente = $this->mCliente
@@ -160,14 +162,10 @@ class ClienteController extends Controller
                 ->where('id_externo', '=', $oRequest->input('id_externo'))
                 ->first();
             if (!empty($oClienteExistente)) {
-                return ejsend_fail([
-                    'code' => 409,
-                    'type' => 'Parámetros',
-                    'message' => 'Error al crear el recurso: Cliente existente con el mismo id_externo (' . $oCliente->uuid . ')',
-                ]);
+                return ejsend_fail(['code' => 409, 'type' => 'Parámetros', 'message' => 'Error al crear el recurso: Cliente existente con el mismo id_externo (' . $oCliente->uuid . ')']);
             }
             // Crea objeto
-            $oCliente = $this->mCliente->create($oRequest->all());
+            $oCliente = new ClienteResource($this->mCliente->create($oRequest->all()));
             // Regresa resultados
             return ejsend_success(['cliente' => $oCliente]);
         } catch (\Exception $e) {
@@ -204,7 +202,7 @@ class ClienteController extends Controller
                 ], 400, ['errors' => $oValidator->errors()]);
             }
             // Busca cliente
-            $oCliente = $this->mCliente->where('comercio_uuid', '=', $sComercioUuid)->find($uuid);
+            $oCliente = new ClienteResource($this->mCliente->where('comercio_uuid', '=', $sComercioUuid)->find($uuid));
             if ($oCliente == null) {
                 Log::error('Error on '.__METHOD__.' line '.__LINE__.': Cliente no encontrado:'.$uuid);
                 return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Cliente no encontrado.'], 404);
@@ -285,7 +283,7 @@ class ClienteController extends Controller
             $oRequest->merge($aCambios);
             // Actualiza cliente
             $oCliente->update($oRequest->all());
-            return ejsend_success(['cliente' => $oCliente]);
+            return ejsend_success(['cliente' => new ClienteResource($oCliente)]);
         } catch (\Exception $e) {
             Log::error('Error on '.__METHOD__.' line '.$e->getLine().':'.$e->getMessage());
             return ejsend_error([
@@ -324,7 +322,7 @@ class ClienteController extends Controller
             }
             // Borra Cliente
             $oCliente->forceDelete();
-            return ejsend_success([], 204);
+            return ejsend_success(['cliente' => new ClienteResource($oCliente)], 204);
         } catch (\Exception $e) {
             Log::error('Error on '.__METHOD__.' line '.$e->getLine().':'.$e->getMessage());
             return ejsend_error([
