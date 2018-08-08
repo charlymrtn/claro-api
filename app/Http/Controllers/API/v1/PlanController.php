@@ -3,78 +3,103 @@
 namespace app\Http\Controllers\API\v1;
 
 use Log;
+use Auth;
 use Validator;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use Webpatser\Uuid\Uuid;
 use App\Http\Controllers\Controller;
 use App\Models\Suscripciones\Plan;
+use App\Models\Suscripciones\Suscripcion;
+use App\Http\Resources\v1\PlanResource;
+use App\Http\Resources\v1\PlanCollectionResource;
+use App\Http\Resources\v1\SuscripcionResource;
+use App\Http\Resources\v1\SuscripcionCollectionResource;
 
 class PlanController extends Controller
 {
 
-    public function __construct()
+    /**
+     * Plan instance.
+     *
+     * @var \App\Models\Suscripciones\Plan
+     */
+    protected $mPlan;
+
+    /**
+     * Suscripcion instance.
+     *
+     * @var \App\Models\Suscripciones\Suscripcion
+     */
+    protected $mSuscripcion;
+
+    /**
+     * SuscripcionController constructor.
+     *
+     * @param \App\Models\Suscripciones\Suscripcion $suscripcion
+     */
+    public function __construct(Plan $plan, Suscripcion $suscripcion)
     {
-        // @todo: Obtiene usuario y comercio
+        $this->mPlan = $plan;
+        $this->mSuscripcion = $suscripcion;
     }
+
     /**
      * Consultar listado de Planes.
      *
-     * @return \Illuminate\Http\Response
+     * @param  \Illuminate\Http\Request  $oRequest
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function index(Request $oRequest)
+    public function index(Request $oRequest): JsonResponse
     {
-        // Regresa todos los planes paginados
+        // Regresa los registros de planes paginados
         try {
             // Verifica las variables para despliegue de datos
             $oValidator = Validator::make($oRequest->all(), [
-                // Datos de la paginación y filtros
+                // Datos de filtros
+                'filtro' => 'max:100',
+                // Datos de la paginación
                 'registros_por_pagina' => 'numeric|between:5,100',
                 'pagina' => 'numeric|between:1,3',
-                'ordenar_por' => 'max:30|in:uuid,comercio_uuid,nombre,estado,puede_suscribir,creacion',
+                'ordenar_por' => 'max:30|in:uuid,nombre,monto,estado,puede_suscribir,creacion',
                 'orden' => 'in:asc,desc',
             ]);
             if ($oValidator->fails()) {
                 return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
             }
-            // @todo: Filtros
-            $iRegistrosPorPagina = (int) $oRequest->input('registros_por_pagina', 10);
-            $sOrdenarPor = $oRequest->input('ordenar_por', 'creacion');
-            $aOrderBy = [
+            // Obtiene usuario del request
+            $oUser = Auth::user();
+            // Filtro
+            $sFiltro = $oRequest->input('filtro', false);
+            $aOrderByLabels = [
+                'id' => 'uuid',
+                'plan_id' => 'uuid',
                 'creacion' => 'created_at',
-                'nombre' => 'nombre',
+                'cliente' => 'cliente_uuid',
                 'estado' => 'estado',
-                'puede_suscribir' => 'puede_suscribir',
+                'inicio' => 'inicio',
+                'fin' => 'fin',
+                'fecha_proximo_cargo' => 'fecha_proximo_cargo',
             ];
-            $cPlanes = factory(Plan::class, $iRegistrosPorPagina)->create()->sortBy($aOrderBy[$sOrdenarPor]);
-            // Formatea objeto resultado
-            $aPlanes = [];
-            foreach($cPlanes as $item) {
-                $aPlanes[] = [
-                    'id' => $item->uuid,
-                    'nombre' => $item->nombre,
-                    'monto' => $item->monto,
-                    'moneda' => $item->moneda_iso_a3,
-                    'frecuencia' => $item->frecuencia,
-                    'tipo_periodo' => $item->tipo_periodo,
-                    'max_reintentos' => $item->max_reintentos,
-                    'estado' => $item->estado,
-                    'puede_suscribir' => $item->puede_suscribir,
-                    'prueba_frecuencia' => $item->prueba_frecuencia,
-                    'prueba_tipo_periodo' => $item->prueba_tipo_periodo,
-                    'creacion' => $item->created_at->toRfc3339String(),
-                    'actualizacion' => $item->updated_at->toRfc3339String(),
-                ];
-            }
-            $aResultado = [
-                'total' => 30,
-                'per_page' => $iRegistrosPorPagina,
-                'current_page' => 1,
-                'last_page' => 3,
-                'from' => 1,
-                'to' => $iRegistrosPorPagina,
-                'data' => $aPlanes,
-            ];
+            $sOrderBy = $aOrderByLabels[$oRequest->input('ordenar_por', 'creacion')] ?? 'created_at';
+            // Busca cliente
+            $cPlanes = new PlanCollectionResource($this->mPlan
+                ->where('comercio_uuid', $oUser->comercio_uuid)
+                ->where(
+                    function ($q) use ($sFiltro) {
+                        if ($sFiltro !== false) {
+                            return $q
+                                ->orWhere('uuid', 'like', "%$sFiltro%")
+                                ->orWhere('nombre', 'like', "%$sFiltro%")
+                                ->orWhere('monto', 'like', "%$sFiltro%")
+                                ->orWhere('estado', 'like', "%$sFiltro%");
+                        }
+                    }
+                )
+                ->orderBy($sOrderBy, $oRequest->input('orden', 'desc'))
+                ->paginate((int) $oRequest->input('registros_por_pagina', 25), ['*'], 'pagina', (int) $oRequest->input('pagina', 1)));
             // Envía datos paginados
-            return ejsend_success(['planes' => $aResultado]);
+            return ejsend_success(['planes' => $cPlanes]);
         } catch (\Exception $e) {
             Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
             return ejsend_error(['code' => 500, 'type' => 'Sistema', 'message' => 'Error al obtener el recurso: ' . $e->getMessage()]);
@@ -82,61 +107,84 @@ class PlanController extends Controller
     }
 
     /**
-     * Crear Plan de Suscripcion.
+     * Crear Plan.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @param  \Illuminate\Http\Request  $oRequest
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function store(Request $oRequest)
+    public function store(Request $oRequest): JsonResponse
     {
-        //
-        $oPlan = factory(Plan::class)->create([]);
-        $aPlan = [
-            'id' => $uuid,
-            'nombre' => $oRequest->input('nombre', $oPlan->nombre),
-            'monto' => $oRequest->input('monto', $oPlan->monto),
-            'moneda' => $oRequest->input('moneda', $oPlan->moneda_iso_a3),
-            'frecuencia' => $oRequest->input('frecuencia', $oPlan->frecuencia),
-            'tipo_periodo' => $oRequest->input('tipo_periodo', $oPlan->tipo_periodo),
-            'max_reintentos' => $oRequest->input('max_reintentos', $oPlan->max_reintentos),
-            'estado' => $oRequest->input('estado', $oPlan->estado),
-            'puede_suscribir' => $oRequest->input('puede_suscribir', $oPlan->puede_suscribir),
-            'prueba_frecuencia' => $oRequest->input('prueba_frecuencia', $oPlan->prueba_frecuencia),
-            'prueba_tipo_periodo' => $oRequest->input('prueba_tipo_periodo', $oPlan->prueba_tipo_periodo),
-            'creacion' => $oPlan->created_at->toRfc3339String(),
-            'actualizacion' => $oPlan->updated_at->toRfc3339String(),
-        ];
-        // Envía datos paginados
-        return ejsend_success(['plan' => $aPlan]);
+        // Guarda Plan
+        try {
+            // Obtiene comercio_uuid del token del usuario de la petición
+            $sComercioUuid = $oRequest->user()->comercio_uuid;
+            // Define valores por default antes de validación
+            $oRequest->merge([
+                'uuid' => Uuid::generate(4)->string,
+                'comercio_uuid' => $sComercioUuid,
+                'estado' => 'activo',
+                'puede_suscribir' => true,
+                'moneda_iso_a3' => $oRequest->input('moneda', 'MXN'),
+            ]);
+            // Valida campos
+            $oValidator = Validator::make($oRequest->all(), $this->mPlan->rules);
+            if ($oValidator->fails()) {
+                return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
+            }
+            // Crea objeto
+            $oPlan = new PlanResource($this->mPlan->create($oRequest->all()));
+            // Regresa resultados
+            return ejsend_success(['plan' => $oPlan]);
+        } catch (\Exception $e) {
+            Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
+            return ejsend_error([
+                'code' => 500,
+                'type' => 'Sistema',
+                'message' => 'Error al crear el recurso: '.$e->getMessage(),
+            ]);
+        }
     }
 
     /**
      * Consultar un Plan.
      *
      * @param  int $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function show(string $uuid)
+    public function show(string $uuid): JsonResponse
     {
-        //
-        $oPlan = factory(Plan::class)->create([]);
-        $aPlan = [
-            'id' => $uuid,
-            'nombre' => $oPlan->nombre,
-            'monto' => $oPlan->monto,
-            'moneda' => $oPlan->moneda_iso_a3,
-            'frecuencia' => $oPlan->frecuencia,
-            'tipo_periodo' => $oPlan->tipo_periodo,
-            'max_reintentos' => $oPlan->max_reintentos,
-            'estado' => $oPlan->estado,
-            'puede_suscribir' => $oPlan->puede_suscribir,
-            'prueba_frecuencia' => $oPlan->prueba_frecuencia,
-            'prueba_tipo_periodo' => $oPlan->prueba_tipo_periodo,
-            'creacion' => $oPlan->created_at->toRfc3339String(),
-            'actualizacion' => $oPlan->updated_at->toRfc3339String(),
-        ];
-        // Envía datos paginados
-        return ejsend_success(['plan' => $aPlan]);
+        // Muestra el recurso solicitado
+        try {
+            // Obtiene comercio_uuid del usuario de la petición
+            $sComercioUuid = Auth::user()->comercio_uuid;
+            // Valida request
+            $oValidator = Validator::make(['uuid' => $uuid], [
+                'uuid' => 'required|uuid|size:36',
+            ]);
+            if ($oValidator->fails()) {
+                return ejsend_fail([
+                    'code' => 400,
+                    'type' => 'Parámetros',
+                    'message' => 'Error en parámetros de entrada.',
+                ], 400, ['errors' => $oValidator->errors()]);
+            }
+            // Busca plan
+            $oPlan = $this->mPlan->where('comercio_uuid', '=', $sComercioUuid)->find($uuid);
+            if ($oPlan == null) {
+                Log::error('Error on '.__METHOD__.' line '.__LINE__.': Plan no encontrado:'.$uuid);
+                return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Plan no encontrado.'], 404);
+            }
+            // Regresa plan
+            return ejsend_success(['plan' => new PlanResource($oPlan)]);
+        } catch (\Exception $e) {
+            // Registra error
+            Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
+            return ejsend_error([
+                'code' => 500,
+                'type' => 'Sistema',
+                'message' => 'Error al obtener el recurso: '.$e->getMessage(),
+            ]);
+        }
     }
 
     /**
@@ -148,25 +196,50 @@ class PlanController extends Controller
      */
     public function update(Request $oRequest, string $uuid)
     {
-        //
-        $oPlan = factory(Plan::class)->create([]);
-        $aPlan = [
-            'id' => $uuid,
-            'nombre' => $oRequest->input('nombre', $oPlan->nombre),
-            'monto' => $oRequest->input('monto', $oPlan->monto),
-            'moneda' => $oRequest->input('moneda', $oPlan->moneda_iso_a3),
-            'frecuencia' => $oRequest->input('frecuencia', $oPlan->frecuencia),
-            'tipo_periodo' => $oRequest->input('tipo_periodo', $oPlan->tipo_periodo),
-            'max_reintentos' => $oRequest->input('max_reintentos', $oPlan->max_reintentos),
-            'estado' => $oRequest->input('estado', $oPlan->estado),
-            'puede_suscribir' => $oRequest->input('puede_suscribir', $oPlan->puede_suscribir),
-            'prueba_frecuencia' => $oRequest->input('prueba_frecuencia', $oPlan->prueba_frecuencia),
-            'prueba_tipo_periodo' => $oRequest->input('prueba_tipo_periodo', $oPlan->prueba_tipo_periodo),
-            'creacion' => $oPlan->created_at->toRfc3339String(),
-            'actualizacion' => $oPlan->updated_at->toRfc3339String(),
-        ];
-        // Envía datos paginados
-        return ejsend_success(['plan' => $aPlan]);
+        try {
+            // Obtiene comercio_uuid del token del usuario de la petición
+            $sComercioUuid = $oRequest->user()->comercio_uuid;
+            // Valida uuid
+            $oIdValidator = Validator::make(['uuid' => $uuid], [
+                'uuid' => 'required|uuid|size:36',
+            ]);
+            if ($oIdValidator->fails()) {
+                return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oIdValidator->errors()]);
+            }
+            // Busca plan
+            $oPlan = $this->mPlan->where('comercio_uuid', '=', $sComercioUuid)->find($uuid);
+            if ($oPlan == null) {
+                Log::error('Error on '.__METHOD__.' line '.__LINE__.': Suscripción no encontrada:'.$uuid);
+                return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Objeto no encontrado.'], 404);
+            }
+            // Filtra campos aceptados para actualización
+            $aCambios = array_only($oRequest->all(), ['nombre', 'monto', 'frecuencia', 'tipo_periodo', 'max_reintentos', 'estado', 'puede_suscribir', 'prueba_frecuencia', 'prueba_tipo_periodo']);
+            // Valida campos
+            $oValidator = Validator::make($aCambios, [
+                'nombre' => $this->mPlan->rules['nombre'],
+                'monto' => $this->mPlan->rules['monto'],
+                'frecuencia' => $this->mPlan->rules['frecuencia'],
+                'tipo_periodo' => $this->mPlan->rules['tipo_periodo'],
+                'max_reintentos' => $this->mPlan->rules['max_reintentos'],
+                'estado' => $this->mPlan->rules['estado'],
+                'puede_suscribir' => $this->mPlan->rules['puede_suscribir'],
+                'prueba_frecuencia' => $this->mPlan->rules['prueba_frecuencia'],
+                'prueba_tipo_periodo' => $this->mPlan->rules['prueba_tipo_periodo'],
+            ]);
+            if ($oValidator->fails()) {
+                return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
+            }
+            // Actualiza suscripción
+            $oPlan->update($aCambios);
+            return ejsend_success(['plan' => new PlanResource($oPlan)]);
+        } catch (\Exception $e) {
+            Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
+            return ejsend_error([
+                'code' => 500,
+                'type' => 'Sistema',
+                'message' => 'Ehe rror al actualizar el recurso: ' . $e->getMessage(),
+            ]);
+        }
     }
 
     /**
@@ -177,6 +250,142 @@ class PlanController extends Controller
      */
     public function destroy(int $id)
     {
-        //
+        return ejsend_fail(['code' => 405, 'type' => 'Sistema', 'message' => 'Método no implementado o no permitido para este recurso.'], 405);
+    }
+
+    /**
+     * Obtiene las suscripciones del plan
+     *
+     * @param string  $uuid
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function suscripciones($uuid): JsonResponse
+    {
+        // Muestra el recurso solicitado
+        try {
+            // Obtiene comercio_uuid del usuario de la petición
+            $sComercioUuid = Auth::user()->comercio_uuid;
+            // Valida request
+            $oValidator = Validator::make(['uuid' => $uuid], [
+                'uuid' => 'required|uuid|size:36',
+            ]);
+            if ($oValidator->fails()) {
+                return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oIdValidator->errors()]);
+            }
+            // Busca plan
+            $oPlan = $this->mPlan->where('comercio_uuid', '=', $sComercioUuid)->find($uuid);
+            if ($oPlan == null) {
+                Log::error('Error on '.__METHOD__.' line '.__LINE__.': Plan no encontrado:'.$uuid);
+                return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Plan no encontrado.'], 404);
+            }
+            // Regresa suscripciones del cliente
+            return ejsend_success(['suscripciones' => SuscripcionResource::collection($oPlan->suscripciones)]);
+        } catch (\Exception $e) {
+            // Registra error
+            Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
+            return ejsend_error([
+                'code' => 500,
+                'type' => 'Sistema',
+                'message' => 'Error al obtener el recurso: '.$e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Cancela las suscripciones al plan
+     *
+     * @param string  $uuid
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function cancelarSuscripciones($uuid): JsonResponse
+    {
+        try {
+            // Obtiene comercio_uuid del usuario de la petición
+            $sComercioUuid = Auth::user()->comercio_uuid;
+            // Valida request
+            $oIdValidator = Validator::make(['uuid' => $uuid], [
+                'uuid' => 'required|uuid|size:36',
+            ]);
+            if ($oIdValidator->fails()) {
+                return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oIdValidator->errors()]);
+            }
+            // Busca plan
+            $oPlan = $this->mPlan->where('comercio_uuid', '=', $sComercioUuid)->find($uuid);
+            if ($oPlan == null) {
+                Log::error('Error on '.__METHOD__.' line '.__LINE__.': Plan no encontrado:'.$uuid);
+                return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Plan no encontrado.'], 404);
+            }
+            // Cancela suscripciones
+            $aResultados = [];
+            foreach($oPlan->suscripciones as $oSuscripcion) {
+                if (in_array($oSuscripcion->estado, ['prueba', 'activa', 'pendiente'])) {
+                    $oSuscripcion->cancela();
+                    $aResultados[] = [
+                        'suscripcion_id' => $oSuscripcion->uuid,
+                        'cliente_id' => $oSuscripcion->cliente_uuid,
+                        'estado' => $oSuscripcion->estado,
+                        'actualizado' => $oSuscripcion->updated_at->toRfc3339String(),
+                    ];
+                }
+            }
+            // Regresa suscripciones del cliente
+            return ejsend_success(['suscripciones' => $aResultados]);
+        } catch (\Exception $e) {
+            // Registra error
+            Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
+            return ejsend_error([
+                'code' => 500,
+                'type' => 'Sistema',
+                'message' => 'Error al obtener el recurso: '.$e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Cancela el plan
+     *
+     * @param string $uuid
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function cancelar(string $uuid): JsonResponse
+    {
+        try {
+            // Obtiene comercio_uuid del usuario de la petición
+            $sComercioUuid = Auth::user()->comercio_uuid;
+            // Valida request
+            $oIdValidator = Validator::make(['uuid' => $uuid], [
+                'uuid' => 'required|uuid|size:36',
+            ]);
+            if ($oIdValidator->fails()) {
+                return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oIdValidator->errors()]);
+            }
+            // Busca plan
+            $oPlan = $this->mPlan->where('comercio_uuid', '=', $sComercioUuid)->find($uuid);
+            if ($oPlan == null) {
+                Log::error('Error on '.__METHOD__.' line '.__LINE__.': Plan no encontrado:'.$uuid);
+                return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Plan no encontrado.'], 404);
+            }
+            // Valida si existen suscripciones sin cancelar
+            $oSuscripcionesActivas = $this->mSuscripcion->where([
+                ['comercio_uuid', '=', $sComercioUuid],
+                ['plan_uuid', '=', $uuid],
+            ])->whereIn('estado', ['prueba', 'activa', 'pendiente'])->get();
+            if ($oSuscripcionesActivas->isNotEmpty()) {
+                Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': No se puede cancelar el plan ya que tiene suscripciones activas, en prueba o pendientes: ' . $uuid);
+                return ejsend_fail(['code' => 409, 'type' => 'Plan', 'message' => 'No se puede cancelar el plan ya que tiene suscripciones activas, en prueba o pendientes.'], 409);
+            } else {
+                $oPlan->cancela();
+            }
+            // Regresa suscripciones del cliente
+            return ejsend_success(['plan' => $oPlan]);
+        } catch (\Exception $e) {
+            // Registra error
+            Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
+            return ejsend_error([
+                'code' => 500,
+                'type' => 'Sistema',
+                'message' => 'Error al obtener el recurso: '.$e->getMessage(),
+            ]);
+        }
     }
 }

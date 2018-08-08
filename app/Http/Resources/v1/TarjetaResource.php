@@ -3,10 +3,8 @@
 namespace App\Http\Resources\v1;
 
 use Illuminate\Http\Resources\Json\JsonResource;
-use App\Http\Resources\v1\TarjetaResource;
-use App\Http\Resources\v1\SuscripcionResource;
 
-class ClienteResource extends JsonResource
+class TarjetaResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -18,16 +16,22 @@ class ClienteResource extends JsonResource
     {
         return  array_replace_keys(
             array_replace(
-                array_except(parent::toArray($request), ['deleted_at']),
+                array_except(parent::toArray($request), [
+                    'nombres',
+                    'apellido_paterno',
+                    'apellido_materno',
+                    'deleted_at',
+                    'inicio_mes',
+                    'inicio_anio',
+                ]),
                 [
                     'created_at' => $this->created_at->toRfc3339String(),
                     'updated_at' => $this->updated_at->toRfc3339String(),
-                    'tarjetas' => TarjetaResource::collection($this->whenLoaded('tarjetas')),
-                    'suscripciones' => SuscripcionResource::collection($this->whenLoaded('suscripciones')),
                 ]
             ),
             [
-                'uuid' => 'id',
+                'uuid' => 'token_tarjeta',
+                'cliente_uuid' => 'cliente_id',
                 'created_at' => 'creacion',
                 'updated_at' => 'actualizacion'
             ]

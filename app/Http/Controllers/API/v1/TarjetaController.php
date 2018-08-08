@@ -12,6 +12,8 @@ use App\Models\Medios\Tarjeta;
 use App\Classes\Pagos\Medios\TarjetaCredito;
 use App\Classes\Pagos\Base\Direccion;
 use App\Classes\Pagos\Base\Telefono;
+use App\Http\Resources\v1\TarjetaResource;
+use App\Http\Resources\v1\TarjetaCollectionResource;
 
 class TarjetaController extends Controller
 {
@@ -34,95 +36,92 @@ class TarjetaController extends Controller
     }
 
     /**
-     * Display a listing of the resource.
+     * Obtiene la lista de tarjetas creadas por el comercio
      *
+     * @param \Illuminate\Http\Request $oRequest
      * @return \Illuminate\Http\JsonResponse
      */
     public function index(Request $oRequest): JsonResponse
     {
-        try {
-            // Verifica las variables para despliegue de datos
-            $oValidator = Validator::make($oRequest->all(), [
-                'per_page' => 'numeric|between:5,100',
-                'order' => 'max:30|in:uuid,nombre,marca,comercio_uuid,cliente_uuid,iin,pan,terminacion,created_at,updated_at,deleted_at',
-                'search' => 'max:100',
-                'sort' => 'in:asc,desc',
-            ]);
-            if ($oValidator->fails()) {
-                return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
-            }
-            // Obtiene usuario del request
-            $oUser = Auth::user();
-            // Filtro
-            $sFiltro = $oRequest->input('search', false);
-            $sDeleted = $oRequest->input('deleted', 'yes');
-            // Busca tarjeta
-            $aTarjeta = $this->mTarjeta
-                ->withTrashed()
-                ->where('comercio_uuid', $oUser->comercio_uuid)
-                ->where(
-                    function ($q) use ($sFiltro) {
-                        if ($sFiltro !== false) {
-                            return $q
-                                ->orWhere('uuid', 'like', "%$sFiltro%")
-                                ->orWhere('nombre', 'like', "%$sFiltro%")
-                                ->orWhere('marca', 'like', "%$sFiltro%")
-                                ->orWhere('comercio_uuid', 'like', "%$sFiltro%")
-                                ->orWhere('cliente_uuid', 'like', "%$sFiltro%")
-                                ->orWhere('pan', 'like', "%$sFiltro%");
-                        }
-                    }
-                )
-                ->where(
-                    function ($q) use ($sDeleted) {
-                        if ($sDeleted == 'no') {
-                            return $q->whereNull('deleted_at');
-                        } else if ($sDeleted == 'yes') {
-                            return $q;
-                        } else if ($sDeleted == 'only') {
-                            return $q->whereNotNull('deleted_at');
-                        }
-                    }
-                )
-                ->orderBy($oRequest->input('order', 'uuid'), $oRequest->input('sort', 'asc'))
-                ->paginate((int) $oRequest->input('per_page', 25));
-            // Envía datos paginados
-            return ejsend_success(["status" => "success", "data" => ["tarjetas" => $aTarjeta]]);
-        } catch (\Exception $e) {
-            // Define error
-            if (empty($e->getCode())) {
-                $sCode = 400; $sErrorType = 'Parámetros';
-            } else {
-                $sCode = (int) $e->getCode(); $sErrorType = 'Sistema';
-            }
-            // Registra error
-            Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
-            return ejsend_error(['code' => $sCode, 'type' => $sErrorType, 'message' => 'Error al obtener el recurso: ' . $e->getMessage()]);
-        }
+        return ejsend_fail(['code' => 405, 'type' => 'General', 'message' => 'Método no implementado o no permitido para este recurso.'], 405);
+// Comentado por definición
+//        // Regresa los registros de tarjeta paginados
+//        try {
+//            // Verifica las variables para despliegue de datos
+//            $oValidator = Validator::make($oRequest->all(), [
+//                // Datos de filtros
+//                'filtro' => 'max:100',
+//                // Datos de la paginación
+//                'registros_por_pagina' => 'numeric|between:5,100',
+//                'pagina' => 'numeric|between:1,3',
+//                'ordenar_por' => 'max:30|in:uuid,nombre,marca,comercio_uuid,cliente_uuid,iin,pan,terminacion,created_at,updated_at,deleted_at',
+//                'orden' => 'in:asc,desc',
+//            ]);
+//            if ($oValidator->fails()) {
+//                return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
+//            }
+//            // Obtiene usuario del request
+//            $oUser = Auth::user();
+//            // Filtro
+//            $sFiltro = $oRequest->input('filtro', false);
+//            // Busca tarjeta
+//            $aTarjeta = new TarjetaCollectionResource($this->mTarjeta
+//                ->where('comercio_uuid', $oUser->comercio_uuid)
+//                ->where(
+//                    function ($q) use ($sFiltro) {
+//                        if ($sFiltro !== false) {
+//                            return $q
+//                                ->orWhere('uuid', 'like', "%$sFiltro%")
+//                                ->orWhere('nombre', 'like', "%$sFiltro%")
+//                                ->orWhere('marca', 'like', "%$sFiltro%")
+//                                ->orWhere('comercio_uuid', 'like', "%$sFiltro%")
+//                                ->orWhere('cliente_uuid', 'like', "%$sFiltro%")
+//                                ->orWhere('pan', 'like', "%$sFiltro%");
+//                        }
+//                    }
+//                )
+//                ->orderBy($oRequest->input('ordenar_por', 'created_at'), $oRequest->input('orden', 'desc'))
+//                ->paginate((int) $oRequest->input('registros_por_pagina', 25)));
+//            // Envía datos paginados
+//            return ejsend_success(["tarjetas" => $aTarjeta]);
+//        } catch (\Exception $e) {
+//            // Define error
+//            if (empty($e->getCode())) {
+//                $sCode = 400; $sErrorType = 'Parámetros';
+//            } else {
+//                $sCode = (int) $e->getCode(); $sErrorType = 'Sistema';
+//            }
+//            // Registra error
+//            Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
+//            return ejsend_error(['code' => $sCode, 'type' => $sErrorType, 'message' => 'Error al obtener el recurso: ' . $e->getMessage()]);
+//        }
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Guarda una tarjeta
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Http\Request $oRequest
      * @return \Illuminate\Http\JsonResponse
      */
     public function store(Request $oRequest): JsonResponse
     {
-        // Formatea y encapsula datos
+        // Guarda tarjeta
         try {
+            // Obtiene comercio_uuid del token del usuario de la petición
+            $sComercioUuid = $oRequest->user()->comercio_uuid;
             // Crea tarjeta y valida
             $oTarjetaCredito = $this->tarjetaRequest($oRequest);
             // Guarda resultado en base de datos
             $oTarjeta = $this->mTarjeta->create(array_merge([
                     'comercio_uuid' => $oRequest->user()->comercio_uuid,
+                    'cliente_uuid' => $oRequest->input('cliente_id', false),
                     'default' => $oRequest->input('default', false),
                     'cargo_unico' => $oRequest->input('cargo_unico', true),
                 ], $oTarjetaCredito->toArray()));
             // Envía tarjeta a bóveda
             // Guarda resultado en base de datos
             // Formatea respuestay regresa resultado
-            return ejsend_success(['tarjeta' => $this->tarjetaResponse($oTarjeta)]);
+            return ejsend_success(['tarjeta' => new TarjetaResource($oTarjeta)]);
         } catch (\Exception $e) {
             // Define error
             if (empty($e->getCode())) {
@@ -160,8 +159,8 @@ class TarjetaController extends Controller
                 Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': Objeto no encontrado');
                 return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Objeto no encontrado.'], 404);
             } else {
-                // Regresa usuario con clientes y tokens
-                return ejsend_success(['tarjeta' => $this->tarjetaResponse($oTarjeta)]);
+                // Regresa tarjeta
+                return ejsend_success(['tarjeta' => new TarjetaResource($oTarjeta)]);
             }
         } catch (\Exception $e) {
             // Define error
@@ -195,18 +194,37 @@ class TarjetaController extends Controller
                 Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': Tarjeta no encontrada:' . $uuid);
                 return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Tarjeta no encontrada.'], 404);
             }
-            // Crea TarjetaCredito y valida
-            $oTarjetaCredito = $this->tarjetaRequest($oRequest);
+            // Define cambios
+            $aCambios = [];
+            $aCambios['direccion'] = new Direccion([
+                'pais' => $oRequest->input('direccion.pais', $oTarjeta->direccion->pais),
+                'estado' => $oRequest->input('direccion.estado', $oTarjeta->direccion->estado),
+                'ciudad' => $oRequest->input('direccion.ciudad', $oTarjeta->direccion->ciudad),
+                'municipio' => $oRequest->input('direccion.municipio', $oTarjeta->direccion->municipio ?? ''),
+                'linea1' => $oRequest->input('direccion.linea1', $oTarjeta->direccion->linea1 ?? ''),
+                'linea2' => $oRequest->input('direccion.linea2', $oTarjeta->direccion->linea2 ?? ''),
+                'linea3' => $oRequest->input('direccion.linea3', $oTarjeta->direccion->linea3 ?? ''),
+                'cp' => $oRequest->input('direccion.cp', $oTarjeta->direccion->cp ?? '0000'),
+                'longitud' => $oRequest->input('direccion.longitud', $oTarjeta->direccion->longitud ?? 0),
+                'latitud' => $oRequest->input('direccion.latitud', $oTarjeta->direccion->latitud ?? 0),
+                'referencia_1' => $oRequest->input('direccion.referencia_1', $oTarjeta->direccion->referencia_1 ?? null),
+                'referencia_2' => $oRequest->input('direccion.referencia_2', $oTarjeta->direccion->referencia_2 ?? null),
+                'telefono' => new Telefono([
+                    'tipo' => $oRequest->input('telefono.tipo', $oTarjeta->direccion->telefono->tipo ?? 'desconocido'),
+                    'codigo_pais' => $oRequest->input('telefono.codigo_pais', $oTarjeta->direccion->telefono->codigo_pais ?? 52),
+                    'prefijo' => $oRequest->input('telefono.prefijo', $oTarjeta->direccion->telefono->prefijo ?? null),
+                    'codigo_area' => $oRequest->input('telefono.codigo_area', $oTarjeta->direccion->telefono->codigo_area ?? 55),
+                    'numero' => $oRequest->input('telefono.numero', $oTarjeta->direccion->telefono->numero ?? '0000000000'),
+                    'extension' => $oRequest->input('telefono.extension', $oTarjeta->direccion->telefono->extension ?? null),
+                ]),
+            ]);
+            $oRequest->merge($aCambios);
             // Actualiza en base de datos
-            $oTarjeta->update(array_merge([
-                    'comercio_uuid' => $oRequest->user()->comercio_uuid,
-                    'default' => $oRequest->input('default', false),
-                    'cargo_unico' => $oRequest->input('cargo_unico', true),
-                ], $oTarjetaCredito->toArray()));
+            $oTarjeta->update($oRequest->all());
             // Envía tarjeta a bóveda
             // Guarda resultado en base de datos
             // Formatea respuestay regresa resultado
-            return ejsend_success(['tarjeta' => $this->tarjetaResponse($oTarjeta)]);
+            return ejsend_success(['tarjeta' => new TarjetaResource($oTarjeta)]);
         } catch (\Exception $e) {
             // Define error
             if (empty($e->getCode())) {
@@ -247,7 +265,7 @@ class TarjetaController extends Controller
             } else {
                 $oTarjeta->forceDelete();
                 // Regresa usuario con clientes y tokens
-                return ejsend_success(['tarjeta' => $this->tarjetaResponse($oTarjeta)]);
+                return ejsend_success(['tarjeta' => new TarjetaResource($oTarjeta)], 204);
             }
         } catch (\Exception $e) {
             // Define error
@@ -284,7 +302,7 @@ class TarjetaController extends Controller
                 'pais' => $oRequest->input('direccion.pais', 'MEX'),
                 'estado' => $oRequest->input('direccion.estado', 'CMX'),
                 'ciudad' => $oRequest->input('direccion.ciudad', 'CDMX'),
-                'municipio' => $oRequest->input('direccion.municipio', 'Delegación'),
+                'municipio' => $oRequest->input('direccion.municipio', ''),
                 'telefono' => new Telefono([
                     'tipo' => $oRequest->input('direccion.telefono.tipo', 'desconocido'),
                     'codigo_pais' => $oRequest->input('direccion.telefono.codigo_pais', '52'),
@@ -294,29 +312,5 @@ class TarjetaController extends Controller
                 ]),
             ]),
         ]);
-    }
-
-    /**
-     * Formato de respuesta de tarjeta
-     *
-     * @param  TarjetaCredito $oTarjeta Objeto de modelo de TarjetaCredito
-     * @return array
-     */
-    private function tarjetaResponse(Tarjeta $oTarjeta): array
-    {
-        return [
-            'token_tarjeta' => $oTarjeta->uuid,
-            'pan' => $oTarjeta->pan,
-            'iin' => $oTarjeta->iin,
-            'terminacion' => $oTarjeta->terminacion,
-            'marca' => $oTarjeta->marca,
-            'nombre' => $oTarjeta->nombre,
-            'expiracion_mes' => $oTarjeta->expiracion_mes,
-            'expiracion_anio' => $oTarjeta->expiracion_anio,
-            'direccion' => $oTarjeta->direccion,
-            'cliente_id' => $oTarjeta->cliente_uuid,
-            'default' => $oTarjeta->default,
-            'cargo_unico' => $oTarjeta->cargo_unico,
-        ];
     }
 }

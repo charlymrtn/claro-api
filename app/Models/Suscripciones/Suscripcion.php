@@ -2,10 +2,12 @@
 
 namespace App\Models\Suscripciones;
 
+use Carbon\Carbon;
 use Webpatser\Uuid\Uuid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Suscripciones\Plan;
 
 class Suscripcion extends Model
 {
@@ -51,7 +53,7 @@ class Suscripcion extends Model
      *
      * @var array
      */
-    protected $hidden = [];
+    protected $hidden = ['comercio_uuid'];
 
     /**
      * Atributos mutables a fechas.
@@ -76,12 +78,12 @@ class Suscripcion extends Model
      * Reglas de validación
      * @var array $rules Reglas de validación
      */
-    protected $rules = [
-        'comercio_uuid' => 'required|string',
-        'plan_uuid' => 'required|string',
-        'cliente_uuid' => 'required|string',
-        'metodo_pago' => 'in:Tarjeta',
-        'metodo_pago_uuid' => 'required|string',
+    public $rules = [
+        'comercio_uuid' => 'required|uuid|size:36',
+        'plan_uuid' => 'required|uuid|size:36|exists:suscripcion_plan,uuid',
+        'cliente_uuid' => 'required|uuid|size:36|exists:cliente,uuid',
+        'metodo_pago' => 'in:tarjeta',
+        'metodo_pago_uuid' => 'required|uuid|size:36|string',
         'estado' => 'in:prueba,activa,pendiente,suspendida,cancelada',
         'inicio' => 'date',
         'fin' => 'date',
@@ -129,4 +131,121 @@ class Suscripcion extends Model
      * Accessor & Mutators
      */
 
+    /**
+     * Define el inicio de la suscripcion
+     *
+     * @param Carbon $cFechaInicio
+     *
+     * @return void
+     */
+    public function setInicioAttribute(Carbon $cFechaInicio)
+    {
+        // Define datetime
+        $this->attributes['inicio'] = $cFechaInicio;
+        // Calcula fechas de periodos y estado de la suscripción
+        $this->calculaFechas();
+    }
+
+    /**
+     * Define el inicio de la suscripcion
+     *
+     * @param Carbon $cFechaInicio
+     *
+     * @return void
+     */
+    public function setPlanUuidAttribute(string $uUuid)
+    {
+        // Define plan_uuid
+        $this->attributes['plan_uuid'] = $uUuid;
+        // Calcula fechas de periodos y estado de la suscripción
+        $this->calculaFechas();
+    }
+
+    /* --------------------------------------------------------------
+     * Otros
+     */
+
+    /**
+     * Valida input con las reglas de validación del modelo
+     *
+     * @param array $aAttributes Arreglo con valores de los campos
+     *
+     * @return void
+     */
+    public function valida($aAttributes)
+    {
+        $oValidator = Validator::make($aAttributes, $this->rules);
+        if ($oValidator->fails()) {
+            throw new Exception($oValidator->errors(), 400);
+        }
+    }
+
+    /**
+     * Calcula fechas y estado de la suscripción
+     *
+     * @return void
+     */
+    public function calculaFechas()
+    {
+        // Verifica ya exista la información completa
+        if (isset($this->attributes['inicio']) && isset($this->attributes['plan_uuid'])) {
+            // Variables
+            $cNow = Carbon::now();
+            // Obtiene plan
+            $oPlan = Plan::find($this->attributes['plan_uuid']);
+            if (!empty($oPlan)) {
+                // Calcula fechas de prueba
+                $this->attributes['prueba_inicio'] = $this->attributes['inicio']->copy();
+                $this->attributes['prueba_fin'] = $this->attributes['prueba_inicio']->copy();
+                if ($oPlan->prueba_tipo_periodo == 'dia') {
+                    $this->attributes['prueba_fin']->addDays($oPlan->prueba_frecuencia);
+                } elseif ($oPlan->prueba_tipo_periodo == 'semana') {
+                    $this->attributes['prueba_fin']->addWeeks($oPlan->prueba_frecuencia);
+                } elseif ($oPlan->prueba_tipo_periodo == 'mes') {
+                    $this->attributes['prueba_fin']->addMonths($oPlan->prueba_frecuencia);
+                } elseif ($oPlan->prueba_tipo_periodo == 'anio') {
+                    $this->attributes['prueba_fin']->addYears($oPlan->prueba_frecuencia);
+                }
+                // Calcula fechas periodo
+                $this->attributes['periodo_fecha_inicio'] = $this->attributes['prueba_fin']->copy()->addDay();
+                $this->attributes['periodo_fecha_fin'] = $this->attributes['periodo_fecha_inicio']->copy();
+                if ($oPlan->tipo_periodo == 'dia') {
+                    $this->attributes['periodo_fecha_fin']->addDays($oPlan->prueba_frecuencia);
+                } elseif ($oPlan->tipo_periodo == 'semana') {
+                    $this->attributes['periodo_fecha_fin']->addWeeks($oPlan->prueba_frecuencia);
+                } elseif ($oPlan->tipo_periodo == 'mes') {
+                    $this->attributes['periodo_fecha_fin']->addMonths($oPlan->prueba_frecuencia);
+                } elseif ($oPlan->tipo_periodo == 'anio') {
+                    $this->attributes['periodo_fecha_fin']->addYears($oPlan->prueba_frecuencia);
+                }
+               // Define estado
+                if ($cNow->lt($this->attributes['prueba_fin'])) {
+                    $this->attributes['estado'] = 'prueba';
+                } else {
+                    $this->attributes['estado'] = 'activa';
+                }
+                // Calcula fecha de próximo cargo
+                if ($this->attributes['estado'] == 'prueba') {
+                    $this->attributes['fecha_proximo_cargo'] = $this->attributes['periodo_fecha_inicio']->copy();
+                } elseif ($this->attributes['estado'] == 'activa') {
+                    $this->attributes['fecha_proximo_cargo'] = $this->attributes['periodo_fecha_fin']->copy()->addDay();
+                }
+            } else {
+                $this->attributes['prueba_inicio'] = $cNow;
+                $this->attributes['prueba_fin'] = $cNow;
+                $this->attributes['estado'] = 'prueba';
+            }
+        }
+    }
+
+    /**
+     * Cancela suscripción
+     *
+     * @return void
+     */
+    public function cancela()
+    {
+        $this->attributes['estado'] = 'cancelada';
+        $this->save();
+    }
 }

@@ -37,7 +37,7 @@ class Plan extends Model
         'frecuencia', // Determina cuantas veces debe repetirse el tipo de periodo
         'tipo_periodo', // ['dia', 'semana', 'mes', 'anio']
         'max_reintentos', // 1 a 10
-        'prueba_frecuencia', // Determina cuantas veces debe repetirse el tipo de periodo
+        'prueba_frecuencia', // Determina el periodo de prueba
         'prueba_tipo_periodo', // ['dia', 'semana', 'mes', 'anio']
         'estado', // ['inactivo', 'activo']
         'puede_suscribir', // Booleano
@@ -51,7 +51,7 @@ class Plan extends Model
      *
      * @var array
      */
-    protected $hidden = [];
+    protected $hidden = ['comercio_uuid'];
 
     /**
      * Atributos mutables a fechas.
@@ -76,7 +76,7 @@ class Plan extends Model
      * Reglas de validación
      * @var array $rules Reglas de validación
      */
-    protected $rules = [
+    public $rules = [
         'comercio_uuid' => 'required|string',
         'nombre' => 'string|min:1|max:60',
         'monto' => 'numeric',
@@ -119,4 +119,19 @@ class Plan extends Model
      * Accessor & Mutators
      */
 
+    /* --------------------------------------------------------------
+     * Otros
+     */
+
+    /**
+     * Cancela plan
+     *
+     * @return void
+     */
+    public function cancela()
+    {
+        $this->attributes['estado'] = 'inactivo';
+        $this->attributes['puede_suscribir'] = false;
+        $this->save();
+    }
 }

@@ -18,13 +18,20 @@ Route::group(['namespace' => 'API\v1', 'prefix' => 'v1', 'as' => 'api.v1.'], fun
     });
 
     // API Suscripciones
-    // @todo: Cambiar permiso a: cliente-suscripciones
-    Route::group(['middleware' => ['scope:superadmin,cliente-transacciones']], function () {
+    // @todo: Quitar permiso a: cliente-transacciones
+    Route::group(['middleware' => ['scope:superadmin,cliente-transacciones,cliente-suscripciones']], function () {
         Route::apiResource('/plan', 'PlanController');
+        Route::get('/plan/{uuid}/suscripciones', 'PlanController@suscripciones')->name('plan.suscripciones');
+        Route::get('/plan/{uuid}/suscripciones/cancelar', 'PlanController@cancelarSuscripciones')->name('plan.suscripciones.cancelar');
+         Route::get('/plan/{uuid}/cancelar', 'PlanController@cancelar')->name('plan.cancelar');
+        Route::apiResource('/suscripcion', 'SuscripcionController');
     });
 
     // Clientes
-    Route::group(['middleware' => ['scope:superadmin']], function () {
+    // @todo: Agregar permiso específico (ej: cliente-clientes)
+    Route::group(['middleware' => ['scope:superadmin,cliente-transacciones']], function () {
         Route::apiResource('/cliente', 'ClienteController');
+        Route::get('/cliente/{uuid}/tarjeta', 'ClienteController@tarjetas')->name('cliente.tarjetas');
+        Route::get('/cliente/{uuid}/suscripciones', 'ClienteController@suscripciones')->name('cliente.suscripciones');
     });
 });

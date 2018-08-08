@@ -6,7 +6,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 use App\Http\Resources\v1\TarjetaResource;
 use App\Http\Resources\v1\SuscripcionResource;
 
-class ClienteResource extends JsonResource
+class PlanResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -22,12 +22,12 @@ class ClienteResource extends JsonResource
                 [
                     'created_at' => $this->created_at->toRfc3339String(),
                     'updated_at' => $this->updated_at->toRfc3339String(),
-                    'tarjetas' => TarjetaResource::collection($this->whenLoaded('tarjetas')),
                     'suscripciones' => SuscripcionResource::collection($this->whenLoaded('suscripciones')),
                 ]
             ),
             [
                 'uuid' => 'id',
+                'moneda_iso_a3' => 'moneda',
                 'created_at' => 'creacion',
                 'updated_at' => 'actualizacion'
             ]

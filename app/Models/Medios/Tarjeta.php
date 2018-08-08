@@ -56,7 +56,7 @@ class Tarjeta extends Model
      *
      * @var array
      */
-    protected $hidden = ['comercio_uuid', 'pan_hash'];
+    protected $hidden = ['comercio_uuid', 'pan_hash', 'token'];
 
     /**
      * Atributos mutables a fechas.
@@ -71,7 +71,7 @@ class Tarjeta extends Model
      * @var array
      */
     protected $casts = [
-        'direccion' => 'array',
+        'direccion' => 'object',
         'default' => 'boolean',
         'cargo_unico' => 'boolean',
     ];
@@ -121,7 +121,7 @@ class Tarjeta extends Model
      */
 
     /*
-     * Mutator direccion
+     * Mutator direccion set
      *
      * @param Direccion $oDireccion Objeto Direccion
      * @return void
@@ -130,4 +130,16 @@ class Tarjeta extends Model
     {
         $this->attributes['direccion'] = $oDireccion;
     }
+
+//    /*
+//     * Mutator direccion get
+//     *
+//     * @param array $aValue Arreglo
+//     * @return Direccion
+//     */
+//    public function getDireccionAttribute(string $sValue): Direccion
+//    {
+//        return new Direccion(json_decode($sValue, true));
+//    }
+
 }

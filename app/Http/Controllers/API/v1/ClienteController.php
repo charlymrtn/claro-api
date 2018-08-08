@@ -5,8 +5,8 @@ namespace App\Http\Controllers\API\v1;
 use Log;
 use Auth;
 use Validator;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Webpatser\Uuid\Uuid;
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
@@ -14,6 +14,8 @@ use App\Classes\Pagos\Base\Direccion;
 use App\Classes\Pagos\Base\Telefono;
 use App\Http\Resources\v1\ClienteResource;
 use App\Http\Resources\v1\ClienteCollectionResource;
+use App\Http\Resources\v1\TarjetaResource;
+use App\Http\Resources\v1\SuscripcionResource;
 
 class ClienteController extends Controller
 {
@@ -221,7 +223,7 @@ class ClienteController extends Controller
     }
 
     /**
-     * Actualiza un recurso
+     * Actualiza objeto Cliente.
      *
      * @param  \Illuminate\Http\Request  $oRequest
      * @param  string  $uuid
@@ -320,6 +322,12 @@ class ClienteController extends Controller
                 Log::error('Error on '.__METHOD__.' line '.__LINE__.': Cliente no encontrado:'.$uuid);
                 return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Objeto no encontrado.'], 404);
             }
+            // Valida borrado de cliente
+            // Busca suscripciones activas
+            if (!empty($oCliente->suscripciones) && $oCliente->suscripciones->isNotEmpty()) {
+                Log::error('Error on '.__METHOD__.' line '.__LINE__.': El cliente cuenta con suscripciones, no se puede borrar.'.$uuid);
+                return ejsend_fail(['code' => 412, 'type' => 'Cliente', 'message' => 'El cliente cuenta con suscripciones, no se puede borrar.'], 412);
+            }
             // Borra Cliente
             $oCliente->forceDelete();
             return ejsend_success(['cliente' => new ClienteResource($oCliente)], 204);
@@ -329,6 +337,91 @@ class ClienteController extends Controller
                 'code' => 500,
                 'type' => 'Sistema',
                 'message' => 'Error al borrar el recurso: '.$e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Obtiene las tarjetas del cliente
+     *
+     * @param string  $uuid
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function tarjetas($uuid): JsonResponse
+    {
+        // Muestra el recurso solicitado
+        try {
+            // Obtiene comercio_uuid del usuario de la petición
+            $sComercioUuid = Auth::user()->comercio_uuid;
+            // Valida request
+            $oValidator = Validator::make(['uuid' => $uuid], [
+                'uuid' => 'required|uuid|size:36',
+            ]);
+            if ($oValidator->fails()) {
+                return ejsend_fail([
+                    'code' => 400,
+                    'type' => 'Parámetros',
+                    'message' => 'Error en parámetros de entrada.',
+                ], 400, ['errors' => $oValidator->errors()]);
+            }
+            // Busca cliente
+            $oCliente = new ClienteResource($this->mCliente->with('tarjetas')->where('comercio_uuid', '=', $sComercioUuid)->find($uuid));
+            if ($oCliente == null) {
+                Log::error('Error on '.__METHOD__.' line '.__LINE__.': Cliente no encontrado:'.$uuid);
+                return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Cliente no encontrado.'], 404);
+            }
+            // Regresa tarjetas del cliente
+            #return ejsend_success(['tarjetas' => new TarjetaCollectionResource($oCliente->tarjetas)]);
+            return ejsend_success(['tarjetas' => TarjetaResource::collection($oCliente->tarjetas)]);
+        } catch (\Exception $e) {
+            // Registra error
+            Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
+            return ejsend_error([
+                'code' => 500,
+                'type' => 'Sistema',
+                'message' => 'Error al obtener el recurso: '.$e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Obtiene las suscripciones del cliente
+     *
+     * @param string  $uuid
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function suscripciones($uuid): JsonResponse
+    {
+        // Muestra el recurso solicitado
+        try {
+            // Obtiene comercio_uuid del usuario de la petición
+            $sComercioUuid = Auth::user()->comercio_uuid;
+            // Valida request
+            $oValidator = Validator::make(['uuid' => $uuid], [
+                'uuid' => 'required|uuid|size:36',
+            ]);
+            if ($oValidator->fails()) {
+                return ejsend_fail([
+                    'code' => 400,
+                    'type' => 'Parámetros',
+                    'message' => 'Error en parámetros de entrada.',
+                ], 400, ['errors' => $oValidator->errors()]);
+            }
+            // Busca cliente
+            $oCliente = new ClienteResource($this->mCliente->with('suscripciones')->where('comercio_uuid', '=', $sComercioUuid)->find($uuid));
+            if ($oCliente == null) {
+                Log::error('Error on '.__METHOD__.' line '.__LINE__.': Cliente no encontrado:'.$uuid);
+                return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Cliente no encontrado.'], 404);
+            }
+            // Regresa suscripciones del cliente
+            return ejsend_success(['suscripciones' => SuscripcionResource::collection($oCliente->suscripciones)]);
+        } catch (\Exception $e) {
+            // Registra error
+            Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
+            return ejsend_error([
+                'code' => 500,
+                'type' => 'Sistema',
+                'message' => 'Error al obtener el recurso: '.$e->getMessage(),
             ]);
         }
     }
