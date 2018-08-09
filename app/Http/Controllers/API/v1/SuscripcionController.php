@@ -123,8 +123,13 @@ class SuscripcionController extends Controller
                 'plan_uuid' => $oRequest->input('plan_id'),
                 'cliente_uuid' => $oRequest->input('cliente_id'),
                 'metodo_pago_uuid' => $oRequest->input('token'),
-                'inicio' => Carbon::parse($oRequest->input('inicio', 'now')),
             ]);
+            // Parsea fechas
+            foreach (['inicio', 'fin', 'prueba_inicio', 'prueba_fin', 'periodo_fecha_inicio', 'periodo_fecha_fin', 'fecha_proximo_cargo'] as $sCampoDate) {
+                if (!empty($oRequest->input($sCampoDate))) {
+                    $oRequest->merge([$sCampoDate => Carbon::parse($oRequest->input($sCampoDate))]);
+                }
+            }
             // Valida campos
             $oValidator = Validator::make($oRequest->all(), $this->mSuscripcion->rules);
             if ($oValidator->fails()) {
@@ -248,6 +253,12 @@ class SuscripcionController extends Controller
             $oRequest->merge([
                 'metodo_pago_uuid' => $oRequest->input('token'),
             ]);
+            // Parsea fechas
+            foreach (['inicio', 'fin', 'prueba_inicio', 'prueba_fin', 'periodo_fecha_inicio', 'periodo_fecha_fin', 'fecha_proximo_cargo'] as $sCampoDate) {
+                if (!empty($oRequest->input($sCampoDate))) {
+                    $oRequest->merge([$sCampoDate => Carbon::parse($oRequest->input($sCampoDate))]);
+                }
+            }
             // Filtra campos aceptados para actualización
             $aCambios = array_only($oRequest->all(), ['metodo_pago', 'metodo_pago_uuid', 'estado']);
             // Valida campos
@@ -312,6 +323,8 @@ class SuscripcionController extends Controller
                 Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': Suscripción no encontrada:' . $uuid);
                 return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Suscripción no encontrada.'], 404);
             }
+            // Cancela suscripción
+            $oSuscripcion->cancela();
             // Regresa suscripcion
             return ejsend_success(['suscripcion' => $oSuscripcion]);
         } catch (\Exception $e) {

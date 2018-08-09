@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\v1;
 use Log;
 use Auth;
 use Validator;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Webpatser\Uuid\Uuid;
@@ -117,8 +118,11 @@ class ClienteController extends Controller
                 'estado' => $oRequest->input('estado', 'activo'),
                 'id_externo' => $oRequest->input('id_externo', $oRequest->input('email')),
             ]);
-            if (!empty($oRequest->input('creacion'))) {
-                $oRequest->merge(['creacion_externa' => $oRequest->input('creacion')]);
+            // Parsea fechas
+            foreach (['creacion_externa', 'nacimiento'] as $sCampoDate) {
+                if (!empty($oRequest->input($sCampoDate))) {
+                    $oRequest->merge([$sCampoDate => Carbon::parse($oRequest->input($sCampoDate))]);
+                }
             }
             // Valida campos
             $oValidator = Validator::make($oRequest->all(), $this->mCliente->rules);
@@ -283,6 +287,12 @@ class ClienteController extends Controller
                 'referencia_2' => $oRequest->input('direccion.referencia_2', ''),
             ]);
             $oRequest->merge($aCambios);
+            // Parsea fechas
+            foreach (['creacion_externa', 'nacimiento'] as $sCampoDate) {
+                if (!empty($oRequest->input($sCampoDate))) {
+                    $oRequest->merge([$sCampoDate => Carbon::parse($oRequest->input($sCampoDate))]);
+                }
+            }
             // Actualiza cliente
             $oCliente->update($oRequest->all());
             return ejsend_success(['cliente' => new ClienteResource($oCliente)]);

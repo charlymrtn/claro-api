@@ -126,6 +126,9 @@ class PlanController extends Controller
                 'puede_suscribir' => true,
                 'moneda_iso_a3' => $oRequest->input('moneda', 'MXN'),
                 'nombre' => $oRequest->input('nombre', 'Plan ' . str_random(5)),
+                'max_reintentos' => $oRequest->input('max_reintentos', 3),
+                'prueba_frecuencia' => $oRequest->input('prueba_frecuencia', 1),
+                'prueba_tipo_periodo' => $oRequest->input('prueba_tipo_periodo', 'mes'),
             ]);
             // Valida campos
             $oValidator = Validator::make($oRequest->all(), $this->mPlan->rules);
@@ -218,7 +221,7 @@ class PlanController extends Controller
                 'nombre' => $oRequest->input('nombre', 'Plan ' . str_random(5)),
             ]);
             // Filtra campos aceptados para actualización
-            $aCambios = array_only($oRequest->all(), ['nombre', 'monto', 'frecuencia', 'tipo_periodo', 'max_reintentos', 'estado', 'puede_suscribir', 'prueba_frecuencia', 'prueba_tipo_periodo']);
+            $aCambios = array_only(array_merge($oPlan->toArray(), $oRequest->all()), ['nombre', 'monto', 'frecuencia', 'tipo_periodo', 'max_reintentos', 'estado', 'puede_suscribir', 'prueba_frecuencia', 'prueba_tipo_periodo']);
             // Valida campos
             $oValidator = Validator::make($aCambios, [
                 'nombre' => $this->mPlan->rules['nombre'],

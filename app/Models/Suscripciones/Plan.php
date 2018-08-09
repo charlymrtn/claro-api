@@ -79,15 +79,15 @@ class Plan extends Model
     public $rules = [
         'comercio_uuid' => 'required|string',
         'nombre' => 'string|min:1|max:60',
-        'monto' => 'numeric',
-        'frecuencia' => 'integer',
-        'tipo_periodo' => 'in:dia,semana,mes,anio',
+        'monto' => 'required|numeric',
+        'frecuencia' => 'required|integer',
+        'tipo_periodo' => 'required|in:dia,semana,mes,anio',
         'max_reintentos' => 'integer|min:0|max:10',
         'prueba_frecuencia' => 'integer',
         'prueba_tipo_periodo' => 'in:dia,semana,mes,anio',
         'estado' => 'in:inactivo,activo',
         'puede_suscribir' => 'boolean',
-        'moneda_iso_a3' => 'string|size:3',
+        'moneda_iso_a3' => 'required|string|size:3',
     ];
 
     /** --------------------------------------------------------------
