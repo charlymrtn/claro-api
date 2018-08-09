@@ -43,58 +43,56 @@ class TarjetaController extends Controller
      */
     public function index(Request $oRequest): JsonResponse
     {
-        return ejsend_fail(['code' => 405, 'type' => 'General', 'message' => 'Método no implementado o no permitido para este recurso.'], 405);
-// Comentado por definición
-//        // Regresa los registros de tarjeta paginados
-//        try {
-//            // Verifica las variables para despliegue de datos
-//            $oValidator = Validator::make($oRequest->all(), [
-//                // Datos de filtros
-//                'filtro' => 'max:100',
-//                // Datos de la paginación
-//                'registros_por_pagina' => 'numeric|between:5,100',
-//                'pagina' => 'numeric|between:1,3',
-//                'ordenar_por' => 'max:30|in:uuid,nombre,marca,comercio_uuid,cliente_uuid,iin,pan,terminacion,created_at,updated_at,deleted_at',
-//                'orden' => 'in:asc,desc',
-//            ]);
-//            if ($oValidator->fails()) {
-//                return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
-//            }
-//            // Obtiene usuario del request
-//            $oUser = Auth::user();
-//            // Filtro
-//            $sFiltro = $oRequest->input('filtro', false);
-//            // Busca tarjeta
-//            $aTarjeta = new TarjetaCollectionResource($this->mTarjeta
-//                ->where('comercio_uuid', $oUser->comercio_uuid)
-//                ->where(
-//                    function ($q) use ($sFiltro) {
-//                        if ($sFiltro !== false) {
-//                            return $q
-//                                ->orWhere('uuid', 'like', "%$sFiltro%")
-//                                ->orWhere('nombre', 'like', "%$sFiltro%")
-//                                ->orWhere('marca', 'like', "%$sFiltro%")
-//                                ->orWhere('comercio_uuid', 'like', "%$sFiltro%")
-//                                ->orWhere('cliente_uuid', 'like', "%$sFiltro%")
-//                                ->orWhere('pan', 'like', "%$sFiltro%");
-//                        }
-//                    }
-//                )
-//                ->orderBy($oRequest->input('ordenar_por', 'created_at'), $oRequest->input('orden', 'desc'))
-//                ->paginate((int) $oRequest->input('registros_por_pagina', 25)));
-//            // Envía datos paginados
-//            return ejsend_success(["tarjetas" => $aTarjeta]);
-//        } catch (\Exception $e) {
-//            // Define error
-//            if (empty($e->getCode())) {
-//                $sCode = 400; $sErrorType = 'Parámetros';
-//            } else {
-//                $sCode = (int) $e->getCode(); $sErrorType = 'Sistema';
-//            }
-//            // Registra error
-//            Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
-//            return ejsend_error(['code' => $sCode, 'type' => $sErrorType, 'message' => 'Error al obtener el recurso: ' . $e->getMessage()]);
-//        }
+        // Regresa los registros de tarjeta paginados
+        try {
+            // Verifica las variables para despliegue de datos
+            $oValidator = Validator::make($oRequest->all(), [
+                // Datos de filtros
+                'filtro' => 'max:100',
+                // Datos de la paginación
+                'registros_por_pagina' => 'numeric|between:5,100',
+                'pagina' => 'numeric|between:1,3',
+                'ordenar_por' => 'max:30|in:uuid,nombre,marca,comercio_uuid,cliente_uuid,iin,pan,terminacion,created_at,updated_at,deleted_at',
+                'orden' => 'in:asc,desc',
+            ]);
+            if ($oValidator->fails()) {
+                return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
+            }
+            // Obtiene usuario del request
+            $oUser = Auth::user();
+            // Filtro
+            $sFiltro = $oRequest->input('filtro', false);
+            // Busca tarjeta
+            $aTarjeta = new TarjetaCollectionResource($this->mTarjeta
+                ->where('comercio_uuid', $oUser->comercio_uuid)
+                ->where(
+                    function ($q) use ($sFiltro) {
+                        if ($sFiltro !== false) {
+                            return $q
+                                ->orWhere('uuid', 'like', "%$sFiltro%")
+                                ->orWhere('nombre', 'like', "%$sFiltro%")
+                                ->orWhere('marca', 'like', "%$sFiltro%")
+                                ->orWhere('comercio_uuid', 'like', "%$sFiltro%")
+                                ->orWhere('cliente_uuid', 'like', "%$sFiltro%")
+                                ->orWhere('pan', 'like', "%$sFiltro%");
+                        }
+                    }
+                )
+                ->orderBy($oRequest->input('ordenar_por', 'created_at'), $oRequest->input('orden', 'desc'))
+                ->paginate((int) $oRequest->input('registros_por_pagina', 25)));
+            // Envía datos paginados
+            return ejsend_success(["tarjetas" => $aTarjeta]);
+        } catch (\Exception $e) {
+            // Define error
+            if (empty($e->getCode())) {
+                $sCode = 400; $sErrorType = 'Parámetros';
+            } else {
+                $sCode = (int) $e->getCode(); $sErrorType = 'Sistema';
+            }
+            // Registra error
+            Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
+            return ejsend_error(['code' => $sCode, 'type' => $sErrorType, 'message' => 'Error al obtener el recurso: ' . $e->getMessage()]);
+        }
     }
 
     /**
