@@ -144,19 +144,19 @@ class SuscripcionController extends Controller
             $oPlan = $this->mPlan->find($oRequest->input('plan_uuid'));
             if (!$oPlan->puede_suscribir) {
                 Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': El plan proporcionado no permite suscripciones.');
-                return ejsend_fail(['code' => 409, 'type' => 'Suscripción', 'message' => 'El plan proporcionado no permite suscripciones.'], 409);
+                return ejsend_fail(['code' => 412, 'type' => 'Suscripción', 'message' => 'El plan proporcionado no permite suscripciones.'], 412);
             }
             if ($oPlan->estado == 'inactivo') {
                 Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': El plan proporcionado se encuentra inactivo.');
-                return ejsend_fail(['code' => 409, 'type' => 'Suscripción', 'message' => 'El plan proporcionado se encuentra inactivo.'], 409);
+                return ejsend_fail(['code' => 412, 'type' => 'Suscripción', 'message' => 'El plan proporcionado se encuentra inactivo.'], 412);
             }
             // Valida método de pago existente si es proporcionado
             if ($oRequest->input('metodo_pago') == 'tarjeta' && !empty($oRequest->input('token'))) {
                 $oTarjeta = $this->mTarjeta->find($oRequest->input('token'));
                 if ($oTarjeta == null) {
-                    return ejsend_fail(['code' => 409, 'type' => 'Parámetros', 'message' => 'La tarjeta proporcionada no existe.']);
+                    return ejsend_fail(['code' => 409, 'type' => 'Parámetros', 'message' => 'La tarjeta proporcionada no existe.'], 409);
                 } elseif ($oTarjeta->cliente_uuid != $oRequest->input('cliente_uuid')) {
-                    return ejsend_fail(['code' => 409, 'type' => 'Parámetros', 'message' => 'La tarjeta proporcionada no corresponde al cliente proporcionado.']);
+                    return ejsend_fail(['code' => 409, 'type' => 'Parámetros', 'message' => 'La tarjeta proporcionada no corresponde al cliente proporcionado.'], 409);
                 }
             }
             // Crea objeto

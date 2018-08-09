@@ -125,6 +125,7 @@ class PlanController extends Controller
                 'estado' => 'activo',
                 'puede_suscribir' => true,
                 'moneda_iso_a3' => $oRequest->input('moneda', 'MXN'),
+                'nombre' => $oRequest->input('nombre', 'Plan ' . str_random(5)),
             ]);
             // Valida campos
             $oValidator = Validator::make($oRequest->all(), $this->mPlan->rules);
@@ -212,6 +213,10 @@ class PlanController extends Controller
                 Log::error('Error on '.__METHOD__.' line '.__LINE__.': Suscripción no encontrada:'.$uuid);
                 return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Objeto no encontrado.'], 404);
             }
+            // Define valores antes de validación
+            $oRequest->merge([
+                'nombre' => $oRequest->input('nombre', 'Plan ' . str_random(5)),
+            ]);
             // Filtra campos aceptados para actualización
             $aCambios = array_only($oRequest->all(), ['nombre', 'monto', 'frecuencia', 'tipo_periodo', 'max_reintentos', 'estado', 'puede_suscribir', 'prueba_frecuencia', 'prueba_tipo_periodo']);
             // Valida campos
@@ -372,7 +377,7 @@ class PlanController extends Controller
             ])->whereIn('estado', ['prueba', 'activa', 'pendiente'])->get();
             if ($oSuscripcionesActivas->isNotEmpty()) {
                 Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': No se puede cancelar el plan ya que tiene suscripciones activas, en prueba o pendientes: ' . $uuid);
-                return ejsend_fail(['code' => 409, 'type' => 'Plan', 'message' => 'No se puede cancelar el plan ya que tiene suscripciones activas, en prueba o pendientes.'], 409);
+                return ejsend_fail(['code' => 412, 'type' => 'Plan', 'message' => 'No se puede cancelar el plan ya que tiene suscripciones activas, en prueba o pendientes.'], 412);
             } else {
                 $oPlan->cancela();
             }
