@@ -33,8 +33,9 @@ if (!function_exists("ejsend_success")) {
 // Required keys: status, data
 if (!function_exists("ejsend_error")) {
     /**
-     * @param $data
+     * @param $error
      * @param int $status HTTP status code
+     * @param $data
      * @param array $extraHeaders
      *
      * @return \Illuminate\Contracts\Routing\ResponseFactory|\Symfony\Component\HttpFoundation\Response
@@ -60,8 +61,9 @@ if (!function_exists("ejsend_error")) {
 // Required keys: status, message   Optional keys: code, data
 if (!function_exists("ejsend_fail")) {
     /**
-     * @param $data
+     * @param $error
      * @param int $status HTTP status code
+     * @param $data
      * @param array $extraHeaders
      *
      * @return \Illuminate\Contracts\Routing\ResponseFactory|\Symfony\Component\HttpFoundation\Response
@@ -85,6 +87,41 @@ if (!function_exists("ejsend_fail")) {
     }
 }
 
+// Extended JSend error from exception
+if (!function_exists("ejsend_exception")) {
+    /**
+     * @param int $status HTTP status code
+     * @param string $sMensaje Mensaje de error general.
+     * @param array $aErrores Arreglo de errores.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    function ejsend_exception(\Exception $e, $sMensaje = '', $aErrores = [])
+    {
+        // Define error
+        $sCode = (int) $e->getCode();
+        $sErrorType = 'General';
+        if (empty($sCode)) {
+            $sCode = 500; $sErrorType = 'Sistema';
+        } elseif ($sCode >= 300 && $sCode <= 399) {
+            $sErrorType = 'Redirección';
+        } elseif ($sCode >= 400 && $sCode <= 499) {
+            $sErrorType = 'Petición';
+        } elseif ($sCode >= 500 && $sCode <= 599) {
+            $sErrorType = 'Sistema';
+        }
+        // Define mensaje de error
+        if (empty($sMensaje)) {
+            $sMensaje = $e->getMessage();
+        }
+        // Define arreglo de errores
+        if (empty($aErrores)) {
+            $aErrores = [$sErrorType => $e->getMessage()];
+        }
+        // Regresa jsend de error
+        return ejsend_error(['code' => $sCode, 'type' => $sErrorType, 'message' => $sMensaje], $sCode, ['errors' => $aErrores]);
+    }
+}
 
 // Array replace keys
 if (!function_exists("array_replace_keys")) {
@@ -111,5 +148,27 @@ if (!function_exists("array_replace_keys")) {
             }
         }
         return $aNew;
+    }
+}
+
+// Json request structure validation
+if (!function_exists("validate_json")) {
+    /**
+     * Validate a json string structure
+     *
+     * @param  string   $sJson
+     * @param  bool     $bThrowExceptions
+     *
+     * @return bool
+     */
+    function validate_json(string $sJson, bool $bThrowExceptions = true): bool
+    {
+        if (!empty($sJson) && empty(json_decode($sJson))) {
+            if ($bThrowExceptions) {
+                throw new \Exception('Estructura JSON inválida.', 400);
+            }
+            return false;
+        }
+        return true;
     }
 }

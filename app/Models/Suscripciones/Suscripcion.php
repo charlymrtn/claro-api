@@ -83,7 +83,7 @@ class Suscripcion extends Model
         'plan_uuid' => 'required|uuid|size:36|exists:suscripcion_plan,uuid',
         'cliente_uuid' => 'required|uuid|size:36|exists:cliente,uuid',
         'metodo_pago' => 'in:tarjeta',
-        'metodo_pago_uuid' => 'required|uuid|size:36|string',
+        'metodo_pago_uuid' => 'required_with:metodo_pago|uuid|size:36|string',
         'estado' => 'in:prueba,activa,pendiente,suspendida,cancelada',
         'inicio' => 'date',
         'fin' => 'date',

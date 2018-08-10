@@ -9,14 +9,14 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Carbon\Carbon;
 use Webpatser\Uuid\Uuid;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\ApiController;
 use App\Models\Suscripciones\Plan;
 use App\Models\Suscripciones\Suscripcion;
 use App\Http\Resources\v1\SuscripcionResource;
 use App\Http\Resources\v1\SuscripcionCollectionResource;
 use App\Models\Medios\Tarjeta;
 
-class SuscripcionController extends Controller
+class SuscripcionController extends ApiController
 {
 
     /**
@@ -100,7 +100,7 @@ class SuscripcionController extends Controller
             return ejsend_success(['suscripciones' => $cSuscripcion]);
         } catch (\Exception $e) {
             Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
-            return ejsend_error(['code' => 500, 'type' => 'Sistema', 'message' => 'Error al obtener el recurso: ' . $e->getMessage()]);
+            return ejsend_exception($e, 'Error al mostrar los recursos: ' . $e->getMessage());
         }
     }
 
@@ -114,6 +114,8 @@ class SuscripcionController extends Controller
     {
         // Guarda suscripcion
         try {
+            // Valida estructura del request
+            $this->validateJson($oRequest->getContent());
             // Obtiene comercio_uuid del token del usuario de la petición
             $sComercioUuid = $oRequest->user()->comercio_uuid;
             // Define valores por default antes de validación
@@ -123,13 +125,10 @@ class SuscripcionController extends Controller
                 'plan_uuid' => $oRequest->input('plan_id'),
                 'cliente_uuid' => $oRequest->input('cliente_id'),
                 'metodo_pago_uuid' => $oRequest->input('token'),
+                'inicio' => $oRequest->input('inicio', 'now'),
             ]);
             // Parsea fechas
-            foreach (['inicio', 'fin', 'prueba_inicio', 'prueba_fin', 'periodo_fecha_inicio', 'periodo_fecha_fin', 'fecha_proximo_cargo'] as $sCampoDate) {
-                if (!empty($oRequest->input($sCampoDate))) {
-                    $oRequest->merge([$sCampoDate => Carbon::parse($oRequest->input($sCampoDate))]);
-                }
-            }
+            $oRequest->merge($this->parseRequestDates($oRequest, ['inicio', 'fin', 'prueba_inicio', 'prueba_fin', 'periodo_fecha_inicio', 'periodo_fecha_fin', 'fecha_proximo_cargo']));
             // Valida campos
             $oValidator = Validator::make($oRequest->all(), $this->mSuscripcion->rules);
             if ($oValidator->fails()) {
@@ -169,12 +168,9 @@ class SuscripcionController extends Controller
             // Regresa resultados
             return ejsend_success(['suscripcion' => $oSuscripcion]);
         } catch (\Exception $e) {
-            Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
-            return ejsend_error([
-                'code' => 500,
-                'type' => 'Sistema',
-                'message' => 'Error al crear el recurso: '.$e->getMessage(),
-            ]);
+            // Registra error
+            Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
+            return ejsend_exception($e, 'Error al crear el recurso: ' . $e->getMessage());
         }
     }
 
@@ -212,18 +208,14 @@ class SuscripcionController extends Controller
         } catch (\Exception $e) {
             // Registra error
             Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
-            return ejsend_error([
-                'code' => 500,
-                'type' => 'Sistema',
-                'message' => 'Error al obtener el recurso: '.$e->getMessage(),
-            ]);
+            return ejsend_exception($e, 'Error al mostrar el recurso: ' . $e->getMessage());
         }
     }
 
     /**
      * Actualizar objeto Suscripción.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Http\Request $oRequest
      * @param  string $uuid
      * @return \Illuminate\Http\JsonResponse
      */
@@ -233,16 +225,14 @@ class SuscripcionController extends Controller
             // Obtiene comercio_uuid del token del usuario de la petición
             $sComercioUuid = $oRequest->user()->comercio_uuid;
             // Valida uuid
-            $oValidator = Validator::make(['uuid' => $uuid], [
+            $oIdValidator = Validator::make(['uuid' => $uuid], [
                 'uuid' => 'required|uuid|size:36',
             ]);
-            if ($oValidator->fails()) {
-                return ejsend_fail([
-                    'code' => 400,
-                    'type' => 'Parámetros',
-                    'message' => 'Error en parámetros de entrada.',
-                ], 400, ['errors' => $oValidator->errors()]);
+            if ($oIdValidator->fails()) {
+                return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oIdValidator->errors()]);
             }
+            // Valida estructura del request
+            $this->validateJson($oRequest->getContent());
             // Busca suscripción
             $oSuscripcion = $this->mSuscripcion->where('comercio_uuid', '=', $sComercioUuid)->find($uuid);
             if ($oSuscripcion == null) {
@@ -254,11 +244,7 @@ class SuscripcionController extends Controller
                 'metodo_pago_uuid' => $oRequest->input('token'),
             ]);
             // Parsea fechas
-            foreach (['inicio', 'fin', 'prueba_inicio', 'prueba_fin', 'periodo_fecha_inicio', 'periodo_fecha_fin', 'fecha_proximo_cargo'] as $sCampoDate) {
-                if (!empty($oRequest->input($sCampoDate))) {
-                    $oRequest->merge([$sCampoDate => Carbon::parse($oRequest->input($sCampoDate))]);
-                }
-            }
+            $oRequest->merge($this->parseRequestDates($oRequest, ['inicio', 'fin', 'prueba_inicio', 'prueba_fin', 'periodo_fecha_inicio', 'periodo_fecha_fin', 'fecha_proximo_cargo']));
             // Filtra campos aceptados para actualización
             $aCambios = array_only($oRequest->all(), ['metodo_pago', 'metodo_pago_uuid', 'estado']);
             // Valida campos
@@ -275,11 +261,7 @@ class SuscripcionController extends Controller
             return ejsend_success(['suscripcion' => new SuscripcionResource($oSuscripcion)]);
         } catch (\Exception $e) {
             Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
-            return ejsend_error([
-                'code' => 500,
-                'type' => 'Sistema',
-                'message' => 'Ehe rror al actualizar el recurso: ' . $e->getMessage(),
-            ]);
+            return ejsend_exception($e, 'Error al actualizar el recurso: ' . $e->getMessage());
         }
     }
 
@@ -329,13 +311,8 @@ class SuscripcionController extends Controller
             return ejsend_success(['suscripcion' => $oSuscripcion]);
         } catch (\Exception $e) {
             // Registra error
-            Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
-            return ejsend_error([
-                'code' => 500,
-                'type' => 'Sistema',
-                'message' => 'Error al obtener el recurso: '.$e->getMessage(),
-            ]);
+            Log::error('Error en ' . __METHOD__ . ' línea ' . $e->getLine() . ':' . $e->getMessage());
+            return ejsend_exception($e, 'Error al cancelar el recurso: ' . $e->getMessage());
         }
     }
-
 }
