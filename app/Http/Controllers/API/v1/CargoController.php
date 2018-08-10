@@ -9,7 +9,7 @@ use Validator;
 use Carbon\Carbon;
 use Webpatser\Uuid\Uuid;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\ApiController;
 use App\Classes\Pagos\Parametros\PeticionCargo;
 use App\Classes\Pagos\Base\Contacto;
 use App\Classes\Pagos\Base\Pedido;
@@ -21,7 +21,7 @@ use App\Classes\Sistema\Mensaje;
 use App\Models\Medios\Tarjeta;
 use App\Models\Transaccion;
 
-class CargoController extends Controller
+class CargoController extends ApiController
 {
 
     /**

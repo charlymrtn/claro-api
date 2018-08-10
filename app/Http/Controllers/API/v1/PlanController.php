@@ -8,7 +8,7 @@ use Validator;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Webpatser\Uuid\Uuid;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\ApiController;
 use App\Models\Suscripciones\Plan;
 use App\Models\Suscripciones\Suscripcion;
 use App\Http\Resources\v1\PlanResource;
@@ -16,7 +16,7 @@ use App\Http\Resources\v1\PlanCollectionResource;
 use App\Http\Resources\v1\SuscripcionResource;
 use App\Http\Resources\v1\SuscripcionCollectionResource;
 
-class PlanController extends Controller
+class PlanController extends ApiController
 {
 
     /**
@@ -102,7 +102,7 @@ class PlanController extends Controller
             return ejsend_success(['planes' => $cPlanes]);
         } catch (\Exception $e) {
             Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
-            return ejsend_error(['code' => 500, 'type' => 'Sistema', 'message' => 'Error al obtener el recurso: ' . $e->getMessage()]);
+            return ejsend_exception($e, 'Error al mostrar los recursos: ' . $e->getMessage());
         }
     }
 
@@ -116,6 +116,8 @@ class PlanController extends Controller
     {
         // Guarda Plan
         try {
+            // Valida estructura del request
+            $this->validateJson($oRequest->getContent());
             // Obtiene comercio_uuid del token del usuario de la petición
             $sComercioUuid = $oRequest->user()->comercio_uuid;
             // Define valores por default antes de validación
@@ -141,11 +143,7 @@ class PlanController extends Controller
             return ejsend_success(['plan' => $oPlan]);
         } catch (\Exception $e) {
             Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
-            return ejsend_error([
-                'code' => 500,
-                'type' => 'Sistema',
-                'message' => 'Error al crear el recurso: '.$e->getMessage(),
-            ]);
+            return ejsend_exception($e, 'Error al crear el recurso: ' . $e->getMessage());
         }
     }
 
@@ -183,11 +181,7 @@ class PlanController extends Controller
         } catch (\Exception $e) {
             // Registra error
             Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
-            return ejsend_error([
-                'code' => 500,
-                'type' => 'Sistema',
-                'message' => 'Error al obtener el recurso: '.$e->getMessage(),
-            ]);
+            return ejsend_exception($e, 'Error al mostrar el recurso: ' . $e->getMessage());
         }
     }
 
@@ -210,6 +204,8 @@ class PlanController extends Controller
             if ($oIdValidator->fails()) {
                 return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oIdValidator->errors()]);
             }
+            // Valida estructura del request
+            $this->validateJson($oRequest->getContent());
             // Busca plan
             $oPlan = $this->mPlan->where('comercio_uuid', '=', $sComercioUuid)->find($uuid);
             if ($oPlan == null) {
@@ -242,11 +238,7 @@ class PlanController extends Controller
             return ejsend_success(['plan' => new PlanResource($oPlan)]);
         } catch (\Exception $e) {
             Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
-            return ejsend_error([
-                'code' => 500,
-                'type' => 'Sistema',
-                'message' => 'Ehe rror al actualizar el recurso: ' . $e->getMessage(),
-            ]);
+            return ejsend_exception($e, 'Error al actualizar el recurso: ' . $e->getMessage());
         }
     }
 
@@ -291,11 +283,7 @@ class PlanController extends Controller
         } catch (\Exception $e) {
             // Registra error
             Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
-            return ejsend_error([
-                'code' => 500,
-                'type' => 'Sistema',
-                'message' => 'Error al obtener el recurso: '.$e->getMessage(),
-            ]);
+            return ejsend_exception($e, 'Error al obtener los recursos: ' . $e->getMessage());
         }
     }
 
@@ -341,11 +329,7 @@ class PlanController extends Controller
         } catch (\Exception $e) {
             // Registra error
             Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
-            return ejsend_error([
-                'code' => 500,
-                'type' => 'Sistema',
-                'message' => 'Error al obtener el recurso: '.$e->getMessage(),
-            ]);
+            return ejsend_exception($e, 'Error al cancelar los recursos: ' . $e->getMessage());
         }
     }
 
@@ -389,11 +373,7 @@ class PlanController extends Controller
         } catch (\Exception $e) {
             // Registra error
             Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
-            return ejsend_error([
-                'code' => 500,
-                'type' => 'Sistema',
-                'message' => 'Error al obtener el recurso: '.$e->getMessage(),
-            ]);
+            return ejsend_exception($e, 'Error al cancelar el recurso: ' . $e->getMessage());
         }
     }
 }

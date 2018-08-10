@@ -9,7 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Webpatser\Uuid\Uuid;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\ApiController;
 use App\Models\Cliente;
 use App\Classes\Pagos\Base\Direccion;
 use App\Classes\Pagos\Base\Telefono;
@@ -18,7 +18,7 @@ use App\Http\Resources\v1\ClienteCollectionResource;
 use App\Http\Resources\v1\TarjetaResource;
 use App\Http\Resources\v1\SuscripcionResource;
 
-class ClienteController extends Controller
+class ClienteController extends ApiController
 {
     /**
      * Cliente instance.
@@ -87,15 +87,9 @@ class ClienteController extends Controller
             // Envía datos paginados
             return ejsend_success(['clientes' => $cClientes]);
         } catch (\Exception $e) {
-            // Define error
-            if (empty($e->getCode())) {
-                $sCode = 400; $sErrorType = 'Parámetros';
-            } else {
-                $sCode = (int) $e->getCode(); $sErrorType = 'Sistema';
-            }
             // Registra error
             Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
-            return ejsend_error(['code' => $sCode, 'type' => $sErrorType, 'message' => 'Error al obtener el recurso: ' . $e->getMessage()]);
+            return ejsend_exception($e, 'Error al mostrar los recursos: ' . $e->getMessage());
         }
     }
 
@@ -109,6 +103,8 @@ class ClienteController extends Controller
     {
         // Guarda cliente
         try {
+            // Valida estructura del request
+            $this->validateJson($oRequest->getContent());
             // Obtiene comercio_uuid del token del usuario de la petición
             $sComercioUuid = $oRequest->user()->comercio_uuid;
             // Define valores por default antes de validación
@@ -119,11 +115,7 @@ class ClienteController extends Controller
                 'id_externo' => $oRequest->input('id_externo', $oRequest->input('email')),
             ]);
             // Parsea fechas
-            foreach (['creacion_externa', 'nacimiento'] as $sCampoDate) {
-                if (!empty($oRequest->input($sCampoDate))) {
-                    $oRequest->merge([$sCampoDate => Carbon::parse($oRequest->input($sCampoDate))]);
-                }
-            }
+            $oRequest->merge($this->parseRequestDates($oRequest, ['creacion_externa', 'nacimiento']));
             // Valida campos
             $oValidator = Validator::make($oRequest->all(), $this->mCliente->rules);
             if ($oValidator->fails()) {
@@ -176,11 +168,7 @@ class ClienteController extends Controller
             return ejsend_success(['cliente' => $oCliente]);
         } catch (\Exception $e) {
             Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
-            return ejsend_error([
-                'code' => 500,
-                'type' => 'Sistema',
-                'message' => 'Error al crear el recurso: '.$e->getMessage(),
-            ]);
+            return ejsend_exception($e, 'Error al crear el recurso: ' . $e->getMessage());
         }
     }
 
@@ -190,7 +178,7 @@ class ClienteController extends Controller
      * @param string  $uuid
      * @return \Illuminate\Http\JsonResponse
      */
-    public function show($uuid): JsonResponse
+    public function show(string $uuid): JsonResponse
     {
         // Muestra el recurso solicitado
         try {
@@ -218,11 +206,7 @@ class ClienteController extends Controller
         } catch (\Exception $e) {
             // Registra error
             Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
-            return ejsend_error([
-                'code' => 500,
-                'type' => 'Sistema',
-                'message' => 'Error al obtener el recurso: '.$e->getMessage(),
-            ]);
+            return ejsend_exception($e, 'Error al mostrar el recurso: ' . $e->getMessage());
         }
     }
 
@@ -233,34 +217,38 @@ class ClienteController extends Controller
      * @param  string  $uuid
      * @return \Illuminate\Http\JsonResponse
      */
-    public function update(Request $oRequest, $uuid): JsonResponse
+    public function update(Request $oRequest, string $uuid): JsonResponse
     {
         try {
             // Obtiene comercio_uuid del token del usuario de la petición
             $sComercioUuid = $oRequest->user()->comercio_uuid;
-            // Define valores por default antes de validación
-            $oRequest->merge([
-                'uuid'=> $uuid,
-                'comercio_uuid'=> $sComercioUuid,
-            ]);
-            // Valida datos
-            $oValidator = Validator::make($oRequest->all(), array_merge($this->mCliente->rules, [
+            // Valida uuid
+            $oIdValidator = Validator::make(['uuid' => $uuid], [
                 'uuid' => 'required|uuid|size:36',
-                'comercio_uuid' => 'required|uuid|size:36',
-                'email' => 'email',
-            ]));
-            if ($oValidator->fails()) {
-                return ejsend_fail([
-                    'code' => 400,
-                    'type' => 'Parámetros',
-                    'message' => 'Error en parámetros de entrada.',
-                ], 400, ['errors' => $oValidator->errors()]);
+            ]);
+            if ($oIdValidator->fails()) {
+                return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oIdValidator->errors()]);
             }
+            // Valida estructura del request
+            $this->validateJson($oRequest->getContent());
             // Busca cliente
             $oCliente = $this->mCliente->where('comercio_uuid', '=', $sComercioUuid)->find($uuid);
             if ($oCliente == null) {
                 Log::error('Error on '.__METHOD__.' line '.__LINE__.': Cliente no encontrado:'.$uuid);
                 return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Objeto no encontrado.'], 404);
+            }
+            // Define valores antes de validación
+            $oRequest->merge([
+                'comercio_uuid' => $sComercioUuid,
+            ]);
+            // Parsea fechas
+            $oRequest->merge($this->parseRequestDates($oRequest, ['creacion_externa', 'nacimiento']));
+            // Valida datos
+            $oValidator = Validator::make($oRequest->all(), array_merge($this->mCliente->rules, [
+                'email' => 'email',
+            ]));
+            if ($oValidator->fails()) {
+                return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
             }
             // Modifica valores
             $aCambios = [];
@@ -287,22 +275,12 @@ class ClienteController extends Controller
                 'referencia_2' => $oRequest->input('direccion.referencia_2', ''),
             ]);
             $oRequest->merge($aCambios);
-            // Parsea fechas
-            foreach (['creacion_externa', 'nacimiento'] as $sCampoDate) {
-                if (!empty($oRequest->input($sCampoDate))) {
-                    $oRequest->merge([$sCampoDate => Carbon::parse($oRequest->input($sCampoDate))]);
-                }
-            }
             // Actualiza cliente
             $oCliente->update($oRequest->all());
             return ejsend_success(['cliente' => new ClienteResource($oCliente)]);
         } catch (\Exception $e) {
             Log::error('Error on '.__METHOD__.' line '.$e->getLine().':'.$e->getMessage());
-            return ejsend_error([
-                'code' => 500,
-                'type' => 'Sistema',
-                'message' => 'Ehe rror al actualizar el recurso: '.$e->getMessage(),
-            ]);
+            return ejsend_exception($e, 'Error al actualizar el recurso: ' . $e->getMessage());
         }
     }
 
@@ -343,11 +321,7 @@ class ClienteController extends Controller
             return ejsend_success(['cliente' => new ClienteResource($oCliente)], 204);
         } catch (\Exception $e) {
             Log::error('Error on '.__METHOD__.' line '.$e->getLine().':'.$e->getMessage());
-            return ejsend_error([
-                'code' => 500,
-                'type' => 'Sistema',
-                'message' => 'Error al borrar el recurso: '.$e->getMessage(),
-            ]);
+            return ejsend_exception($e, 'Error al borrar el recurso: ' . $e->getMessage());
         }
     }
 
@@ -386,11 +360,7 @@ class ClienteController extends Controller
         } catch (\Exception $e) {
             // Registra error
             Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
-            return ejsend_error([
-                'code' => 500,
-                'type' => 'Sistema',
-                'message' => 'Error al obtener el recurso: '.$e->getMessage(),
-            ]);
+            return ejsend_exception($e, 'Error al obtener los recursos: ' . $e->getMessage());
         }
     }
 
@@ -428,11 +398,7 @@ class ClienteController extends Controller
         } catch (\Exception $e) {
             // Registra error
             Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
-            return ejsend_error([
-                'code' => 500,
-                'type' => 'Sistema',
-                'message' => 'Error al obtener el recurso: '.$e->getMessage(),
-            ]);
+            return ejsend_exception($e, 'Error al obtener los recursos: ' . $e->getMessage());
         }
     }
 }
