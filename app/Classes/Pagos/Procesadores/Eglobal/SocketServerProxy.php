@@ -68,6 +68,31 @@ class SocketServerProxy implements MessageComponentInterface
      */
     private $aEglobalClienteErrores = [];
 
+    /*
+     * @var array $aTTag Term style tags
+     */
+    private $aTTag = [
+        // Nivel de debug
+        'reset' => "\033[0m", // Yellow
+        'alert' => "\033[01;93m", // Yellow
+        'warning' => "\033[01;93m", // Yellow
+        'emergency' => "\033[01;31m", // Red
+        'critical' => "\033[01;31m", // Red
+        'error' => "\033[01;31m", // Red
+        'notice' => "\033[01;36m", // Cyan
+        'info' => "\033[01;36m", // Cyan
+        'debug' => "", // Blank
+        // Dirección de mensaje
+        'in' => "\033[01;1m",
+        'out' => "\033[01;32m",
+        // Genéricos
+        'bold' => "\033[01;1m",
+        'red' => "\033[01;31m",
+        'yellow' => "\033[01;93m",
+        'green' => "\033[01;30m",
+        'cyan' => "\033[01;36m",
+    ];
+
     // }}}}
 
     /**
@@ -174,6 +199,9 @@ class SocketServerProxy implements MessageComponentInterface
      */
     private function conectaEglobal($iMaxIntentos = 200, $iTiempoEspera = 5): bool
     {
+//        foreach(range(0, 47) as $n) {
+//            echo "\033[01;" . $n . "m (" . $n . ") \033[01;0m" . "\n";
+//        }
         // Variables
         $iIntentos = 0;
         // Inicializa estatus
@@ -216,10 +244,14 @@ class SocketServerProxy implements MessageComponentInterface
      * Envía mensaje a eglobal.
      *
      * @param string $sMensaje Mensaje a enviar.
+     * @param string $sTrxId Transacción ID.
+     * @param string $sStan STAN
+     * @param string $sMensaje Mensaje a enviar.
+     * @param bool $bLog Loguea mensaje.
      *
      * @return boolean Verificación del envío del mensaje.
      */
-    private function enviaEglobal($from, string $sTrxId, string $sStan, string $sMensaje): bool
+    private function enviaEglobal($from, string $sTrxId, string $sStan, string $sMensaje, bool $bLog = true): bool
     {
         // Valida conexión
         if (!$this->aStats['eglobal']['conectado']) {
@@ -235,8 +267,10 @@ class SocketServerProxy implements MessageComponentInterface
                 $this->aMensajesEviados[$sStan] = ['transaccion_id' => $sTrxId, 'stan' => $sStan, 'from' => $from, 'enviado' => null];
             }
             $iMessageSize = strlen($sMensaje);
-            $this->loguea("  Enviando mensaje a eglobal (str): " . $sMensaje, 'debug');
-            $this->loguea("  Enviando mensaje a eglobal (hex): " . $this->ascii2hex($sMensaje), 'debug');
+            if ($bLog) {
+                $this->loguea("  Enviando mensaje a eglobal (str): " . $sMensaje, 'debug');
+                $this->loguea("  Enviando mensaje a eglobal (hex): " . $this->ascii2hex($sMensaje), 'debug');
+            }
             // Procesa mensaje ISO
             $iMessageBytes = fwrite($this->oEglobalCliente, $sMensaje, $iMessageSize);
             if ($iMessageBytes === false || $iMessageBytes < $iMessageSize) {
@@ -246,7 +280,9 @@ class SocketServerProxy implements MessageComponentInterface
                 $this->aStats['eglobal']['transacciones'] += 1;
                 $this->aStats['eglobal']['ultima_transaccion'] = $oNow;
                 $this->aMensajesEviados[$sStan]['enviado'] = $oNow;
-                $this->loguea("      Mensaje enviado correctamente a eglobal. (Bytes enviados: {$iMessageBytes})", 'info');
+                if ($bLog) {
+                    $this->loguea($this->aTTag['out'] . "      Mensaje enviado correctamente a eglobal." . $this->aTTag['reset'] . " (Bytes enviados: {$iMessageBytes})", 'info');
+                }
             }
             unset($iMessageSize, $iMessageBytes);
         } catch (\Exception $e) {
@@ -272,8 +308,6 @@ class SocketServerProxy implements MessageComponentInterface
                 // Obtiene mensaje de tamaño $iMensajeBytes
                 $sMensaje = stream_get_contents($this->oEglobalCliente, $iMensajeBytes);
                 // Mensaje raw
-                $this->loguea("      Respuesta recibida (str): " . $sMensaje, 'debug');
-                $this->loguea("      Respuesta recibida (hex): " . $this->ascii2hex($sMensaje), 'debug');
                 // Revisa si el mensaje es un ISO Adecuado
                 if (substr($sMensaje, 0, 3) == 'ISO') {
                     // Obtiene STAN
@@ -281,19 +315,25 @@ class SocketServerProxy implements MessageComponentInterface
                     $aRespuestaMensajeISO = $oRespuesta->procesaMensaje($sMensajeBytes . $sMensaje);
                     $sRespuestaStan = $aRespuestaMensajeISO['iso_parsed'][11];
                     if (!empty($sRespuestaStan)) {
-                        $this->loguea("      Respuesta STAN: " . $sRespuestaStan, 'debug');
                         // Envía respuesta a cliente conectado
                         if (isset($this->aMensajesEviados[$sRespuestaStan]) && isset($this->aMensajesEviados[$sRespuestaStan]['from'])) {
+                            $this->loguea($this->aTTag['in'] . "      Mensaje recibido." . $this->aTTag['reset'] . " (str): " . $sMensaje, 'debug');
+                            //$this->loguea("      Respuesta recibida (hex): " . $this->ascii2hex($sMensaje), 'debug');
+                            $this->loguea("      Respuesta STAN: " . $sRespuestaStan, 'debug');
                             $this->sendMessage($this->aMensajesEviados[$sRespuestaStan]['from'], ['conexion' => 'success', 'encoding' => 'base64', 'respuesta' => base64_encode($sMensajeBytes . $sMensaje)]);
                             // Mensaje enviado respondido, limpiando datos
                             unset($this->aMensajesEviados[$sRespuestaStan]);
                         } else {
-                            $this->loguea("      Mensaje interno descartado.", 'debug');
+                            $this->loguea("      Mensaje interno recibido y descartado.", 'debug');
                         }
                     } else {
+                        $this->loguea($this->aTTag['in'] . "      Mensaje recibido." . $this->aTTag['reset'] . " (str): " . $sMensaje, 'debug');
+                        //$this->loguea("      Respuesta recibida (hex): " . $this->ascii2hex($sMensaje), 'debug');
                         $this->loguea("      Mensaje BBVA ISO inválido.", 'error');
                     }
                 } else {
+                    $this->loguea($this->aTTag['in'] . "      Mensaje recibido." . $this->aTTag['reset'] . " (str): " . $sMensaje, 'debug');
+                    //$this->loguea("      Respuesta recibida (hex): " . $this->ascii2hex($sMensaje), 'debug');
                     $this->loguea("      Mensaje BBVA ISO inválido.", 'error');
                 }
             } else {
@@ -321,35 +361,23 @@ class SocketServerProxy implements MessageComponentInterface
         if (!in_array($this->aConfig['proxy']['verbose'], ['emergency', 'alert', 'critical', 'error', 'warning', 'notice', 'info', 'debug'])) {
             $this->aConfig['proxy']['verbose'] = 'info';
         }
-        // Variables
-        $sTTag = [
-            'reset' => "\033[0m", // Yellow
-            'alert' => "\033[01;93m", // Yellow
-            'warning' => "\033[01;93m", // Yellow
-            'emergency' => "\033[01;31m", // Red
-            'critical' => "\033[01;31m", // Red
-            'error' => "\033[01;31m", // Red
-            'notice' => "\033[01;36m", // Cyan
-            'info' => "\033[01;36m", // Cyan
-            'debug' => "", // Blank
-        ];
         // Loguea en terminal
         if ($sVerboseLevel == 'emergency' && in_array($this->aConfig['proxy']['verbose'], ['emergency'])) {
-            echo "   " . Carbon::now() . ' ' . $sTTag[$sVerboseLevel] . $sMensaje . $sTTag['reset'] . "\n";
+            echo $this->aTTag['info'] . "   " . Carbon::now() . ' ' . $this->aTTag['reset'] . $this->aTTag[$sVerboseLevel] . $sMensaje . $this->aTTag['reset'] . "\n";
         } else if ($sVerboseLevel == 'alert' && in_array($this->aConfig['proxy']['verbose'], ['emergency', 'alert'])) {
-            echo "   " . Carbon::now() . ' ' . $sTTag[$sVerboseLevel] . $sMensaje . $sTTag['reset'] . "\n";
+            echo $this->aTTag['info'] . "   " . Carbon::now() . ' ' . $this->aTTag['reset'] . $this->aTTag[$sVerboseLevel] . $sMensaje . $this->aTTag['reset'] . "\n";
         } else if ($sVerboseLevel == 'critical' && in_array($this->aConfig['proxy']['verbose'], ['emergency', 'alert', 'critical'])) {
-            echo "   " . Carbon::now() . ' ' . $sTTag[$sVerboseLevel] . $sMensaje . $sTTag['reset'] . "\n";
+            echo $this->aTTag['info'] . "   " . Carbon::now() . ' ' . $this->aTTag['reset'] . $this->aTTag[$sVerboseLevel] . $sMensaje . $this->aTTag['reset'] . "\n";
         } else if ($sVerboseLevel == 'error' && in_array($this->aConfig['proxy']['verbose'], ['emergency', 'alert', 'critical', 'error'])) {
-            echo "   " . Carbon::now() . ' ' . $sTTag[$sVerboseLevel] . $sMensaje . $sTTag['reset'] . "\n";
+            echo $this->aTTag['info'] . "   " . Carbon::now() . ' ' . $this->aTTag['reset'] . $this->aTTag[$sVerboseLevel] . $sMensaje . $this->aTTag['reset'] . "\n";
         } else if ($sVerboseLevel == 'warning' && in_array($this->aConfig['proxy']['verbose'], ['emergency', 'alert', 'critical', 'error', 'warning'])) {
-            echo "   " . Carbon::now() . ' ' . $sTTag[$sVerboseLevel] . $sMensaje . $sTTag['reset'] . "\n";
+            echo $this->aTTag['info'] . "   " . Carbon::now() . ' ' . $this->aTTag['reset'] . $this->aTTag[$sVerboseLevel] . $sMensaje . $this->aTTag['reset'] . "\n";
         } else if ($sVerboseLevel == 'notice' && in_array($this->aConfig['proxy']['verbose'], ['emergency', 'alert', 'critical', 'error', 'warning', 'notice'])) {
-            echo "   " . Carbon::now() . ' ' . $sTTag[$sVerboseLevel] . $sMensaje . $sTTag['reset'] . "\n";
+            echo $this->aTTag['info'] . "   " . Carbon::now() . ' ' . $this->aTTag['reset'] . $this->aTTag[$sVerboseLevel] . $sMensaje . $this->aTTag['reset'] . "\n";
         } else if ($sVerboseLevel == 'info' && in_array($this->aConfig['proxy']['verbose'], ['emergency', 'alert', 'critical', 'error', 'warning', 'notice', 'info'])) {
-            echo "   " . Carbon::now() . ' ' . $sTTag[$sVerboseLevel] . $sMensaje . $sTTag['reset'] . "\n";
+            echo $this->aTTag['info'] . "   " . Carbon::now() . ' ' . $this->aTTag['reset'] . $this->aTTag[$sVerboseLevel] . $sMensaje . $this->aTTag['reset'] . "\n";
         } else if ($sVerboseLevel == 'debug' && in_array($this->aConfig['proxy']['verbose'], ['emergency', 'alert', 'critical', 'error', 'warning', 'notice', 'info', 'debug'])) {
-            echo "   " . Carbon::now() . ' ' . $sTTag[$sVerboseLevel] . $sMensaje . $sTTag['reset'] . "\n";
+            echo $this->aTTag['info'] . "   " . Carbon::now() . ' ' . $this->aTTag['reset'] . $this->aTTag[$sVerboseLevel] . $sMensaje . $this->aTTag['reset'] . "\n";
         }
     }
 
@@ -485,7 +513,7 @@ class SocketServerProxy implements MessageComponentInterface
         if ($iUltimaTrx >= ($this->aConfig['keepalive'])) {
             $this->loguea("Enviando keepalive a eglobal.", 'debug');
             $oInterred = new BBVAInterred();
-            return $this->enviaEglobal(null, 0, 0, $oInterred->mensajeEcho());
+            return $this->enviaEglobal(null, 0, 0, $oInterred->mensajeEcho(), false);
         }
         // Revisa si hay mensajes en el socket
         $this->escuchaEglobal();

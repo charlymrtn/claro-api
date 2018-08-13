@@ -89,12 +89,25 @@ class Handler extends ExceptionHandler
      * Convert an authentication exception into an unauthenticated response.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \Illuminate\Auth\MethodNotAllowedHttpException  $exception
+     * @param  \Symfony\Component\HttpKernel\Exception\NotFoundHttpException  $exception
      * @return \Illuminate\Http\JsonResponse
      */
     protected function notfound($request, NotFoundHttpException $exception): JsonResponse
     {
         // API sólo responde con JSONs
         return ejsend_error(['code' => 404, 'type' => 'Sistema', 'message' => 'Contexto no encontrado: ' . $exception->getMessage()], 404);
+    }
+
+    /**
+     * Convert an authentication exception into an unauthenticated response.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException  $exception
+     * @return \Illuminate\Http\JsonResponse
+     */
+    protected function methodnotallowed($request, MethodNotAllowedHttpException $exception): JsonResponse
+    {
+        // API sólo responde con JSONs
+        return ejsend_error(['code' => 405, 'type' => 'Sistema', 'message' => 'Método no permitido: ' . $exception->getMessage()], 405);
     }
 }
