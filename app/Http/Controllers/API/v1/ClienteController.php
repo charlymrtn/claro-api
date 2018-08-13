@@ -152,7 +152,7 @@ class ClienteController extends ApiController
                 ->where('email', '=', $oRequest->input('email'))
                 ->first();
             if (!empty($oClienteExistenteEmail)) {
-                return ejsend_fail(['code' => 409, 'type' => 'Parámetros', 'message' => 'Error al crear el recurso: Cliente existente con el mismo email (' . $oCliente->uuid . ')'], 409);
+                return ejsend_fail(['code' => 409, 'type' => 'Parámetros', 'message' => 'Error al crear el recurso: Cliente existente con el mismo email (' . $oClienteExistenteEmail->uuid . ')'], 409);
             }
             // Valida cliente creado anteriormente con mismo id_externo
             $oClienteExistenteId = $this->mCliente
@@ -160,7 +160,7 @@ class ClienteController extends ApiController
                 ->where('id_externo', '=', $oRequest->input('id_externo'))
                 ->first();
             if (!empty($oClienteExistenteId)) {
-                return ejsend_fail(['code' => 409, 'type' => 'Parámetros', 'message' => 'Error al crear el recurso: Cliente existente con el mismo id_externo (' . $oCliente->uuid . ')'], 409);
+                return ejsend_fail(['code' => 409, 'type' => 'Parámetros', 'message' => 'Error al crear el recurso: Cliente existente con el mismo id_externo (' . $oClienteExistenteId->uuid . ')'], 409);
             }
             // Crea objeto
             $oCliente = new ClienteResource($this->mCliente->create($oRequest->all()));
