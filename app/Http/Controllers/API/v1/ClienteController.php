@@ -147,19 +147,19 @@ class ClienteController extends ApiController
             ]);
             $oRequest->merge($aCambios);
             // Valida cliente creado anteriormente con mismo email
-            $oCliente = $this->mCliente
+            $oClienteExistenteEmail = $this->mCliente
                 ->where('comercio_uuid', '=', $sComercioUuid)
                 ->where('email', '=', $oRequest->input('email'))
                 ->first();
-            if (!empty($oCliente)) {
+            if (!empty($oClienteExistenteEmail)) {
                 return ejsend_fail(['code' => 409, 'type' => 'Parámetros', 'message' => 'Error al crear el recurso: Cliente existente con el mismo email (' . $oCliente->uuid . ')'], 409);
             }
             // Valida cliente creado anteriormente con mismo id_externo
-            $oCliente = $this->mCliente
+            $oClienteExistenteId = $this->mCliente
                 ->where('comercio_uuid', '=', $sComercioUuid)
                 ->where('id_externo', '=', $oRequest->input('id_externo'))
                 ->first();
-            if (!empty($oClienteExistente)) {
+            if (!empty($oClienteExistenteId)) {
                 return ejsend_fail(['code' => 409, 'type' => 'Parámetros', 'message' => 'Error al crear el recurso: Cliente existente con el mismo id_externo (' . $oCliente->uuid . ')'], 409);
             }
             // Crea objeto
