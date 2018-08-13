@@ -421,6 +421,597 @@ class BbvaController extends Controller
         }
         return $aPlan;
     }
+
+
+
+    /**
+     * Realiza una petición de cargo.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function cargo(Request $oRequest)
+    {
+        // ========================================================================
+        // Valida datos de entrada
+        $oValidator = Validator::make($oRequest->toArray(), [
+            'comercio_uuid' => 'required|string',
+            'descripcion' => 'max:250',
+            'prueba' => 'boolean',
+            'monto' => 'required',
+            // TARJETA 'tarjeta' => 'required|array',
+                'tarjeta.pan' => 'required|numeric',
+                'tarjeta.nombre' => 'max:60',
+                'tarjeta.cvv2' => 'nullable', // 'tarjeta.cvv2' => 'required|numeric',
+                'tarjeta.expiracion_mes' => 'required|numeric',
+                'tarjeta.expiracion_anio' => 'required|numeric',
+                'tarjeta.inicio_mes' => 'numeric',
+                'tarjeta.inicio_anio' => 'numeric',
+                'tarjeta.direccion' => 'array',
+//                'tarjeta.nombres' => 'required_without:tarjeta.nombre|min:3|max:30',
+//                'tarjeta.apellido_paterno' => 'required_without:tarjeta.nombre|min:3|max:30',
+//                'tarjeta.apellido_materno' => 'required_without:tarjeta.nombre|min:3|max:30',
+            // PEDIDO 'pedido' => 'required|array',
+                'pedido.id' => 'max:48',
+                'pedido.direccion_envio' => 'array',
+                'pedido.articulos' => 'numeric',
+            // CLIENTE 'cliente' => 'required|array',
+                'cliente.id' => 'string',
+                'cliente.nombre' => 'min:3|max:30',
+                'cliente.apellido_paterno' => 'min:3|max:30',
+                'cliente.apellido_materno' => 'min:3|max:30',
+                'cliente.email' => 'email',
+                'cliente.telefono' => 'string',
+                'cliente.direccion' => 'array',
+                'cliente.creacion' => 'date',
+            // PLAN
+                'plan.plan' => 'string',
+                'plan.puntos' => 'numeric',
+                'plan.parcialidades' => 'numeric|min:0|max:48',
+                'plan.diferido' => 'numeric|min:0|max:48',
+        ]);
+        if ($oValidator->fails()) {
+            $sCode = '400';
+            Log::error('Error de validación de parámetros: ' . json_encode($oValidator->errors()));
+            return ejsend_fail(['code' => $sCode, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], $sCode, ['errors' => $oValidator->errors()]);
+        }
+
+        // ========================================================================
+        // Formatea y encapsula datos en PeticionCargo
+        try {
+            $oPeticionCargo = new PeticionCargo([
+                'comercio_uuid' => $oRequest->input('comercio_uuid'),
+                'prueba' => $oRequest->input('prueba', true),
+                'descripcion' => $oRequest->input('descripcion', ''),
+                'monto' => $oRequest->input('monto', '0.00'),
+                'tarjeta' => new TarjetaCredito([
+                    'pan' => $oRequest->input('tarjeta.pan'),
+                    'nombre' => $oRequest->input('tarjeta.nombre', 'Claro Pagos'),
+                    'cvv2' => $oRequest->input('tarjeta.cvv2'),
+                    'expiracion_mes' => $oRequest->input('tarjeta.expiracion_mes'),
+                    'expiracion_anio' => $oRequest->input('tarjeta.expiracion_anio'),
+                ]),
+                'plan' => new PlanPago([
+                    'plan' => $oRequest->input('plan.plan', 'normal'),
+                    'puntos' => $oRequest->input('plan.puntos', 0),
+                    'parcialidades' => $oRequest->input('plan.parcialidades', 0),
+                    'diferido' => $oRequest->input('plan.diferido', 0),
+                ]),
+                'pedido' => new Pedido([
+                    'id' => $oRequest->input('pedido.id', 1),
+                    'articulos' => $oRequest->input('pedido.articulos', 1),
+                    'peso' => $oRequest->input('pedido.peso', 0),
+                    'total' => $oRequest->input('pedido.total', $oRequest->input('monto', '0.00')),
+                    'direccion_envio' => new Direccion([
+                        'pais' => $oRequest->input('pedido.direccion.pais', 'MEX'),
+                        'estado' => $oRequest->input('pedido.direccion.estado', 'CMX'),
+                        'ciudad' => $oRequest->input('pedido.direccion.ciudad', 'CDMX'),
+                        'municipio' => $oRequest->input('pedido.direccion.municipio', 'Delegación'),
+                        'linea1' => $oRequest->input('pedido.direccion.linea1', ''),
+                        'linea2' => $oRequest->input('pedido.direccion.linea2', ''),
+                        'linea3' => $oRequest->input('pedido.direccion.linea3', ''),
+                        'cp' => $oRequest->input('pedido.direccion.cp', '0000'),
+                        'telefono' => new Telefono([
+                            'tipo' => $oRequest->input('pedido.direccion.telefono.tipo', 'desconocido'),
+                            'codigo_pais' => $oRequest->input('pedido.direccion.telefono.codigo_pais', '52'),
+                            'codigo_area' => $oRequest->input('pedido.direccion.telefono.codigo_area', '55'),
+                            'numero' => $oRequest->input('pedido.direccion.telefono', '0000000000'),
+                            'extension' => $oRequest->input('pedido.direccion.extension', null),
+                        ]),
+                    ]),
+                ]),
+                'direccion_cargo' => new Direccion([
+                    'pais' => $oRequest->input('pedido.direccion.pais', 'MEX'),
+                    'estado' => $oRequest->input('pedido.direccion.estado', 'CMX'),
+                    'ciudad' => $oRequest->input('pedido.direccion.ciudad', 'CDMX'),
+                    'municipio' => $oRequest->input('pedido.direccion.municipio', 'Delegación'),
+                    'linea1' => $oRequest->input('pedido.direccion.linea1', ''),
+                    'linea2' => $oRequest->input('pedido.direccion.linea2', ''),
+                    'linea3' => $oRequest->input('pedido.direccion.linea3', ''),
+                    'cp' => $oRequest->input('pedido.direccion.cp', '0000'),
+                    'telefono' => new Telefono([
+                        'tipo' => $oRequest->input('pedido.direccion.telefono.tipo', 'desconocido'),
+                        'codigo_pais' => $oRequest->input('pedido.direccion.telefono.codigo_pais', '52'),
+                        'codigo_area' => $oRequest->input('pedido.direccion.telefono.codigo_area', '55'),
+                        'numero' => $oRequest->input('pedido.direccion.telefono', '0000000000'),
+                        'extension' => $oRequest->input('pedido.direccion.extension', null),
+                    ]),
+                ]),
+                'cliente' => new Contacto([
+                    'id' => $oRequest->input('cliente.id', 0),
+                    'nombre' => $oRequest->input('cliente.nombre'),
+                    'apellido_paterno' => $oRequest->input('cliente.apellido_paterno'),
+                    'apellido_materno' => $oRequest->input('cliente.apellido_materno'),
+                    'genero' => $oRequest->input('cliente.genero', 'Desconocido'),
+                    'email' => $oRequest->input('cliente.email'),
+                    'telefono' => new Telefono([
+                        'tipo' => $oRequest->input('cliente.telefono.tipo', 'desconocido'),
+                        'codigo_pais' => $oRequest->input('cliente.telefono.codigo_pais', '52'),
+                        'codigo_area' => $oRequest->input('cliente.telefono.codigo_area', '55'),
+                        'numero' => $oRequest->input('cliente.telefono', '0000000000'),
+                        'extension' => $oRequest->input('cliente.extension', null),
+                    ]),
+                    'nacimiento' => $oRequest->input('cliente.nacimiento', null),
+                    'creacion' => $oRequest->input('cliente.creacion', null),
+                    'cliente.direccion' => new Direccion([
+                        'pais' => $oRequest->input('pedido.direccion.pais', 'MEX'),
+                        'estado' => $oRequest->input('pedido.direccion.estado', 'CMX'),
+                        'ciudad' => $oRequest->input('pedido.direccion.ciudad', 'CDMX'),
+                        'municipio' => $oRequest->input('pedido.direccion.municipio', 'Delegación'),
+                        'linea1' => $oRequest->input('pedido.direccion.linea1', ''),
+                        'linea2' => $oRequest->input('pedido.direccion.linea2', ''),
+                        'linea3' => $oRequest->input('pedido.direccion.linea3', ''),
+                        'cp' => $oRequest->input('pedido.direccion.cp', '0000'),
+                        'telefono' => new Telefono([
+                            'tipo' => $oRequest->input('pedido.direccion.telefono.tipo', 'desconocido'),
+                            'codigo_pais' => $oRequest->input('pedido.direccion.telefono.codigo_pais', '52'),
+                            'codigo_area' => $oRequest->input('pedido.direccion.telefono.codigo_area', '55'),
+                            'numero' => $oRequest->input('pedido.direccion.telefono', '0000000000'),
+                            'extension' => $oRequest->input('pedido.direccion.extension', null),
+                        ]),
+                    ]),
+                ]),
+            ]);
+        } catch (\Exception $e) {
+            if (empty($e->getCode())) {
+                $sCode = '400';
+            } else {
+                $sCode = $e->getCode();
+            }
+            Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
+            return ejsend_fail(['code' => $sCode, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], $sCode, ['errors' => $e->getMessage()]);
+        }
+
+        // ========================================================================
+        // Prepara transacción
+        $oTrx = new Transaccion([
+            'prueba' => $oPeticionCargo->prueba,
+            'operacion' => 'pago',
+            'monto' => $oPeticionCargo->monto,
+            'forma_pago' => 'tarjeta',
+            'estatus' => 'pendiente',
+            'datos_pago' => [
+                'nombre' => $oPeticionCargo->tarjeta->nombre,
+                'pan' => $oPeticionCargo->tarjeta->pan,
+                'pan_hash' => $oPeticionCargo->tarjeta->pan_hash,
+                'marca' => $oPeticionCargo->tarjeta->marca,
+            ],
+            // Comercio
+            'datos_comercio' => [
+                'pedido' => $oPeticionCargo->pedido,
+                'cliente' => $oPeticionCargo->cliente,
+            ],
+            // Claropagos
+            'datos_claropagos' => [],
+            // Eventos
+            'datos_antifraude' => [],
+            'datos_procesador' => [],
+            'datos_destino' => [],
+            // Catálogos
+            'comercio_uuid' => $oPeticionCargo->comercio_uuid,
+            'transaccion_estatus_id' => 4,
+            'pais' => 'MEX',
+            'moneda' => 'MXN',
+        ]);
+        // Guarda transacción
+        $oTrx->save();
+        $oTrx = Transaccion::find($oTrx->uuid);
+
+        // ========================================================================
+        // Prepara opciones
+        $aOpciones = [];
+
+        // Bines de puntos BBVA
+        $aBinesPuntos = ['410180', '410181', '441311', '455500', '455503', '455504', '455505', '455508', '455529', '455540', '455545', '493160', '493161', '493162', '477210', '477212', '477213', '477214', '477291', '477292', '481514', '481515', '542010', '542977', '544053', '544551', "547077", '547086', '547095', '547155', '547156', '554629', '535875', '542015', '542073'];
+        if (in_array(substr($oPeticionCargo->tarjeta->pan, 0, 6), $aBinesPuntos)) {
+            $aOpciones['tipo'] = 'puntos_compra';
+        } else {
+            $aOpciones['tipo'] = 'compra';
+        }
+
+
+        // ========================================================================
+        // Envía mensaje interred
+        $oInterredProxy = new InterredProxy();
+        $oResultado = $oInterredProxy->mensajeVenta($oPeticionCargo, $aOpciones, true, false);
+
+        if ($oRequest->input('procesador') == 'bbva_reversos_comercio') {
+            // Reversos automáticos por comercio
+            $oPeticionCargo->descripcion = 'Reverso Automático - ' . $oPeticionCargo->descripcion;
+            $aOpcionesReverso = [
+                'tipo' => 'reverso',
+                'tipo_original' => $aOpciones['tipo'] ?? 'puntos_compra',
+                'mti_original' => $oResultado->iso->getMTI(), // ?  Id de mensaje ISO de la transacción original
+                'referencia' => $oResultado->iso->getValue(37), // Campo 37
+                'autorizacion' => '      ', // Campo 38 de la respuesta
+                'fecha_original' => $oResultado->iso->getValue(13), // CAMPO 13 de la respuesta
+                'hora_original' => $oResultado->iso->getValue(12), // CAMPO 12 de la respuesta
+                'fecha_captura_original' => $oResultado->iso->getValue(17), // CAMPO 17 de la respuesta
+            ];
+            // Prepara mensaje reverso y envía
+            $oInterredProxyReverso = new InterredProxy();
+            $oResultadoReverso = $oInterredProxyReverso->mensajeReverso($oPeticionCargo, $aOpcionesReverso, true, false);
+            if (isset($oResultadoReverso->respuesta)) {
+                $aResultado['reverso'] = $oResultadoReverso->respuesta;
+            } else {
+                $aResultado['reverso'] = [
+                    'mensaje_json' => $oPeticionCargo,
+                ];
+            }
+            // Prepara mensaje reenvío de reverso y envía
+            $oResultadoReversoRet = $oInterredProxyReverso->mensajeReenvioReverso($oPeticionCargo, $aOpcionesReverso, true, false);
+            if (isset($oResultadoReversoRet->respuesta)) {
+                $aResultado['reverso_reenvio'] = $oResultadoReversoRet->respuesta;
+            }
+            $oTrx->estatus = 'cancelada';
+            $oTrx->save();
+        } else {
+            // No se recibió respuesta, envía reverso automático
+            if (!isset($oResultado->respuesta)) {
+                // Reversos automáticos por comercio
+                $oPeticionCargo->descripcion = 'Reverso Automático - ' . $oPeticionCargo->descripcion;
+                $aOpcionesReverso = [
+                    'tipo' => 'reverso',
+                    'tipo_original' => $aOpciones['tipo'] ?? 'puntos_compra',
+                    'mti_original' => $oResultado->iso->getMTI(), // ?  Id de mensaje ISO de la transacción original
+                    'referencia' => $oResultado->iso->getValue(37), // Campo 37
+                    'autorizacion' => '      ', // Campo 38 de la respuesta
+                    'fecha_original' => $oResultado->iso->getValue(13), // CAMPO 13 de la respuesta
+                    'hora_original' => $oResultado->iso->getValue(12), // CAMPO 12 de la respuesta
+                    'fecha_captura_original' => $oResultado->iso->getValue(17), // CAMPO 17 de la respuesta
+                ];
+                // Prepara mensaje reverso y envía
+                $oInterredProxyReverso = new InterredProxy();
+                $oResultadoReverso = $oInterredProxyReverso->mensajeReverso($oPeticionCargo, $aOpcionesReverso, true, false);
+                // Valida reverso automático
+                if (isset($oResultadoReverso->respuesta)) {
+                    $aResultado['reverso'] = $oResultadoReverso->respuesta;
+                } else {
+                    $aResultado['reverso'] = [
+                        'mensaje_json' => $oPeticionCargo,
+                    ];
+                    // Prepara mensaje reenvío de reverso y envía
+                    $oResultadoReversoRet = $oInterredProxyReverso->mensajeReenvioReverso($oPeticionCargo, $aOpcionesReverso, true, false);
+                    // Valida reenvio reversoss
+                    if (isset($oResultadoReversoRet->respuesta)) {
+                        $aResultado['reverso_reenvio'] = $oResultadoReversoRet->respuesta;
+                    }
+                    $oTrx->estatus = 'cancelada';
+                    $oTrx->save();
+                }
+            }
+        }
+
+
+        // Prepara resultado
+        $aResultado = [
+            'peticion' => [
+                'mensaje_json' => $oPeticionCargo,
+                'mensaje_b64' => base64_encode($oResultado->mensaje),
+                'mensaje_hex' => $oResultado->mensaje_hex,
+                'iso_mti' => $oResultado->iso->getMTI(),
+                'iso_parsed' => $oResultado->iso->getDataArray(),
+                'iso_validation' => $oResultado->iso->getIsoValidation(),
+            ],
+        ];
+        // Prepara respuesta si fue enviado el mensaje
+        $sAutorizacion = '0';
+        $bRespuesta = false;
+        if (isset($oResultado->respuesta)) {
+            $aResultado['respuesta'] = $oResultado->respuesta;
+            $bRespuesta = true;
+            $oTrx->datos_procesador = [
+                'request' => [
+                    'mti' => $oResultado->iso->getMTI(),
+                    'json' => $oPeticionCargo->toJson(),
+                    'b64' => base64_encode($oResultado->mensaje),
+                ],
+                'response' => [
+                    'b64' => $oResultado->respuesta['mensaje_b64'],
+                    'json' => $oResultado->respuesta['iso_parsed'],
+                ],
+            ];
+            if (isset($oTrx->datos_procesador['response']['json']['39']) && $oTrx->datos_procesador['response']['json']['39'] == '00') {
+                $oTrx->estatus = 'completada';
+                $sAutorizacion = $oTrx->datos_procesador['response']['json']['38'];
+            } else {
+                $oTrx->estatus = 'rechazada-banco';
+            }
+            $oTrx->save();
+        }
+
+        // ========================================================================
+        // Envía transacciones a admin y clientes
+        $oMensajeCP = new MensajeCP();
+        $oMensajeResultadoA = $oMensajeCP->envia('clientes', '/api/admin/transaccion', 'POST', $oTrx->toJson());
+        #dump($oMensajeResultadoA);
+        $oMensajeResultadoB = $oMensajeCP->envia('admin', '/api/admin/transaccion', 'POST', $oTrx->toJson());
+        #dump($oMensajeResultadoB);
+
+        // ========================================================================
+        // Regresa resultado en RespuestaCargo
+        $aRespuesta = [
+            'id' => $oTrx->uuid,
+            'monto' => $oTrx->monto,
+            'autorizacion' => $sAutorizacion,
+            'tipo' => 'cargo',
+            'fecha' => $oTrx->created_at,
+            'orden_id' => $oPeticionCargo->pedido->id,
+            'cliente_id' => $oPeticionCargo->cliente->id,
+            'estatus' => $oTrx->estatus,
+            'prueba' => $oTrx->prueba,
+            'mensaje' => $aResultado['peticion']['iso_parsed'],
+            'estatus_color' => '#DDDDDD',
+            'resultado_codigo' => 0,
+            'resultado_descripcion' => 'Ocurrió un error al procesar el cargo, no hubo respuesta del banco.',
+        ];
+        if (isset($oResultado->respuesta)) {
+            $aRespuesta['respuesta'] = $oResultado->respuesta['iso_parsed'];
+            $aRespuesta['resultado_descripcion'] = 'Pendiente';
+            if (isset($aRespuesta['respuesta'][39])) {
+                $aRespuesta['resultado_codigo'] = $aRespuesta['respuesta'][39];
+                $aRespuesta['resultado_descripcion'] = '(' . $aRespuesta['resultado_codigo'] . ') - ';
+                if ($aRespuesta['resultado_codigo'] == '00') {
+                    $aRespuesta['resultado_descripcion'] .= 'Aprobada';
+                } else if ($aRespuesta['resultado_codigo'] == '01') {
+                    $aRespuesta['resultado_descripcion'] .= 'Error en procesador de pago';
+                } else if ($aRespuesta['resultado_codigo'] == '05') {
+                    $aRespuesta['resultado_descripcion'] .= 'Rechazada';
+                } else if ($aRespuesta['resultado_codigo'] == '17') {
+                    $aRespuesta['resultado_descripcion'] .= 'Cancelación';
+                } else if ($aRespuesta['resultado_codigo'] == '45') {
+                    $aRespuesta['resultado_descripcion'] .= 'Promoción no permitida';
+                } else if ($aRespuesta['resultado_codigo'] == '46') {
+                    $aRespuesta['resultado_descripcion'] .= 'Monto inferior mínimo para promoción';
+                } else if ($aRespuesta['resultado_codigo'] == '48') {
+                    $aRespuesta['resultado_descripcion'] .= 'CV2 Requerido';
+                } else if ($aRespuesta['resultado_codigo'] == '49') {
+                    $aRespuesta['resultado_descripcion'] .= 'CV2 Inválido';
+                } else if ($aRespuesta['resultado_codigo'] == '82') {
+                    $aRespuesta['resultado_descripcion'] .= 'CVV/CVV2 incorrecto';
+                } else {
+                    $aRespuesta['resultado_descripcion'] .= 'Error desconocido';
+                }
+            }
+        }
+        $oRespuestaCargo = new RespuestaCargo($aRespuesta);
+        #dump($oTrx->toArray());
+        return $oRespuestaCargo;
+
+    }
+
+
+    public function devolucion($uuid)
+    {
+        // Busca transacción
+        $oTrx = Transaccion::find($uuid);
+
+        // Obtiene request original
+        $oRequestOriginal = json_decode($oTrx->datos_procesador['request']['json']);
+
+        // Construye petición de cargo
+        $oPeticionCargo = new PeticionCargo([
+            'id' => Uuid::generate(4)->string,
+            'comercio_uuid' => $oRequestOriginal->comercio_uuid,
+            'prueba' => $oRequestOriginal->prueba,
+            'descripcion' => 'Devolución - ' . $oRequestOriginal->descripcion,
+            'monto' => $oRequestOriginal->monto,
+            'tarjeta' => new TarjetaCredito([
+                'nombre' => $oRequestOriginal->tarjeta->nombre,
+                'pan' => substr($oTrx->datos_procesador['response']['json']['35'], 2, 16),
+                'expiracion_mes' => $oRequestOriginal->tarjeta->expiracion_mes,
+                'expiracion_anio' => $oRequestOriginal->tarjeta->expiracion_anio,
+            ]),
+            'plan' => new PlanPago([
+                'plan' => $oRequestOriginal->plan->plan,
+                'puntos' => $oRequestOriginal->plan->puntos,
+                'parcialidades' => $oRequestOriginal->plan->parcialidades,
+                'diferido' => $oRequestOriginal->plan->diferido,
+            ]),
+        ]);
+
+        // Define opciones
+        $aOpciones = [
+            'tipo' => 'devolucion',
+        ];
+
+        // ========================================================================
+        // Envía mensaje interred
+        $oInterredProxy = new InterredProxy();
+        $oResultado = $oInterredProxy->mensajeVenta($oPeticionCargo, $aOpciones, true, false);
+        $aResultado = [
+            'peticion' => [
+                'mensaje_json' => $oPeticionCargo,
+                'mensaje_b64' => base64_encode($oResultado->mensaje),
+                'mensaje_hex' => $oResultado->mensaje_hex,
+                'iso_mti' => $oResultado->iso->getMTI(),
+                'iso_parsed' => $oResultado->iso->getDataArray(),
+                'iso_validation' => $oResultado->iso->getIsoValidation(),
+            ],
+        ];
+        // Prepara respuesta si fue enviado el mensaje
+        $sAutorizacion = '0';
+        $bRespuesta = false;
+        if (isset($oResultado->respuesta)) {
+            $aResultado['respuesta'] = $oResultado->respuesta;
+            $bRespuesta = true;
+            $oTrx->datos_procesador = [
+                'request' => [
+                    'json' => $oPeticionCargo->toJson(),
+                    'b64' => base64_encode($oResultado->mensaje),
+                ],
+                'response' => [
+                    'b64' => $oResultado->respuesta['mensaje_b64'],
+                    'json' => $oResultado->respuesta['iso_parsed'],
+                ],
+            ];
+            if (isset($oTrx->datos_procesador['response']['json']['39']) && $oTrx->datos_procesador['response']['json']['39'] == '00') {
+                $oTrx->estatus = 'reembolsada';
+                $sAutorizacion = $oTrx->datos_procesador['response']['json']['38'];
+                $oTrx->save();
+                $oTrx = Transaccion::find($uuid);
+            }
+        }
+        // ========================================================================
+        // Envía transacciones a admin y clientes
+        $oMensajeCP = new MensajeCP();
+        $oMensajeResultadoA = $oMensajeCP->envia('clientes', '/api/admin/transaccion/' . $oTrx->uuid, 'PUT', $oTrx->toJson());
+        #dump($oMensajeResultadoA);
+        $oMensajeResultadoB = $oMensajeCP->envia('admin', '/api/admin/transaccion/' . $oTrx->uuid, 'PUT', $oTrx->toJson());
+        #dump($oMensajeResultadoB);
+
+        // ========================================================================
+        // Regresa resultado en RespuestaCargo
+        $aRespuesta = [
+            'id' => $oTrx->uuid,
+            'monto' => $oTrx->monto,
+            'autorizacion' => $sAutorizacion,
+            'tipo' => 'devolucion',
+            'fecha' => $oTrx->created_at,
+            'estatus' => $oTrx->estatus,
+            'prueba' => $oTrx->prueba,
+            'mensaje' => $aResultado['peticion']['iso_parsed'],
+            #'respuesta' => $aResultado['respuesta']['iso_parsed'],
+            'respuesta' => $oMensajeResultadoA,
+        ];
+        $oRespuestaCargo = new RespuestaCargo($aRespuesta);
+        #dump($oTrx->toArray());
+        return $oRespuestaCargo;
+        #return ejsend_success($aResultado);
+    }
+
+
+    public function cancelacion($uuid)
+    {
+        // Busca transacción
+        $oTrx = Transaccion::find($uuid);
+
+        // Obtiene request original
+        $oRequestOriginal = json_decode($oTrx->datos_procesador['request']['json']);
+
+        // Construye petición de cargo
+        $oPeticionCargo = new PeticionCargo([
+            'id' => Uuid::generate(4)->string,
+            'comercio_uuid' => $oRequestOriginal->comercio_uuid,
+            'prueba' => $oRequestOriginal->prueba,
+            'descripcion' => 'Cancelación - ' . $oRequestOriginal->descripcion,
+            'monto' => $oRequestOriginal->monto,
+            'tarjeta' => new TarjetaCredito([
+                'nombre' => $oRequestOriginal->tarjeta->nombre,
+                'pan' => substr($oTrx->datos_procesador['response']['json']['35'], 2, 16),
+                'expiracion_mes' => $oRequestOriginal->tarjeta->expiracion_mes,
+                'expiracion_anio' => $oRequestOriginal->tarjeta->expiracion_anio,
+            ]),
+            'plan' => new PlanPago([
+                'plan' => $oRequestOriginal->plan->plan,
+                'puntos' => $oRequestOriginal->plan->puntos,
+                'parcialidades' => $oRequestOriginal->plan->parcialidades,
+                'diferido' => $oRequestOriginal->plan->diferido,
+            ]),
+        ]);
+
+        // Define opciones
+        $aOpciones = [
+            'tipo' => 'cancelacion',
+            'referencia' => $oTrx->datos_procesador['response']['json']['37'], // CAMPO 37 de la respuesta
+            'autorizacion' => $oTrx->datos_procesador['response']['json']['38'], // CAMPO 38 de la respuesta
+            'mti_original' => $oTrx->datos_procesador['request']['mti'], // Id de mensaje ISO de la transacción original
+            'fecha_original' => $oTrx->datos_procesador['response']['json']['13'], // CAMPO 13 de la respuesta
+            'hora_original' => $oTrx->datos_procesador['response']['json']['12'], // CAMPO 12 de la respuesta
+            'fecha_captura_original' => $oTrx->datos_procesador['response']['json']['17'], // CAMPO 17 de la respuesta
+        ];
+        // Bines de puntos BBVA
+        $aBinesPuntos = ['410180', '410181', '441311', '455500', '455503', '455504', '455505', '455508', '455529', '455540', '455545', '493160', '493161', '493162', '477210', '477212', '477213', '477214', '477291', '477292', '481514', '481515', '542010', '542977', '544053', '544551', "547077", '547086', '547095', '547155', '547156', '554629', '535875', '542015', '542073'];
+        if (in_array(substr($oPeticionCargo->tarjeta->pan, 0, 6), $aBinesPuntos)) {
+            $aOpciones['tipo_original'] = 'puntos_compra';
+        } else {
+            $aOpciones['tipo_original'] = 'compra';
+        }
+
+        // ========================================================================
+        // Envía mensaje interred
+        $oInterredProxy = new InterredProxy();
+        $oResultado = $oInterredProxy->mensajeCancelacion($oPeticionCargo, $aOpciones, true, false);
+        $aResultado = [
+            'peticion' => [
+                'mensaje_json' => $oPeticionCargo,
+                'mensaje_b64' => base64_encode($oResultado->mensaje),
+                'mensaje_hex' => $oResultado->mensaje_hex,
+                'iso_mti' => $oResultado->iso->getMTI(),
+                'iso_parsed' => $oResultado->iso->getDataArray(),
+                'iso_validation' => $oResultado->iso->getIsoValidation(),
+            ],
+        ];
+        // Prepara respuesta si fue enviado el mensaje
+        $sAutorizacion = '0';
+        $bRespuesta = false;
+        if (isset($oResultado->respuesta)) {
+            $aResultado['respuesta'] = $oResultado->respuesta;
+            $bRespuesta = true;
+            $oTrx->datos_procesador = [
+                'request' => [
+                    'json' => $oPeticionCargo->toJson(),
+                    'b64' => base64_encode($oResultado->mensaje),
+                ],
+                'response' => [
+                    'b64' => $oResultado->respuesta['mensaje_b64'],
+                    'json' => $oResultado->respuesta['iso_parsed'],
+                ],
+            ];
+            if (isset($oTrx->datos_procesador['response']['json']['39']) && $oTrx->datos_procesador['response']['json']['39'] == '00') {
+                $oTrx->estatus = 'cancelada';
+                $oTrx->save();
+                $oTrx = Transaccion::find($uuid);
+            }
+        }
+        // ========================================================================
+        // Envía transacciones a admin y clientes
+        $oMensajeCP = new MensajeCP();
+        $oMensajeResultadoA = $oMensajeCP->envia('clientes', '/api/admin/transaccion/' . $oTrx->uuid, 'PUT', $oTrx->toJson());
+        #dump($oMensajeResultadoA);
+        $oMensajeResultadoB = $oMensajeCP->envia('admin', '/api/admin/transaccion/' . $oTrx->uuid, 'PUT', $oTrx->toJson());
+        #dump($oMensajeResultadoB);
+
+        // ========================================================================
+        // Regresa resultado en RespuestaCargo
+        $aRespuesta = [
+            'id' => $oTrx->uuid,
+            'monto' => $oTrx->monto,
+            'autorizacion' => $sAutorizacion,
+            'tipo' => 'cancelacion',
+            'fecha' => $oTrx->created_at,
+            'estatus' => $oTrx->estatus,
+            'prueba' => $oTrx->prueba,
+            'mensaje' => $aResultado['peticion']['iso_parsed'],
+            #'respuesta' => $aResultado['respuesta']['iso_parsed'],
+            'respuesta' => $oMensajeResultadoA,
+        ];
+        $oRespuestaCargo = new RespuestaCargo($aRespuesta);
+        #dump($oTrx->toArray());
+        return $oRespuestaCargo;
+        #return ejsend_success($aResultado);
+    }
+
 }
 
 
@@ -1152,7 +1743,7 @@ class InterredProxy
                 $oMensaje->setData(58,
                 $oMensaje->formateaCampo58([
                     'importe_total' => $oMensaje->formateaCampo4($oPeticionCargo->monto),
-                    'importe_puntos' => $oPeticionCargo->puntos,
+                    'importe_puntos' => $oPeticionCargo->plan->puntos,
                 ]));
             }
         }
@@ -1528,7 +2119,7 @@ class InterredProxy
                     // Evalua resultado campo 39
                     if (isset($aMensajeISO['iso_parsed'][39]) && isset($this->aCatalogoRespuestas[$aMensajeISO['iso_parsed'][39]])) {
                         if ($bEcho) {
-                            echo "<br><h3>Resutado: " . $this->aCatalogoRespuestas[$aMensajeISO['iso_parsed'][39]] . " (" . $aMensajeISO['iso_parsed'][39] . ") </h3>\n";
+                            echo "<br><h3>Resultado: " . $this->aCatalogoRespuestas[$aMensajeISO['iso_parsed'][39]] . " (" . $aMensajeISO['iso_parsed'][39] . ") </h3>\n";
                         }
                     }
                 } catch (\Exception $e) {
