@@ -16,8 +16,8 @@ class PlanCollectionResource extends ResourceCollection
      */
     public function toArray($request)
     {
-        $this->collection->transform(function (Plan $cliente) {
-            return (new PlanResource($cliente));
+        $this->collection->transform(function (Plan $plan) {
+            return (new PlanResource($plan));
         });
 
         return [

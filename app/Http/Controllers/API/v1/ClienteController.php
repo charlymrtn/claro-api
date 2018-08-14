@@ -377,15 +377,11 @@ class ClienteController extends ApiController
             // Obtiene comercio_uuid del usuario de la petición
             $sComercioUuid = Auth::user()->comercio_uuid;
             // Valida request
-            $oValidator = Validator::make(['uuid' => $uuid], [
+            $oIdValidator = Validator::make(['uuid' => $uuid], [
                 'uuid' => 'required|uuid|size:36',
             ]);
-            if ($oValidator->fails()) {
-                return ejsend_fail([
-                    'code' => 400,
-                    'type' => 'Parámetros',
-                    'message' => 'Error en parámetros de entrada.',
-                ], 400, ['errors' => $oValidator->errors()]);
+            if ($oIdValidator->fails()) {
+                return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oIdValidator->errors()]);
             }
             // Busca cliente
             $oCliente = new ClienteResource($this->mCliente->with('suscripciones')->where('comercio_uuid', '=', $sComercioUuid)->find($uuid));

@@ -266,10 +266,10 @@ class PlanController extends ApiController
             // Obtiene comercio_uuid del usuario de la petición
             $sComercioUuid = Auth::user()->comercio_uuid;
             // Valida request
-            $oValidator = Validator::make(['uuid' => $uuid], [
+            $oIdValidator = Validator::make(['uuid' => $uuid], [
                 'uuid' => 'required|uuid|size:36',
             ]);
-            if ($oValidator->fails()) {
+            if ($oIdValidator->fails()) {
                 return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oIdValidator->errors()]);
             }
             // Busca plan
@@ -369,7 +369,7 @@ class PlanController extends ApiController
                 $oPlan->cancela();
             }
             // Regresa suscripciones del cliente
-            return ejsend_success(['plan' => $oPlan]);
+            return ejsend_success(['plan' => new PlanResource($oPlan)]);
         } catch (\Exception $e) {
             // Registra error
             Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
