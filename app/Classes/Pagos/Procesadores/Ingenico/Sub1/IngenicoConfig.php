@@ -106,8 +106,8 @@ class IngenicoConfig extends Model
         $this->attributes['version'] = '2.2';
         $this->attributes['tx_source'] = 'WEB';
         $this->attributes['environment'] = 'DEVELOPMENT_ENV';
-        // Valida entradas
-        $this->valida($aAttributes);
+        // Valida entradas con los valores default incorporados
+        $this->valida(array_merge($this->attributes, $aAttributes));
         // Ejecuta constructor padre
         parent::__construct($aAttributes);
     }
