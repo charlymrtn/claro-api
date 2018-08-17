@@ -123,6 +123,26 @@ if (!function_exists("ejsend_exception")) {
     }
 }
 
+// Array filter nulls
+if (!function_exists("array_filter_null")) {
+    /**
+     * Remove null elements from array
+     *
+     * @param  array   $array
+     *
+     * @return $array
+     */
+    function array_filter_null(array $array)
+    {
+        foreach($array as $key => $value) {
+            if(is_null($value)) {
+                unset($array[$key]);
+            }
+        }
+        return $array;
+    }
+}
+
 // Array replace keys
 if (!function_exists("array_replace_keys")) {
     /**

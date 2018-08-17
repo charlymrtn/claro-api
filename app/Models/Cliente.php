@@ -23,7 +23,7 @@ class Cliente extends Model
      */
     public $incrementing = false;
     protected $primaryKey = 'uuid';
-    protected $keyType = 'uuid';
+    protected $keyType = 'string';
 
     /**
      * Atributos

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Classes\Pagos\Parametros;
+namespace App\Classes\Pagos\Procesadores\Ingenico\Sub1;
 
 use Jenssegers\Model\Model;
 use Exception;
