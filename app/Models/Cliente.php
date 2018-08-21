@@ -46,6 +46,8 @@ class Cliente extends Model
         // Objetos JSON
         'telefono', // Objeto tipo Teléfono
         'direccion', // Objeto de tipo Dirección
+        'created_at',
+        'updated_at',
     ];
 
     /**

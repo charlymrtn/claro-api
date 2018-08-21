@@ -40,9 +40,6 @@ class Direccion extends Model
      * Atributos no asignables en masa
      */
     protected $guarded = [
-        'creacion', // Fecha de creación del objeto en ISO 8601
-        'created_at', // Fecha de creación del objeto tipo Carbon
-        'updated_at', // Fecha de actualización del objeto tipo Carbon
     ];
 
     /*
@@ -89,16 +86,16 @@ class Direccion extends Model
     {
          // Valida datos de entrada
         $oValidator = Validator::make($this->toArray(), [
-            'pais' => 'string|size:3',
-            'estado' => 'string|size:3',
-            'ciudad' => 'string|max:60',
-            'municipio' => 'string|max:60',
-            'linea1' => 'string|max:120',
-            'linea2' => 'string|max:120',
-            'linea3' => 'string|max:120',
-            'cp' => 'string|min:3|max:10', // Pueden ser alfanuméricos https://en.wikipedia.org/wiki/Postal_code
-            'longitud' => 'numeric|min:-180|max:180',
-            'latitud' => 'numeric|min:-90|max:90',
+            'pais' => 'sometimes|string|size:3',
+            'estado' => 'sometimes|string|size:3',
+            'ciudad' => 'sometimes|string|max:60',
+            'municipio' => 'sometimes|string|max:60',
+            'linea1' => 'sometimes|string|max:120',
+            'linea2' => 'sometimes|string|max:120',
+            'linea3' => 'sometimes|string|max:120',
+            'cp' => 'sometimes|string|min:3|max:10', // Pueden ser alfanuméricos https://en.wikipedia.org/wiki/Postal_code
+            'longitud' => 'sometimes|numeric|min:-180|max:180',
+            'latitud' => 'sometimes|numeric|min:-90|max:90',
         ]);
         if ($oValidator->fails()) {
             throw new Exception($oValidator->errors(), 400);
@@ -134,9 +131,11 @@ class Direccion extends Model
      * @param  string  $sPais
      * @return void
      */
-    public function setPaisAttribute($sPais)
+    public function setPaisAttribute(?string $sPais): void
     {
-        $this->attributes['pais'] = strtoupper($sPais);
+        if (!is_null($sPais)) {
+            $this->attributes['pais'] = strtoupper($sPais);
+        }
     }
 
     /**
@@ -145,9 +144,11 @@ class Direccion extends Model
      * @param  string  $sEstado
      * @return void
      */
-    public function setEstadoAttribute($sEstado)
+    public function setEstadoAttribute(?string $sEstado): void
     {
-        $this->attributes['estado'] = strtoupper($sEstado);
+        if (!is_null($sEstado)) {
+            $this->attributes['estado'] = strtoupper($sEstado);
+        }
     }
 
     /*
@@ -156,9 +157,11 @@ class Direccion extends Model
      * @param Direccion $oDireccion Objeto Direccion
      * @return void
      */
-    public function setTelefonoAttribute(Telefono $oTelefono): void
+    public function setTelefonoAttribute(?Telefono $oTelefono): void
     {
-        $this->attributes['telefono'] = $oTelefono;
+        if (!is_null($oTelefono)) {
+            $this->attributes['telefono'] = $oTelefono;
+        }
     }
 
     // }}}

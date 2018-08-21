@@ -155,21 +155,41 @@ if (!function_exists("array_replace_keys")) {
      * @param  array   $keys
      * @param  boolean $filter
      *
-     * @return $array
+     * @return array
      */
     function array_replace_keys(array $array, array $keys, $filter = false)
     {
-        $aNew = [];
+        $aNewArray = [];
         foreach($array as $key => $value) {
             if(isset($keys[$key])) {
-                $aNew[$keys[$key]] = $value;
+                $aNewArray[$keys[$key]] = $value;
             } elseif(!$filter) {
-                $aNew[$key] = $value;
+                $aNewArray[$key] = $value;
             }
         }
-        return $aNew;
+        return $aNewArray;
     }
 }
+
+// Array undot
+if (!function_exists("array_undot")) {
+    /**
+     * Expands a single level array with dot notation into a multi-dimensional array
+     *
+     * @param  array   $aDotArray
+     *
+     * @return array
+     */
+    function array_undot(array $aDotArray)
+    {
+        $aNewArray = [];
+        foreach ($aDotArray as $key => $value) {
+            array_set($aNewArray, $key, $value);
+        }
+        return $aNewArray;
+    }
+}
+
 
 // Json request structure validation
 if (!function_exists("validate_json")) {

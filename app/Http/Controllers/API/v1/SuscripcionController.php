@@ -128,7 +128,7 @@ class SuscripcionController extends ApiController
                 'inicio' => $oRequest->input('inicio', 'now'),
             ]);
             // Parsea fechas
-            $oRequest->merge($this->parseRequestDates($oRequest, ['inicio', 'fin', 'prueba_inicio', 'prueba_fin', 'periodo_fecha_inicio', 'periodo_fecha_fin', 'fecha_proximo_cargo']));
+            $oRequest->merge($this->parseArrayDates($oRequest->all(), ['inicio', 'fin', 'prueba_inicio', 'prueba_fin', 'periodo_fecha_inicio', 'periodo_fecha_fin', 'fecha_proximo_cargo']));
             // Valida campos
             $oValidator = Validator::make($oRequest->all(), $this->mSuscripcion->rules);
             if ($oValidator->fails()) {
@@ -244,7 +244,7 @@ class SuscripcionController extends ApiController
                 'metodo_pago_uuid' => $oRequest->input('token'),
             ]);
             // Parsea fechas
-            $oRequest->merge($this->parseRequestDates($oRequest, ['inicio', 'fin', 'prueba_inicio', 'prueba_fin', 'periodo_fecha_inicio', 'periodo_fecha_fin', 'fecha_proximo_cargo']));
+            $oRequest->merge($this->parseArrayDates($oRequest->all(), ['inicio', 'fin', 'prueba_inicio', 'prueba_fin', 'periodo_fecha_inicio', 'periodo_fecha_fin', 'fecha_proximo_cargo']));
             // Filtra campos aceptados para actualización
             $aCambios = array_only($oRequest->all(), ['metodo_pago', 'metodo_pago_uuid', 'estado']);
             // Valida campos

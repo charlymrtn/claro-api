@@ -115,37 +115,21 @@ class ClienteController extends ApiController
                 'id_externo' => $oRequest->input('id_externo', $oRequest->input('email')),
             ]);
             // Parsea fechas
-            $oRequest->merge($this->parseRequestDates($oRequest, ['creacion_externa', 'nacimiento']));
+            $oRequest->merge($this->parseArrayDates($oRequest->all(), ['creacion_externa', 'nacimiento']));
             // Valida campos
             $oValidator = Validator::make($oRequest->all(), $this->mCliente->rules);
             if ($oValidator->fails()) {
                 return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
             }
-            // Modifica valores
-            $aCambios = [];
-            $aCambios['telefono'] = new Telefono([
-                'tipo' => $oRequest->input('telefono.tipo', 'desconocido'),
-                'codigo_pais' => $oRequest->input('telefono.codigo_pais', null),
-                'prefijo' => $oRequest->input('telefono.prefijo'),
-                'codigo_area' => $oRequest->input('telefono.codigo_area'),
-                'numero' => $oRequest->input('telefono.numero'),
-                'extension' => $oRequest->input('telefono.extension'),
-            ]);
-            $aCambios['direccion'] = new Direccion([
-                'pais' => $oRequest->input('direccion.pais', 'MEX'),
-                'estado' => $oRequest->input('direccion.estado', 'CMX'),
-                'ciudad' => $oRequest->input('direccion.ciudad', 'CDMX'),
-                'municipio' => $oRequest->input('direccion.municipio', ''),
-                'linea1' => $oRequest->input('direccion.linea1', ''),
-                'linea2' => $oRequest->input('direccion.linea2', ''),
-                'linea3' => $oRequest->input('direccion.linea3', ''),
-                'cp' => $oRequest->input('direccion.cp', ''),
-                'longitud' => $oRequest->input('direccion.longitud', 0),
-                'latitud' => $oRequest->input('direccion.latitud', 0),
-                'referencia_1' => $oRequest->input('direccion.referencia_1', ''),
-                'referencia_2' => $oRequest->input('direccion.referencia_2', ''),
-            ]);
-            $oRequest->merge($aCambios);
+            // Define objetos
+            $aObjetos = [];
+            if(!empty($oRequest->input('telefono'))) {
+                $aObjetos['telefono'] = new Telefono(array_filter_null($oRequest->input('telefono')));
+            }
+            if(!empty($oRequest->input('direccion'))) {
+                $aObjetos['direccion'] = new Direccion(array_filter_null($oRequest->input('direccion')));
+            }
+            $oRequest->merge($aObjetos);
             // Valida cliente creado anteriormente con mismo email
             $oClienteExistenteEmail = $this->mCliente
                 ->where('comercio_uuid', '=', $sComercioUuid)
@@ -196,13 +180,13 @@ class ClienteController extends ApiController
                 ], 400, ['errors' => $oValidator->errors()]);
             }
             // Busca cliente
-            $oCliente = new ClienteResource($this->mCliente->where('comercio_uuid', '=', $sComercioUuid)->find($uuid));
+            $oCliente = $this->mCliente->where('comercio_uuid', '=', $sComercioUuid)->find($uuid);
             if ($oCliente == null) {
                 Log::error('Error on '.__METHOD__.' line '.__LINE__.': Cliente no encontrado:'.$uuid);
                 return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Cliente no encontrado.'], 404);
             }
             // Regresa cliente
-            return ejsend_success(['cliente' => $oCliente]);
+            return ejsend_success(['cliente' => new ClienteResource($oCliente)]);
         } catch (\Exception $e) {
             // Registra error
             Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
@@ -237,46 +221,73 @@ class ClienteController extends ApiController
                 Log::error('Error on '.__METHOD__.' line '.__LINE__.': Cliente no encontrado:'.$uuid);
                 return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Objeto no encontrado.'], 404);
             }
-            // Define valores antes de validación
-            $oRequest->merge([
-                'comercio_uuid' => $sComercioUuid,
-            ]);
+            // Campos permitidos para actualización
+            $aDatosActualizables = [
+                'creacion_externa',
+                'nombre',
+                'apellido_paterno',
+                'apellido_materno',
+                'sexo',
+                'email',
+                'nacimiento',
+                'estado',
+            ];
+            $aCambios = array_only($oRequest->all(), $aDatosActualizables);
             // Parsea fechas
-            $oRequest->merge($this->parseRequestDates($oRequest, ['creacion_externa', 'nacimiento']));
+            $aCambios = $this->parseArrayDates($aCambios, ['creacion_externa', 'nacimiento']);
+            // Acualiza campos
+            $oCliente->update($aCambios);
+            // Actualiza objetos internos
+            $aObjetosActualizables = [
+                'telefono' => 'App\Classes\Pagos\Base\Telefono',
+                'direccion' => 'App\Classes\Pagos\Base\Direccion',
+            ];
+            $aCambios = array_only($oRequest->all(), array_keys($aObjetosActualizables));
+            foreach(array_keys($aObjetosActualizables) as $sObjeto) {
+                if(!empty($aCambios[$sObjeto])) {
+                    $aObjetoOriginal = $this->parseArrayDates(array_replace_keys($oCliente->$sObjeto, ['creacion' => 'created_at', 'actualizacion' => 'updated_at']), ['created_at', 'updated_at']);
+                    $aObjetoCambios = array_merge($aObjetoOriginal, array_filter_null($aCambios[$sObjeto]));
+                    dump($aObjetoCambios);
+                    $sObjetoNuevo = new $aObjetosActualizables[$sObjeto]($aObjetoCambios);
+                    dd($sObjetoNuevo->toArray());
+                    $oCliente->update([$sObjeto => $sObjetoNuevo]);
+                }
+            }
+
+            dd($oCliente);
+
+
+
+//            // Actualiza objetos internos
+//            $aObjetos = [];
+//            if(!empty($aCambios['direccion'])) {
+//                $aObjetos['direccion'] = new Direccion(array_merge($oCliente->direccion, array_filter_null($oRequest->input('direccion'))));
+//            }
+//            $aCambios = array_merge($aCambios, $aObjetos);
+//
+//            dump($oCliente->direccion);
+//            dump($aCambios['direccion']);
+//
+//            $aCambios = array_only(array_merge($oPlan->toArray(), $oRequest->all()), ['nombre', 'monto', 'frecuencia', 'tipo_periodo', 'max_reintentos', 'estado', 'puede_suscribir', 'prueba_frecuencia', 'prueba_tipo_periodo']);
+//            dump($aCambios);
+
+
+
+            // Actualiza valores en cliente antes de validación
+            #dump($oCliente->all());
+            $oCliente->fill($oRequest->all());
+            dd($oCliente->all());
+            $aClienteActualizado = array_merge_recursive($oCliente->makeVisible('comercio_uuid')->makeHidden('deleted_at', 'created_at', 'updated_at')->toArray(), $oRequest->all());
+            dump($aClienteActualizado);
+            // Parsea fechas
+            $aClienteActualizado = $this->parseArrayDates($aClienteActualizado, ['creacion_externa', 'nacimiento']);
+            dd($aClienteActualizado);
             // Valida datos
-            $oValidator = Validator::make($oRequest->all(), array_merge($this->mCliente->rules, [
-                'email' => 'email',
-            ]));
+            $oValidator = Validator::make($aClienteActualizado, $this->mCliente->rules);
             if ($oValidator->fails()) {
                 return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
             }
-            // Modifica valores
-            $aCambios = [];
-            $aCambios['telefono'] = new Telefono([
-                'tipo' => $oRequest->input('telefono.tipo', 'desconocido'),
-                'codigo_pais' => $oRequest->input('telefono.codigo_pais', null),
-                'prefijo' => $oRequest->input('telefono.prefijo'),
-                'codigo_area' => $oRequest->input('telefono.codigo_area'),
-                'numero' => $oRequest->input('telefono.numero'),
-                'extension' => $oRequest->input('telefono.extension'),
-            ]);
-            $aCambios['direccion'] = new Direccion([
-                'pais' => $oRequest->input('direccion.pais', 'MEX'),
-                'estado' => $oRequest->input('direccion.estado', 'CMX'),
-                'ciudad' => $oRequest->input('direccion.ciudad', 'CDMX'),
-                'municipio' => $oRequest->input('direccion.municipio', ''),
-                'linea1' => $oRequest->input('direccion.linea1', ''),
-                'linea2' => $oRequest->input('direccion.linea2', ''),
-                'linea3' => $oRequest->input('direccion.linea3', ''),
-                'cp' => $oRequest->input('direccion.cp', ''),
-                'longitud' => $oRequest->input('direccion.longitud', 0),
-                'latitud' => $oRequest->input('direccion.latitud', 0),
-                'referencia_1' => $oRequest->input('direccion.referencia_1', ''),
-                'referencia_2' => $oRequest->input('direccion.referencia_2', ''),
-            ]);
-            $oRequest->merge($aCambios);
-            // Actualiza cliente
-            $oCliente->update($oRequest->all());
+            dd($aClienteActualizado);
             return ejsend_success(['cliente' => new ClienteResource($oCliente)]);
         } catch (\Exception $e) {
             Log::error('Error on '.__METHOD__.' line '.$e->getLine().':'.$e->getMessage());
@@ -305,7 +316,7 @@ class ClienteController extends ApiController
                 ], 400, ['errors' => $oValidator->errors()]);
             }
             // Busca cliente
-            $oCliente = $this->mCliente->where('uuid', '=', $uuid)->first();
+            $oCliente = $this->mCliente->with('tarjetas')->where('uuid', '=', $uuid)->first();
             if ($oCliente == null) {
                 Log::error('Error on '.__METHOD__.' line '.__LINE__.': Cliente no encontrado:'.$uuid);
                 return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Objeto no encontrado.'], 404);
@@ -315,6 +326,11 @@ class ClienteController extends ApiController
             if (!empty($oCliente->suscripciones) && $oCliente->suscripciones->isNotEmpty()) {
                 Log::error('Error on '.__METHOD__.' line '.__LINE__.': El cliente cuenta con suscripciones, no se puede borrar.'.$uuid);
                 return ejsend_fail(['code' => 412, 'type' => 'Cliente', 'message' => 'El cliente cuenta con suscripciones, no se puede borrar.'], 412);
+            }
+            // Borra tarjetas
+            foreach ($this->mCliente->tarjetas as $oTarjeta) {
+                #$oTarjeta = $this->mTarjeta->where('comercio_uuid', $oUser->comercio_uuid)->find($uuid);
+                $oTarjeta->forceDelete();
             }
             // Borra Cliente
             $oCliente->forceDelete();
@@ -349,13 +365,13 @@ class ClienteController extends ApiController
                 ], 400, ['errors' => $oValidator->errors()]);
             }
             // Busca cliente
-            $oCliente = new ClienteResource($this->mCliente->with('tarjetas')->where('comercio_uuid', '=', $sComercioUuid)->find($uuid));
+            $oCliente = $this->mCliente->with('tarjetas')->where('comercio_uuid', '=', $sComercioUuid)->find($uuid);
             if ($oCliente == null) {
                 Log::error('Error on '.__METHOD__.' line '.__LINE__.': Cliente no encontrado:'.$uuid);
                 return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Cliente no encontrado.'], 404);
             }
             // Regresa tarjetas del cliente
-            #return ejsend_success(['tarjetas' => new TarjetaCollectionResource($oCliente->tarjetas)]);
+            // new ClienteResource($oCliente);
             return ejsend_success(['tarjetas' => TarjetaResource::collection($oCliente->tarjetas)]);
         } catch (\Exception $e) {
             // Registra error
@@ -384,12 +400,13 @@ class ClienteController extends ApiController
                 return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oIdValidator->errors()]);
             }
             // Busca cliente
-            $oCliente = new ClienteResource($this->mCliente->with('suscripciones')->where('comercio_uuid', '=', $sComercioUuid)->find($uuid));
+            $oCliente = $this->mCliente->with('suscripciones')->where('comercio_uuid', '=', $sComercioUuid)->find($uuid);
             if ($oCliente == null) {
                 Log::error('Error on '.__METHOD__.' line '.__LINE__.': Cliente no encontrado:'.$uuid);
                 return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Cliente no encontrado.'], 404);
             }
             // Regresa suscripciones del cliente
+            // new ClienteResource($oCliente);
             return ejsend_success(['suscripciones' => SuscripcionResource::collection($oCliente->suscripciones)]);
         } catch (\Exception $e) {
             // Registra error
