@@ -314,7 +314,7 @@ class ClienteController extends ApiController
             ]);
             $oRequest->merge($aCambios);
             // Actualiza cliente
-            $oCliente->update($oRequest->all());
+            $oCliente->update(array_except($oRequest->all(), ['id_externo']));
             return ejsend_success(['cliente' => new ClienteResource($oCliente)]);
         } catch (\Exception $e) {
             Log::error('Error on '.__METHOD__.' line '.$e->getLine().':'.$e->getMessage());
