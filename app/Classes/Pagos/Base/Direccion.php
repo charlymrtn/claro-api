@@ -49,6 +49,7 @@ class Direccion extends Model
      * Atributos escondidos
      */
     protected $hidden = [
+        'creacion',
         'created_at', // Fecha de creación del objeto tipo Carbon
         'updated_at', // Fecha de actualización del objeto tipo Carbon
         'deleted_at', // Fecha de borrado del objeto tipo Carbon
@@ -66,6 +67,14 @@ class Direccion extends Model
      * @var array $dates Atributos mutables afechas
      */
     protected $dates = ['created_at', 'updated_at', 'deleted_at'];
+
+    /**
+     * No se utilizan timestamps
+     *
+     * @var bool
+     */
+    public $timestamps = false;
+
 
     // }}}}
 

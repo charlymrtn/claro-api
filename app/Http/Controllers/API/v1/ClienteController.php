@@ -122,30 +122,14 @@ class ClienteController extends ApiController
                 return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
             }
             // Modifica valores
-            $aCambios = [];
-            $aCambios['telefono'] = new Telefono([
-                'tipo' => $oRequest->input('telefono.tipo', 'desconocido'),
-                'codigo_pais' => $oRequest->input('telefono.codigo_pais', null),
-                'prefijo' => $oRequest->input('telefono.prefijo'),
-                'codigo_area' => $oRequest->input('telefono.codigo_area'),
-                'numero' => $oRequest->input('telefono.numero'),
-                'extension' => $oRequest->input('telefono.extension'),
-            ]);
-            $aCambios['direccion'] = new Direccion([
-                'pais' => $oRequest->input('direccion.pais', 'MEX'),
-                'estado' => $oRequest->input('direccion.estado', 'CMX'),
-                'ciudad' => $oRequest->input('direccion.ciudad', 'CDMX'),
-                'municipio' => $oRequest->input('direccion.municipio', ''),
-                'linea1' => $oRequest->input('direccion.linea1', ''),
-                'linea2' => $oRequest->input('direccion.linea2', ''),
-                'linea3' => $oRequest->input('direccion.linea3', ''),
-                'cp' => $oRequest->input('direccion.cp', ''),
-                'longitud' => $oRequest->input('direccion.longitud', 0),
-                'latitud' => $oRequest->input('direccion.latitud', 0),
-                'referencia_1' => $oRequest->input('direccion.referencia_1', ''),
-                'referencia_2' => $oRequest->input('direccion.referencia_2', ''),
-            ]);
-            $oRequest->merge($aCambios);
+            $aObjetos = [];
+            if(!empty($oRequest->input('telefono'))) {
+                $aObjetos['telefono'] = new Telefono(array_filter_null($oRequest->input('telefono')));
+            }
+            if(!empty($oRequest->input('direccion'))) {
+                $aObjetos['direccion'] = new Direccion(array_filter_null($oRequest->input('direccion')));
+            }
+            $oRequest->merge($aObjetos);
             // Valida cliente creado anteriormente con mismo email
             $oClienteExistenteEmail = $this->mCliente
                 ->where('comercio_uuid', '=', $sComercioUuid)

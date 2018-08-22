@@ -60,7 +60,7 @@ class PlanController extends ApiController
                 'filtro' => 'max:100',
                 // Datos de la paginación
                 'registros_por_pagina' => 'numeric|between:5,100',
-                'pagina' => 'numeric|between:1,3',
+                'pagina' => 'numeric',
                 'ordenar_por' => 'max:30|in:uuid,nombre,monto,estado,puede_suscribir,creacion',
                 'orden' => 'in:asc,desc',
             ]);

@@ -51,7 +51,7 @@ class TarjetaController extends Controller
                 'filtro' => 'max:100',
                 // Datos de la paginación
                 'registros_por_pagina' => 'numeric|between:5,100',
-                'pagina' => 'numeric|between:1,3',
+                'pagina' => 'numeric',
                 'ordenar_por' => 'max:30|in:uuid,nombre,marca,comercio_uuid,cliente_uuid,iin,pan,terminacion,created_at,updated_at,deleted_at',
                 'orden' => 'in:asc,desc',
             ]);
@@ -109,13 +109,20 @@ class TarjetaController extends Controller
             $sComercioUuid = $oRequest->user()->comercio_uuid;
             // Crea tarjeta y valida
             $oTarjetaCredito = $this->tarjetaRequest($oRequest);
-            // Guarda resultado en base de datos
-            $oTarjeta = $this->mTarjeta->create(array_merge([
+            // Define campos
+            $aTarjeta = array_filter_null(array_merge([
                     'comercio_uuid' => $oRequest->user()->comercio_uuid,
-                    'cliente_uuid' => $oRequest->input('cliente_id', false),
+                    'cliente_uuid' => $oRequest->input('cliente_id', null),
                     'default' => $oRequest->input('default', false),
                     'cargo_unico' => $oRequest->input('cargo_unico', true),
                 ], $oTarjetaCredito->toArray()));
+            // Valida campos
+            $oValidator = Validator::make($aTarjeta, $this->mTarjeta->rules, ['cliente_uuid.exists' => 'El cliente proporcionado no existe']);
+            if ($oValidator->fails()) {
+                return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
+            }
+            // Guarda resultado en base de datos
+            $oTarjeta = $this->mTarjeta->create($aTarjeta);
             // Envía tarjeta a bóveda
             // Guarda resultado en base de datos
             // Formatea respuestay regresa resultado
@@ -129,7 +136,7 @@ class TarjetaController extends Controller
             }
             // Registra error
             Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
-            return ejsend_error(['code' => $sCode, 'type' => $sErrorType, 'message' => 'Error al obtener el recurso: ' . $e->getMessage()], $sCode);
+            return ejsend_error(['code' => $sCode, 'type' => $sErrorType, 'message' => 'Error en parámetros de entrada: ' . $e->getMessage()], $sCode);
         }
     }
 
@@ -144,7 +151,7 @@ class TarjetaController extends Controller
         // Busca tarjeta
         try {
             $oValidator = Validator::make(['uuid' => $uuid], [
-                'uuid' => 'required|uuid',
+                'uuid' => 'required|uuid|size:36',
             ]);
             if ($oValidator->fails()) {
                 return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);

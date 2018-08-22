@@ -80,14 +80,15 @@ class Tarjeta extends Model
      * Reglas de validación
      * @var array $rules Reglas de validación
      */
-    protected $rules = [
-        'pan' => 'required|numeric',
+    public $rules = [
+        'pan' => 'required',
         'nombre' => 'required_without:nombres|min:3|max:60',
         'expiracion_mes' => 'required|numeric',
         'expiracion_anio' => 'required|numeric',
         'inicio_mes' => 'numeric',
         'inicio_anio' => 'numeric',
         'default' => 'boolean',
+        'cliente_uuid' => 'sometimes|uuid|size:36|exists:cliente,uuid',
     ];
 
     /** --------------------------------------------------------------
@@ -141,5 +142,4 @@ class Tarjeta extends Model
 //    {
 //        return new Direccion(json_decode($sValue, true));
 //    }
-
 }
