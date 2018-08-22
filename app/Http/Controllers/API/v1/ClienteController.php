@@ -211,6 +211,44 @@ class ClienteController extends ApiController
     }
 
     /**
+     * Obtiene un recurso
+     *
+     * @param string  $id_externo
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function showExterno(string $id_externo): JsonResponse
+    {
+        // Muestra el recurso solicitado
+        try {
+            // Obtiene comercio_uuid del usuario de la petición
+            $sComercioUuid = Auth::user()->comercio_uuid;
+            // Valida request
+            $oValidator = Validator::make(['id_externo' => $id_externo], [
+                'id_externo' => 'required',
+            ]);
+            if ($oValidator->fails()) {
+                return ejsend_fail([
+                    'code' => 400,
+                    'type' => 'Parámetros',
+                    'message' => 'Error en parámetros de entrada.',
+                ], 400, ['errors' => $oValidator->errors()]);
+            }
+            // Busca cliente
+            $oCliente = new ClienteResource($this->mCliente->where('comercio_uuid', '=', $sComercioUuid)->where('id_externo', '=', $id_externo)->first());
+            if ($oCliente == null) {
+                Log::error('Error on '.__METHOD__.' line '.__LINE__.': Cliente no encontrado:'.$uuid);
+                return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Cliente no encontrado.'], 404);
+            }
+            // Regresa cliente
+            return ejsend_success(['cliente' => $oCliente]);
+        } catch (\Exception $e) {
+            // Registra error
+            Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
+            return ejsend_exception($e, 'Error al mostrar el recurso: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Actualiza objeto Cliente.
      *
      * @param  \Illuminate\Http\Request  $oRequest
