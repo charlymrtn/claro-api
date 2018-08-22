@@ -78,7 +78,7 @@ class Cliente extends Model
      */
     public $rules = [
         'comercio_uuid' => 'required|uuid|size:36',
-        'id_externo' => 'min:1|max:30',
+        'id_externo' => 'required|min:1|max:30',
         'creacion_externa' => 'date',
         'nombre' => 'min:2|max:60',
         'apellido_paterno' => 'min:2|max:60',

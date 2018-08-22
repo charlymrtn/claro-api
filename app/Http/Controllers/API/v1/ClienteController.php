@@ -278,6 +278,7 @@ class ClienteController extends ApiController
             // Define valores antes de validación
             $oRequest->merge([
                 'comercio_uuid' => $sComercioUuid,
+                'id_externo' => $oCliente->id_externo,
             ]);
             // Parsea fechas
             $oRequest->merge($this->parseRequestDates($oRequest, ['creacion_externa', 'nacimiento']));
