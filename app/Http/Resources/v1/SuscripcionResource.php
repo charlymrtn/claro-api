@@ -35,6 +35,9 @@ class SuscripcionResource extends JsonResource
             ),
             [
                 'uuid' => 'id',
+                'plan_uuid' => 'plan_id',
+                'cliente_uuid' => 'cliente_id',
+                'metodo_pago_uuid' => 'metodo_pago_token',
                 'created_at' => 'creacion',
                 'updated_at' => 'actualizacion'
             ]

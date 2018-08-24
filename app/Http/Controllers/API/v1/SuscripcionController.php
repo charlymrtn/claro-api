@@ -206,13 +206,13 @@ class SuscripcionController extends ApiController
                 ], 400, ['errors' => $oValidator->errors()]);
             }
             // Busca suscripcion
-            $oSuscripcion = new SuscripcionResource($this->mSuscripcion->where('comercio_uuid', '=', $sComercioUuid)->find($uuid));
+            $oSuscripcion = $this->mSuscripcion->where('comercio_uuid', '=', $sComercioUuid)->find($uuid);
             if ($oSuscripcion == null) {
                 Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': Suscripción no encontrada:' . $uuid);
                 return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Suscripción no encontrada.'], 404);
             }
             // Regresa suscripcion
-            return ejsend_success(['suscripcion' => $oSuscripcion]);
+            return ejsend_success(['suscripcion' => new SuscripcionResource($oSuscripcion)]);
         } catch (\Exception $e) {
             // Registra error
             Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
@@ -308,7 +308,7 @@ class SuscripcionController extends ApiController
                 ], 400, ['errors' => $oValidator->errors()]);
             }
             // Busca suscripcion
-            $oSuscripcion = new SuscripcionResource($this->mSuscripcion->where('comercio_uuid', '=', $sComercioUuid)->find($uuid));
+            $oSuscripcion = $this->mSuscripcion->where('comercio_uuid', '=', $sComercioUuid)->find($uuid);
             if ($oSuscripcion == null) {
                 Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': Suscripción no encontrada:' . $uuid);
                 return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Suscripción no encontrada.'], 404);
@@ -321,7 +321,7 @@ class SuscripcionController extends ApiController
             // Cancela suscripción
             $oSuscripcion->cancela();
             // Regresa suscripcion
-            return ejsend_success(['suscripcion' => $oSuscripcion]);
+            return ejsend_success(['suscripcion' => new SuscripcionResource($oSuscripcion)]);
         } catch (\Exception $e) {
             // Registra error
             Log::error('Error en ' . __METHOD__ . ' línea ' . $e->getLine() . ':' . $e->getMessage());
