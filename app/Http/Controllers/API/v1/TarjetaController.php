@@ -280,7 +280,7 @@ class TarjetaController extends Controller
             } else {
                 $oTarjeta->forceDelete();
                 // Regresa usuario con clientes y tokens
-                return ejsend_success(['tarjeta' => ['token_tarjeta' => $uuid, 'borrada' => Carbon::now()->toIso8601String()]]);
+                return ejsend_success(['tarjeta' => ['token_tarjeta' => $uuid, 'eliminacion' => Carbon::now()->toIso8601String()]]);
             }
         } catch (\Exception $e) {
             // Define error
