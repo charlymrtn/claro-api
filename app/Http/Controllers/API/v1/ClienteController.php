@@ -180,7 +180,12 @@ class ClienteController extends ApiController
                 ], 400, ['errors' => $oValidator->errors()]);
             }
             // Busca cliente
-            $oCliente = $this->mCliente->where('comercio_uuid', '=', $sComercioUuid)->find($uuid);
+            $oCliente = $this->mCliente
+                ->where('comercio_uuid', '=', $sComercioUuid)
+                ->with(['suscripciones' => function ($query) {
+                    $query->whereIn('estado', ['activa', 'prueba', 'pendiente']);
+                }])
+                ->find($uuid);
             if ($oCliente == null) {
                 Log::error('Error on '.__METHOD__.' line '.__LINE__.': Cliente no encontrado:'.$uuid);
                 return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Cliente no encontrado.'], 404);
@@ -223,8 +228,8 @@ class ClienteController extends ApiController
                 Log::error('Error on '.__METHOD__.' line '.__LINE__.': Cliente no encontrado:'.$uuid);
                 return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Cliente no encontrado.'], 404);
             }
-            // Regresa cliente
-            return ejsend_success(['cliente' => new ClienteResource($oCliente)]);
+            // Regresa cliente con el mismo formato que el método show()
+            return $this->show($oCliente->uuid);
         } catch (\Exception $e) {
             // Registra error
             Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
