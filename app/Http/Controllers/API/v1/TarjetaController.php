@@ -5,6 +5,7 @@ namespace app\Http\Controllers\API\v1;
 use Log;
 use Auth;
 use Validator;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
@@ -120,6 +121,15 @@ class TarjetaController extends Controller
             $oValidator = Validator::make($aTarjeta, $this->mTarjeta->rules, ['cliente_uuid.exists' => 'El cliente proporcionado no existe']);
             if ($oValidator->fails()) {
                 return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
+            }
+            // Verifica que la tarjeta no exista con el cliente proporcionado
+            if (!empty($oRequest->input('cliente_id'))) {
+                // Busca tarjeta
+                $oTarjeta = $this->mTarjeta->where('comercio_uuid', $sComercioUuid)->where('cliente_uuid', $oRequest->input('cliente_id'))->where('pan_hash', $oTarjetaCredito->pan_hash)->first();
+                if ($oTarjeta != null) {
+                    // Regresa error de tarjeta existente
+                    return ejsend_fail(['code' => 409, 'type' => 'Tarjeta', 'message' => 'La tarjeta ya existe para el cliente proporcionado'], 409);
+                }
             }
             // Guarda resultado en base de datos
             $oTarjeta = $this->mTarjeta->create($aTarjeta);
@@ -270,7 +280,7 @@ class TarjetaController extends Controller
             } else {
                 $oTarjeta->forceDelete();
                 // Regresa usuario con clientes y tokens
-                return ejsend_success(['tarjeta' => new TarjetaResource($oTarjeta)], 204);
+                return ejsend_success(['tarjeta' => ['token_tarjeta' => $uuid, 'borrada' => Carbon::now()->toIso8601String()]]);
             }
         } catch (\Exception $e) {
             // Define error
