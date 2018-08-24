@@ -30,7 +30,7 @@ class TarjetaResource extends JsonResource
                 ]
             ),
             [
-                'uuid' => 'token_tarjeta',
+                'uuid' => 'token',
                 'cliente_uuid' => 'cliente_id',
                 'created_at' => 'creacion',
                 'updated_at' => 'actualizacion'
