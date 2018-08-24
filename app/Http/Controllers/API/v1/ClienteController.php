@@ -180,13 +180,13 @@ class ClienteController extends ApiController
                 ], 400, ['errors' => $oValidator->errors()]);
             }
             // Busca cliente
-            $oCliente = new ClienteResource($this->mCliente->where('comercio_uuid', '=', $sComercioUuid)->find($uuid));
+            $oCliente = $this->mCliente->where('comercio_uuid', '=', $sComercioUuid)->find($uuid);
             if ($oCliente == null) {
                 Log::error('Error on '.__METHOD__.' line '.__LINE__.': Cliente no encontrado:'.$uuid);
                 return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Cliente no encontrado.'], 404);
             }
             // Regresa cliente
-            return ejsend_success(['cliente' => $oCliente]);
+            return ejsend_success(['cliente' => new ClienteResource($oCliente)]);
         } catch (\Exception $e) {
             // Registra error
             Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
@@ -218,13 +218,13 @@ class ClienteController extends ApiController
                 ], 400, ['errors' => $oValidator->errors()]);
             }
             // Busca cliente
-            $oCliente = new ClienteResource($this->mCliente->where('comercio_uuid', '=', $sComercioUuid)->where('id_externo', '=', $id_externo)->first());
+            $oCliente = $this->mCliente->where('comercio_uuid', '=', $sComercioUuid)->where('id_externo', '=', $id_externo)->first();
             if ($oCliente == null) {
                 Log::error('Error on '.__METHOD__.' line '.__LINE__.': Cliente no encontrado:'.$uuid);
                 return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Cliente no encontrado.'], 404);
             }
             // Regresa cliente
-            return ejsend_success(['cliente' => $oCliente]);
+            return ejsend_success(['cliente' => new ClienteResource($oCliente)]);
         } catch (\Exception $e) {
             // Registra error
             Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
