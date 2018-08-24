@@ -372,7 +372,7 @@ class ClienteController extends ApiController
                 ], 400, ['errors' => $oValidator->errors()]);
             }
             // Busca cliente
-            $oCliente = new ClienteResource($this->mCliente->with('tarjetas')->where('comercio_uuid', '=', $sComercioUuid)->find($uuid));
+            $oCliente = $this->mCliente->with('tarjetas')->where('comercio_uuid', '=', $sComercioUuid)->find($uuid);
             if ($oCliente == null) {
                 Log::error('Error on '.__METHOD__.' line '.__LINE__.': Cliente no encontrado:'.$uuid);
                 return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Cliente no encontrado.'], 404);
