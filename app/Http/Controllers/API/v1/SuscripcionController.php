@@ -124,13 +124,21 @@ class SuscripcionController extends ApiController
                 'comercio_uuid' => $sComercioUuid,
                 'plan_uuid' => $oRequest->input('plan_id'),
                 'cliente_uuid' => $oRequest->input('cliente_id'),
-                'metodo_pago_uuid' => $oRequest->input('token'),
+                'metodo_pago' => $oRequest->input('metodo_pago'),
+                'metodo_pago_uuid' => $oRequest->input('metodo_pago_token'),
                 'inicio' => $oRequest->input('inicio', 'now'),
             ]);
             // Parsea fechas
             $oRequest->merge($this->parseRequestDates($oRequest, ['inicio', 'fin', 'prueba_inicio', 'prueba_fin', 'periodo_fecha_inicio', 'periodo_fecha_fin', 'fecha_proximo_cargo']));
             // Valida campos
-            $oValidator = Validator::make($oRequest->all(), $this->mSuscripcion->rules);
+            $oValidator = Validator::make($oRequest->all(), $this->mSuscripcion->rules, [
+                'cliente_uuid.exists' => 'El cliente proporcionado no existe',
+                'plan_uuid.exists' => 'El plan proporcionado no existe',
+                'metodo_pago_uuid.required_with' => 'El token de metodo de pago es requerido',
+                'cliente_uuid.uuid' => 'cliente_id',
+                'cliente_uuid.size' => 'El campo cliente_id no es un identificador correcto',
+                'cliente_uuid.required' => 'El campo cliente_id es requerido',
+            ]);
             if ($oValidator->fails()) {
                 return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
             }
@@ -304,6 +312,11 @@ class SuscripcionController extends ApiController
             if ($oSuscripcion == null) {
                 Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': Suscripción no encontrada:' . $uuid);
                 return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Suscripción no encontrada.'], 404);
+            }
+            // Si ya está cancelada envía error
+            if ($oSuscripcion->estado == 'cancelada') {
+                Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': Suscripción ya cancelada.');
+                return ejsend_fail(['code' => 412, 'type' => 'Suscripción', 'message' => 'Suscripción ya cancelada.'], 412);
             }
             // Cancela suscripción
             $oSuscripcion->cancela();
