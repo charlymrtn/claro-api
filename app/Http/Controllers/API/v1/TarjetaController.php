@@ -80,7 +80,7 @@ class TarjetaController extends Controller
                     }
                 )
                 ->orderBy($oRequest->input('ordenar_por', 'created_at'), $oRequest->input('orden', 'desc'))
-                ->paginate((int) $oRequest->input('registros_por_pagina', 25)));
+                ->paginate((int) $oRequest->input('registros_por_pagina', 25), ['*'], 'pagina', (int) $oRequest->input('pagina', 1)));
             // Envía datos paginados
             return ejsend_success(["tarjetas" => $aTarjeta]);
         } catch (\Exception $e) {

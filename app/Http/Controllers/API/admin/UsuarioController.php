@@ -54,6 +54,7 @@ class UsuarioController extends Controller
             $oValidator = Validator::make($oRequest->all(), [
                 'comercio_uuid' => 'uuid|size:36',
                 // Datos de la paginación y filtros
+                'page' => 'numeric',
                 'per_page' => 'numeric|between:5,100',
                 'order' => 'max:30|in:id,name,email,activo,comercio_uuid,comercio_nombre,created_at,updated_at,deleted_at',
                 'search' => 'max:100',
@@ -100,7 +101,7 @@ class UsuarioController extends Controller
                     }
                 )
                 ->orderBy($oRequest->input('order', 'id'), $oRequest->input('sort', 'asc'))
-                ->paginate((int) $oRequest->input('per_page', 25));
+                ->paginate((int) $oRequest->input('per_page', 25), ['*'], 'page', (int) $oRequest->input('page', 1));
 
             // Envía datos paginados
             return ejsend_success(['usuarios' => $cUsuarios]);
