@@ -292,20 +292,15 @@ class SuscripcionController extends ApiController
      */
     public function cancelar(string $uuid): JsonResponse
     {
-        // Cancela suscripción
         try {
             // Obtiene comercio_uuid del usuario de la petición
             $sComercioUuid = Auth::user()->comercio_uuid;
             // Valida request
-            $oValidator = Validator::make(['uuid' => $uuid], [
+            $oIdValidator = Validator::make(['uuid' => $uuid], [
                 'uuid' => 'required|uuid|size:36',
             ]);
-            if ($oValidator->fails()) {
-                return ejsend_fail([
-                    'code' => 400,
-                    'type' => 'Parámetros',
-                    'message' => 'Error en parámetros de entrada.',
-                ], 400, ['errors' => $oValidator->errors()]);
+            if ($oIdValidator->fails()) {
+                return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oIdValidator->errors()]);
             }
             // Busca suscripcion
             $oSuscripcion = $this->mSuscripcion->where('comercio_uuid', '=', $sComercioUuid)->find($uuid);

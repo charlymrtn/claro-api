@@ -354,7 +354,7 @@ class PlanController extends ApiController
             // Busca plan
             $oPlan = $this->mPlan->where('comercio_uuid', '=', $sComercioUuid)->find($uuid);
             if ($oPlan == null) {
-                Log::error('Error on '.__METHOD__.' line '.__LINE__.': Plan no encontrado:'.$uuid);
+                Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': Plan no encontrado:' . $uuid);
                 return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Plan no encontrado.'], 404);
             }
             // Valida si existen suscripciones sin cancelar
@@ -365,14 +365,18 @@ class PlanController extends ApiController
             if ($oSuscripcionesActivas->isNotEmpty()) {
                 Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': No se puede cancelar el plan ya que tiene suscripciones activas, en prueba o pendientes: ' . $uuid);
                 return ejsend_fail(['code' => 412, 'type' => 'Plan', 'message' => 'No se puede cancelar el plan ya que tiene suscripciones activas, en prueba o pendientes.'], 412);
-            } else {
-                $oPlan->cancela();
             }
+            // Si ya está cancelada envía error
+            if ($oPlan->estado == 'inactivo') {
+                Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': Plan previamente cancelado.');
+                return ejsend_fail(['code' => 412, 'type' => 'Suscripción', 'message' => 'Plan previamente cancelado.'], 412);
+            }
+            $oPlan->cancela();
             // Regresa suscripciones del cliente
             return ejsend_success(['plan' => new PlanResource($oPlan)]);
         } catch (\Exception $e) {
             // Registra error
-            Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
+            Log::error('Error en ' . __METHOD__ . ' línea ' . $e->getLine() . ':' . $e->getMessage());
             return ejsend_exception($e, 'Error al cancelar el recurso: ' . $e->getMessage());
         }
     }
