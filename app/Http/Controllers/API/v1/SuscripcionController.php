@@ -75,8 +75,8 @@ class SuscripcionController extends ApiController
             if ($oValidator->fails()) {
                 return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
             }
-            // Obtiene usuario del request
-            $oUser = Auth::user();
+            // Obtiene usuario autenticado
+            $oUser = $this->getApiUser();
             // Filtro
             $sFiltro = $oRequest->input('filtro', false);
             // Busca suscripcion
@@ -116,12 +116,12 @@ class SuscripcionController extends ApiController
         try {
             // Valida estructura del request
             $this->validateJson($oRequest->getContent());
-            // Obtiene comercio_uuid del token del usuario de la petición
-            $sComercioUuid = $oRequest->user()->comercio_uuid;
+            // Obtiene usuario autenticado
+            $oUser = $this->getApiUser();
             // Define valores por default antes de validación
             $oRequest->merge([
                 'uuid' => Uuid::generate(4)->string,
-                'comercio_uuid' => $sComercioUuid,
+                'comercio_uuid' => $oUser->comercio_uuid,
                 'plan_uuid' => $oRequest->input('plan_id'),
                 'cliente_uuid' => $oRequest->input('cliente_id'),
                 'metodo_pago' => $oRequest->input('metodo_pago'),
@@ -144,7 +144,7 @@ class SuscripcionController extends ApiController
             }
             // Valida si ya existe la suscripción
             $oPreviaSuscripcion = $this->mSuscripcion->where([
-                ['comercio_uuid', '=', $sComercioUuid],
+                ['comercio_uuid', '=', $oUser->comercio_uuid],
                 ['plan_uuid', '=', $oRequest->input('plan_uuid')],
                 ['cliente_uuid', '=', $oRequest->input('cliente_uuid')],
             ])->first();
@@ -192,8 +192,8 @@ class SuscripcionController extends ApiController
     {
         // Muestra el recurso solicitado
         try {
-            // Obtiene comercio_uuid del usuario de la petición
-            $sComercioUuid = Auth::user()->comercio_uuid;
+            // Obtiene usuario autenticado
+            $oUser = $this->getApiUser();
             // Valida request
             $oValidator = Validator::make(['uuid' => $uuid], [
                 'uuid' => 'required|uuid|size:36',
@@ -206,7 +206,7 @@ class SuscripcionController extends ApiController
                 ], 400, ['errors' => $oValidator->errors()]);
             }
             // Busca suscripcion
-            $oSuscripcion = $this->mSuscripcion->where('comercio_uuid', '=', $sComercioUuid)->find($uuid);
+            $oSuscripcion = $this->mSuscripcion->where('comercio_uuid', '=', $oUser->comercio_uuid)->find($uuid);
             if ($oSuscripcion == null) {
                 Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': Suscripción no encontrada:' . $uuid);
                 return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Suscripción no encontrada.'], 404);
@@ -230,8 +230,8 @@ class SuscripcionController extends ApiController
     public function update(Request $oRequest, string $uuid): JsonResponse
     {
         try {
-            // Obtiene comercio_uuid del token del usuario de la petición
-            $sComercioUuid = $oRequest->user()->comercio_uuid;
+            // Obtiene usuario autenticado
+            $oUser = $this->getApiUser();
             // Valida uuid
             $oIdValidator = Validator::make(['uuid' => $uuid], [
                 'uuid' => 'required|uuid|size:36',
@@ -242,7 +242,7 @@ class SuscripcionController extends ApiController
             // Valida estructura del request
             $this->validateJson($oRequest->getContent());
             // Busca suscripción
-            $oSuscripcion = $this->mSuscripcion->where('comercio_uuid', '=', $sComercioUuid)->find($uuid);
+            $oSuscripcion = $this->mSuscripcion->where('comercio_uuid', '=', $oUser->comercio_uuid)->find($uuid);
             if ($oSuscripcion == null) {
                 Log::error('Error on '.__METHOD__.' line '.__LINE__.': Suscripción no encontrada:'.$uuid);
                 return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Objeto no encontrado.'], 404);
@@ -293,8 +293,8 @@ class SuscripcionController extends ApiController
     public function cancelar(string $uuid): JsonResponse
     {
         try {
-            // Obtiene comercio_uuid del usuario de la petición
-            $sComercioUuid = Auth::user()->comercio_uuid;
+            // Obtiene usuario autenticado
+            $oUser = $this->getApiUser();
             // Valida request
             $oIdValidator = Validator::make(['uuid' => $uuid], [
                 'uuid' => 'required|uuid|size:36',
@@ -303,7 +303,7 @@ class SuscripcionController extends ApiController
                 return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oIdValidator->errors()]);
             }
             // Busca suscripcion
-            $oSuscripcion = $this->mSuscripcion->where('comercio_uuid', '=', $sComercioUuid)->find($uuid);
+            $oSuscripcion = $this->mSuscripcion->where('comercio_uuid', '=', $oUser->comercio_uuid)->find($uuid);
             if ($oSuscripcion == null) {
                 Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': Suscripción no encontrada:' . $uuid);
                 return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Suscripción no encontrada.'], 404);

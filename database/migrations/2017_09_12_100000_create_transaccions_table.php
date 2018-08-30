@@ -31,7 +31,7 @@ class CreateTransaccionsTable extends Migration
             // Datos de transaccion
             $table->boolean('prueba');
             $table->decimal('monto',19, 4);
-            $table->enum('operacion', ['pago', 'preautorizacion', 'autorizacion', 'cancelacion']);
+            $table->enum('operacion', ['pago', 'preautorizacion', 'autorizacion', 'cancelacion', 'reembolso']);
             $table->enum('forma_pago', ['tarjeta', 'telmex-recibo', 'telcel-recibo', 'paypal', 'applepay', 'androidpay', 'visa-checkout', 'masterpass', 'mercadopago']);
             $table->json('datos_pago');
             $table->json('datos_antifraude');

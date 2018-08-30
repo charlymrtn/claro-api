@@ -31,6 +31,7 @@ class Plan extends Model
         'uuid', // UUID del plan de suscripción en Claro Pagos
         // Datos del comercio
         'comercio_uuid', // UUID del comercio
+        'id_externo', // ID del cliente en el comercio
         // Datos del plan
         'nombre', // Nombre del plan
         'monto', // Monto que será cobrado en la suscripción
@@ -78,6 +79,7 @@ class Plan extends Model
      */
     public $rules = [
         'comercio_uuid' => 'required|string',
+        'id_externo' => 'required|min:1|max:64',
         'nombre' => 'string|min:1|max:60',
         'monto' => 'required|numeric',
         'frecuencia' => 'required|integer',

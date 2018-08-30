@@ -59,6 +59,7 @@ class Direccion extends Model
      * Atributos mutables
      */
     protected $casts = [
+        'telefono' => 'object',
         'longitud' => 'float',
         'latitud' => 'float',
     ];
@@ -170,6 +171,18 @@ class Direccion extends Model
         $this->attributes['telefono'] = $oTelefono;
     }
 
+    /*
+     * Mutator telefono
+     *
+     * @param string $jTelefono String json de teléfono
+     * @return Telefono
+     */
+    public function getTelefonoAttribute(string $jTelefono): Telefono
+    {
+        // Convierte dato en arreglo
+        $aTelefono = json_decode($jTelefono, true);
+        return new Telefono($aTelefono);
+    }
     // }}}
 
 }
