@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller as BaseAppController;
-use Illuminate\Http\Request;
+use Auth;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller as BaseAppController;
+use App\Models\User;
 
 class ApiController extends BaseAppController
 {
@@ -20,6 +22,16 @@ class ApiController extends BaseAppController
         if (!empty($sJson) && empty(json_decode($sJson))) {
             throw new \Exception('Estructura JSON inválida.', 400);
         }
+    }
+
+    /**
+     * Get token authenticated user
+     *
+     * @return User
+     */
+    function getApiUser(): User
+    {
+        return Auth::user();
     }
 
     /**

@@ -46,6 +46,7 @@ class Direccion extends Model
      * Atributos escondidos
      */
     protected $hidden = [
+        'creacion',
         'created_at', // Fecha de creación del objeto tipo Carbon
         'updated_at', // Fecha de actualización del objeto tipo Carbon
         'deleted_at', // Fecha de borrado del objeto tipo Carbon
@@ -55,6 +56,7 @@ class Direccion extends Model
      * Atributos mutables
      */
     protected $casts = [
+        'telefono' => 'object',
         'longitud' => 'float',
         'latitud' => 'float',
     ];
@@ -63,6 +65,14 @@ class Direccion extends Model
      * @var array $dates Atributos mutables afechas
      */
     protected $dates = ['created_at', 'updated_at', 'deleted_at'];
+
+    /**
+     * No se utilizan timestamps
+     *
+     * @var bool
+     */
+    public $timestamps = false;
+
 
     // }}}}
 
@@ -164,6 +174,18 @@ class Direccion extends Model
         }
     }
 
+    /*
+     * Mutator telefono
+     *
+     * @param string $jTelefono String json de teléfono
+     * @return Telefono
+     */
+    public function getTelefonoAttribute(string $jTelefono): Telefono
+    {
+        // Convierte dato en arreglo
+        $aTelefono = json_decode($jTelefono, true);
+        return new Telefono($aTelefono);
+    }
     // }}}
 
 }

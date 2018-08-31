@@ -33,6 +33,7 @@ Route::group(['namespace' => 'API\v1', 'prefix' => 'v1', 'as' => 'api.v1.'], fun
     Route::group(['middleware' => ['scope:superadmin,cliente-transacciones']], function () {
         Route::apiResource('/cliente', 'ClienteController');
             Route::get('/cliente/{uuid}/tarjeta', 'ClienteController@tarjetas')->name('cliente.tarjetas');
-            Route::get('/cliente/{uuid}/suscripciones', 'ClienteController@suscripciones')->name('cliente.suscripciones');
+            Route::get('/cliente/{uuid}/suscripcion', 'ClienteController@suscripciones')->name('cliente.suscripciones');
+            Route::get('/cliente/id_externo/{id_externo}', 'ClienteController@showExterno')->name('cliente.id_externo');
     });
 });

@@ -23,7 +23,7 @@ class SuscripcionResource extends JsonResource
             'plan' => PlanResource::collection($this->whenLoaded('plan')),
             'cliente' => ClienteResource::collection($this->whenLoaded('cliente')),
         ];
-        foreach (['inicio', 'fin', 'prueba_inicio', 'prueba_fin', 'periodo_fecha_inicio', 'periodo_fecha_fin', 'fecha_proximo_cargo'] as $sCampoDate) {
+        foreach ($this->dates() as $sCampoDate) {
             if (!empty($this->$sCampoDate)) {
                 $aCambios[$sCampoDate] = $this->$sCampoDate->toRfc3339String();
             }
@@ -35,6 +35,9 @@ class SuscripcionResource extends JsonResource
             ),
             [
                 'uuid' => 'id',
+                'plan_uuid' => 'plan_id',
+                'cliente_uuid' => 'cliente_id',
+                'metodo_pago_uuid' => 'metodo_pago_token',
                 'created_at' => 'creacion',
                 'updated_at' => 'actualizacion'
             ]

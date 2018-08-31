@@ -166,6 +166,16 @@ class Suscripcion extends Model
      */
 
     /**
+     * Regresa campos de fechas definidos en el modelo
+     *
+     * @return array
+     */
+    public function dates()
+    {
+        return $this->dates;
+    }
+
+    /**
      * Valida input con las reglas de validación del modelo
      *
      * @param array $aAttributes Arreglo con valores de los campos
