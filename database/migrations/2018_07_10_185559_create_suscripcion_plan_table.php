@@ -19,7 +19,6 @@ class CreateSuscripcionPlanTable extends Migration
             // -------------------------------------------------------------------------
             // Datos del comercio
             $table->uuid('comercio_uuid');
-            $table->string('id_externo');
             // Datos del plan
             $table->string('nombre');
             $table->decimal('monto',19, 4);
@@ -37,7 +36,6 @@ class CreateSuscripcionPlanTable extends Migration
             // -------------------------------------------------------------------------
             // Índices adicionales
             $table->index('comercio_uuid');
-            $table->unique(['comercio_uuid', 'id_externo'], 'comercio-id');
         });
     }
 

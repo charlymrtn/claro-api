@@ -92,6 +92,11 @@ class Plan extends Model
         'moneda_iso_a3' => 'required|string|size:3',
     ];
 
+
+    public $updatable = [
+        'nombre', 'monto', 'frecuencia', 'tipo_periodo', 'max_reintentos', 'estado', 'puede_suscribir', 'prueba_frecuencia', 'prueba_tipo_periodo'
+    ];
+
     /** --------------------------------------------------------------
      *  Setup model event hooks
      */

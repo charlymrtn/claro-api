@@ -13,7 +13,11 @@ class AlterSuscripcionPlanTable extends Migration
      */
     public function up()
     {
-        //
+        // Agrega columna
+        Schema::connection('mysql_sa')->table('suscripcion_plan', function (Blueprint $table) {
+            $table->string('id_externo');
+            $table->unique(['comercio_uuid', 'id_externo'], 'comercio-id');
+        });
     }
 
     /**
@@ -23,6 +27,10 @@ class AlterSuscripcionPlanTable extends Migration
      */
     public function down()
     {
-        //
+        // Agrega columna
+        Schema::connection('mysql_sa')->table('suscripcion_plan', function (Blueprint $table) {
+            $table->dropIndex('comercio-id');
+            $table->dropColumn('id_externo');
+        });
     }
 }

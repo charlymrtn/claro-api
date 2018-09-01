@@ -49,7 +49,7 @@ if (!function_exists("ejsend_error")) {
             'datetime' => Carbon\Carbon::now()->toRfc3339String(), // Cambio API 1.2.20180718 de toDateTimeString()
             'timestamp' => time(),
         ];
-        if ($data !== null) {
+        if (!empty($data)) {
             $aResponse['data'] = $data;
         }
         return response()->json($aResponse, $status, $extraHeaders);
@@ -80,7 +80,7 @@ if (!function_exists("ejsend_fail")) {
             'datetime' => Carbon\Carbon::now()->toRfc3339String(), // Cambio API 1.2.20180718 de toDateTimeString()
             'timestamp' => time(),
         ];
-        if ($data !== null) {
+        if (!empty($data)) {
             $aResponse['data'] = $data;
         }
         return response()->json($aResponse, $iHttpCode, $extraHeaders);
@@ -115,11 +115,11 @@ if (!function_exists("ejsend_exception")) {
             $sMensaje = $e->getMessage();
         }
         // Define arreglo de errores
-        if (empty($aErrores)) {
-            $aErrores = [$sErrorType => $e->getMessage()];
+        if (!empty($aErrores)) {
+            $aErrores = ['errors' => $aErrores];
         }
         // Regresa jsend de error
-        return ejsend_error(['code' => $sCode, 'type' => $sErrorType, 'message' => $sMensaje], $sCode, ['errors' => $aErrores]);
+        return ejsend_error(['code' => $sCode, 'type' => $sErrorType, 'message' => $sMensaje], $sCode, $aErrores);
     }
 }
 
