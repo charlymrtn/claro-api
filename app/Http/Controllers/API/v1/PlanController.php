@@ -137,6 +137,14 @@ class PlanController extends ApiController
             if ($oValidator->fails()) {
                 return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
             }
+            // Valida cliente creado anteriormente con mismo id_externo
+            $oPlanExistenteId = $this->mPlan
+                ->where('comercio_uuid', '=', $oUser->comercio_uuid)
+                ->where('id_externo', '=', $oRequest->input('id_externo'))
+                ->first();
+            if (!empty($oPlanExistenteId)) {
+                return ejsend_fail(['code' => 409, 'type' => 'Parámetros', 'message' => 'Error al crear el recurso: Plan existente con el mismo id_externo (' . $oPlanExistenteId->uuid . ')'], 409);
+            }
             // Crea objeto
             $oPlan = new PlanResource($this->mPlan->create($oRequest->all()));
             // Regresa resultados

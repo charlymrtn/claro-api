@@ -79,7 +79,7 @@ class Plan extends Model
      */
     public $rules = [
         'comercio_uuid' => 'required|string',
-        'id_externo' => 'required|min:1|max:64',
+        'id_externo' => 'required|min:1|max:64', // unique:suscripcion_plan,id_externo|
         'nombre' => 'string|min:1|max:60',
         'monto' => 'required|numeric',
         'frecuencia' => 'required|integer',
