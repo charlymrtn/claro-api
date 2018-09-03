@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller as BaseAppController;
-use Illuminate\Http\Request;
+use Auth;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller as BaseAppController;
+use App\Models\User;
 
 class ApiController extends BaseAppController
 {
@@ -23,20 +25,30 @@ class ApiController extends BaseAppController
     }
 
     /**
-     * Parse date fields from request
+     * Get token authenticated user
      *
-     * @param  Illuminate\Http\Request $oRequest Request
+     * @return User
+     */
+    function getApiUser(): User
+    {
+        return Auth::user();
+    }
+
+    /**
+     * Parse date fields from array
+     *
+     * @param  array $aArray
      * @param  array $aFieldNames Date field names to process
      * @return array
      */
-    function parseRequestDates(Request $oRequest, array $aFieldNames): array
+    function parseArrayDates(array $aArray, array $aFieldNames): array
     {
-        $aResults = [];
         foreach ($aFieldNames as $sDateField) {
-            if (!empty($oRequest->input($sDateField))) {
-                $aResults[$sDateField] = Carbon::parse($oRequest->input($sDateField));
+            if (!empty($aArray[$sDateField])) {
+                $aArray[$sDateField] = Carbon::parse($aArray[$sDateField]);
             }
         }
-        return $aResults;
+        return $aArray;
     }
+
 }

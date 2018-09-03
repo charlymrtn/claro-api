@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Classes\Pagos\Base\Direccion;
+use App\Classes\Pagos\Base\Telefono;
 
 class Tarjeta extends Model
 {
@@ -66,12 +67,11 @@ class Tarjeta extends Model
     protected $dates = ['deleted_at', 'created_at', 'updated_at'];
 
     /**
-     * Atributos mutables.
+     * Atributos mutables automáticamente.
      *
      * @var array
      */
     protected $casts = [
-        'direccion' => 'object',
         'default' => 'boolean',
         'cargo_unico' => 'boolean',
     ];
@@ -132,14 +132,28 @@ class Tarjeta extends Model
         $this->attributes['direccion'] = $oDireccion;
     }
 
-//    /*
-//     * Mutator direccion get
-//     *
-//     * @param array $aValue Arreglo
-//     * @return Direccion
-//     */
-//    public function getDireccionAttribute(string $sValue): Direccion
-//    {
-//        return new Direccion(json_decode($sValue, true));
-//    }
+    /*
+     * Mutator direccion get
+     *
+     * @param string $sValue Arreglo
+     * @return Direccion
+     */
+    public function getDireccionAttribute(string $jDireccion): Direccion
+    {
+        // Convierte dato en arreglo
+        $aDireccion = json_decode($jDireccion, true);
+        // Convierte objeto Telefono
+        if(!empty($aDireccion['telefono'])) {
+            $oTelefono = new Telefono($aDireccion['telefono']);
+            unset($aDireccion['telefono']);
+        }
+        // Convierte datos en objeto
+        $oDireccion = new Direccion($aDireccion);
+        // Agrega objetos
+        if (isset($oTelefono)) {
+            $oDireccion->telefono = $oTelefono;
+        }
+        // Regresa objeto completo
+        return $oDireccion;
+    }
 }

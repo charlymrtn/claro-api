@@ -3,7 +3,7 @@
 namespace app\Http\Controllers\API\v1;
 
 use Log;
-use Auth;
+use Exception;
 use Validator;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -67,8 +67,8 @@ class PlanController extends ApiController
             if ($oValidator->fails()) {
                 return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
             }
-            // Obtiene usuario del request
-            $oUser = Auth::user();
+            // Obtiene usuario autenticado
+            $oUser = $this->getApiUser();
             // Filtro
             $sFiltro = $oRequest->input('filtro', false);
             $aOrderByLabels = [
@@ -102,7 +102,7 @@ class PlanController extends ApiController
             return ejsend_success(['planes' => $cPlanes]);
         } catch (\Exception $e) {
             Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
-            return ejsend_exception($e, 'Error al mostrar los recursos: ' . $e->getMessage());
+            return ejsend_exception($e);
         }
     }
 
@@ -118,12 +118,12 @@ class PlanController extends ApiController
         try {
             // Valida estructura del request
             $this->validateJson($oRequest->getContent());
-            // Obtiene comercio_uuid del token del usuario de la petición
-            $sComercioUuid = $oRequest->user()->comercio_uuid;
+            // Obtiene usuario autenticado
+            $oUser = $this->getApiUser();
             // Define valores por default antes de validación
             $oRequest->merge([
                 'uuid' => Uuid::generate(4)->string,
-                'comercio_uuid' => $sComercioUuid,
+                'comercio_uuid' => $oUser->comercio_uuid,
                 'estado' => 'activo',
                 'puede_suscribir' => true,
                 'moneda_iso_a3' => $oRequest->input('moneda', 'MXN'),
@@ -143,7 +143,7 @@ class PlanController extends ApiController
             return ejsend_success(['plan' => $oPlan]);
         } catch (\Exception $e) {
             Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
-            return ejsend_exception($e, 'Error al crear el recurso: ' . $e->getMessage());
+            return ejsend_exception($e);
         }
     }
 
@@ -157,79 +157,73 @@ class PlanController extends ApiController
     {
         // Muestra el recurso solicitado
         try {
-            // Obtiene comercio_uuid del usuario de la petición
-            $sComercioUuid = Auth::user()->comercio_uuid;
-            // Valida request
-            $oValidator = Validator::make(['uuid' => $uuid], [
-                'uuid' => 'required|uuid|size:36',
-            ]);
-            if ($oValidator->fails()) {
-                return ejsend_fail([
-                    'code' => 400,
-                    'type' => 'Parámetros',
-                    'message' => 'Error en parámetros de entrada.',
-                ], 400, ['errors' => $oValidator->errors()]);
-            }
-            // Busca plan
-            $oPlan = $this->mPlan->where('comercio_uuid', '=', $sComercioUuid)->find($uuid);
-            if ($oPlan == null) {
-                Log::error('Error on '.__METHOD__.' line '.__LINE__.': Plan no encontrado:'.$uuid);
-                return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Plan no encontrado.'], 404);
-            }
+            // Obtiene usuario autenticado
+            $oUser = $this->getApiUser();
+            // Obtiene plan
+            $oPlan = $this->getPlan($uuid, $oUser->comercio_uuid);
             // Regresa plan
             return ejsend_success(['plan' => new PlanResource($oPlan)]);
         } catch (\Exception $e) {
             // Registra error
             Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
-            return ejsend_exception($e, 'Error al mostrar el recurso: ' . $e->getMessage());
+            return ejsend_exception($e);
+        }
+    }
+
+    /**
+     * Consultar un Plan por el id externo
+     *
+     * @param string  $id_externo
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function showExterno(string $id_externo): JsonResponse
+    {
+        // Muestra el recurso solicitado
+        try {
+            // Obtiene usuario autenticado
+            $oUser = $this->getApiUser();
+            // Valida request
+            $oValidator = Validator::make(['id_externo' => $id_externo], [
+                'id_externo' => 'required',
+            ]);
+            if ($oValidator->fails()) {
+                return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
+            }
+            // Busca plan
+            $oPlan = $this->mPlan->where('comercio_uuid', '=', $oUser->comercio_uuid)->where('id_externo', '=', $id_externo)->first();
+            if ($oPlan == null) {
+                Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': Plan id_externo no encontrado:' . $id_externo);
+                return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'El id_externo proporcionado no fue encontrado en el sistema.'], 404);
+            }
+            // Regresa cliente con el mismo formato que el método show()
+            return $this->show($oPlan->uuid);
+        } catch (\Exception $e) {
+            // Registra error
+            Log::error('Error en ' . __METHOD__ . ' línea ' . $e->getLine() . ':' . $e->getMessage());
+            return ejsend_exception($e);
         }
     }
 
     /**
      * Actualizar Plan.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int $id
-     * @return \Illuminate\Http\Response
+     * @param  \Illuminate\Http\Request  $oRequest
+     * @param  string $uuid
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function update(Request $oRequest, string $uuid)
+    public function update(Request $oRequest, string $uuid): JsonResponse
     {
         try {
-            // Obtiene comercio_uuid del token del usuario de la petición
-            $sComercioUuid = $oRequest->user()->comercio_uuid;
-            // Valida uuid
-            $oIdValidator = Validator::make(['uuid' => $uuid], [
-                'uuid' => 'required|uuid|size:36',
-            ]);
-            if ($oIdValidator->fails()) {
-                return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oIdValidator->errors()]);
-            }
             // Valida estructura del request
             $this->validateJson($oRequest->getContent());
-            // Busca plan
-            $oPlan = $this->mPlan->where('comercio_uuid', '=', $sComercioUuid)->find($uuid);
-            if ($oPlan == null) {
-                Log::error('Error on '.__METHOD__.' line '.__LINE__.': Suscripción no encontrada:'.$uuid);
-                return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Objeto no encontrado.'], 404);
-            }
-            // Define valores antes de validación
-            $oRequest->merge([
-                'nombre' => $oRequest->input('nombre', 'Plan ' . str_random(5)),
-            ]);
+            // Obtiene usuario autenticado
+            $oUser = $this->getApiUser();
+            // Obtiene plan
+            $oPlan = $this->getPlan($uuid, $oUser->comercio_uuid);
             // Filtra campos aceptados para actualización
-            $aCambios = array_only(array_merge($oPlan->toArray(), $oRequest->all()), ['nombre', 'monto', 'frecuencia', 'tipo_periodo', 'max_reintentos', 'estado', 'puede_suscribir', 'prueba_frecuencia', 'prueba_tipo_periodo']);
+            $aCambios = array_only($oRequest->all(), $this->mPlan->updatable);
             // Valida campos
-            $oValidator = Validator::make($aCambios, [
-                'nombre' => $this->mPlan->rules['nombre'],
-                'monto' => $this->mPlan->rules['monto'],
-                'frecuencia' => $this->mPlan->rules['frecuencia'],
-                'tipo_periodo' => $this->mPlan->rules['tipo_periodo'],
-                'max_reintentos' => $this->mPlan->rules['max_reintentos'],
-                'estado' => $this->mPlan->rules['estado'],
-                'puede_suscribir' => $this->mPlan->rules['puede_suscribir'],
-                'prueba_frecuencia' => $this->mPlan->rules['prueba_frecuencia'],
-                'prueba_tipo_periodo' => $this->mPlan->rules['prueba_tipo_periodo'],
-            ]);
+            $oValidator = Validator::make($aCambios, array_only($this->mPlan->rules, array_keys($aCambios)));
             if ($oValidator->fails()) {
                 return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
             }
@@ -238,17 +232,17 @@ class PlanController extends ApiController
             return ejsend_success(['plan' => new PlanResource($oPlan)]);
         } catch (\Exception $e) {
             Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
-            return ejsend_exception($e, 'Error al actualizar el recurso: ' . $e->getMessage());
+            return ejsend_exception($e);
         }
     }
 
     /**
      * Cancelar Plan.
      *
-     * @param  int $id
-     * @return \Illuminate\Http\Response
+     * @param  string $uuid
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function destroy(int $id)
+    public function destroy(string $uuid): JsonResponse
     {
         return ejsend_fail(['code' => 405, 'type' => 'Sistema', 'message' => 'Método no implementado o no permitido para este recurso.'], 405);
     }
@@ -259,31 +253,20 @@ class PlanController extends ApiController
      * @param string  $uuid
      * @return \Illuminate\Http\JsonResponse
      */
-    public function suscripciones($uuid): JsonResponse
+    public function suscripciones(string $uuid): JsonResponse
     {
         // Muestra el recurso solicitado
         try {
-            // Obtiene comercio_uuid del usuario de la petición
-            $sComercioUuid = Auth::user()->comercio_uuid;
-            // Valida request
-            $oIdValidator = Validator::make(['uuid' => $uuid], [
-                'uuid' => 'required|uuid|size:36',
-            ]);
-            if ($oIdValidator->fails()) {
-                return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oIdValidator->errors()]);
-            }
-            // Busca plan
-            $oPlan = $this->mPlan->where('comercio_uuid', '=', $sComercioUuid)->find($uuid);
-            if ($oPlan == null) {
-                Log::error('Error on '.__METHOD__.' line '.__LINE__.': Plan no encontrado:'.$uuid);
-                return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Plan no encontrado.'], 404);
-            }
+            // Obtiene usuario autenticado
+            $oUser = $this->getApiUser();
+            // Obtiene plan
+            $oPlan = $this->getPlan($uuid, $oUser->comercio_uuid);
             // Regresa suscripciones del cliente
             return ejsend_success(['suscripciones' => SuscripcionResource::collection($oPlan->suscripciones)]);
         } catch (\Exception $e) {
             // Registra error
             Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
-            return ejsend_exception($e, 'Error al obtener los recursos: ' . $e->getMessage());
+            return ejsend_exception($e);
         }
     }
 
@@ -293,24 +276,13 @@ class PlanController extends ApiController
      * @param string  $uuid
      * @return \Illuminate\Http\JsonResponse
      */
-    public function cancelarSuscripciones($uuid): JsonResponse
+    public function cancelarSuscripciones(string $uuid): JsonResponse
     {
         try {
-            // Obtiene comercio_uuid del usuario de la petición
-            $sComercioUuid = Auth::user()->comercio_uuid;
-            // Valida request
-            $oIdValidator = Validator::make(['uuid' => $uuid], [
-                'uuid' => 'required|uuid|size:36',
-            ]);
-            if ($oIdValidator->fails()) {
-                return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oIdValidator->errors()]);
-            }
-            // Busca plan
-            $oPlan = $this->mPlan->where('comercio_uuid', '=', $sComercioUuid)->find($uuid);
-            if ($oPlan == null) {
-                Log::error('Error on '.__METHOD__.' line '.__LINE__.': Plan no encontrado:'.$uuid);
-                return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Plan no encontrado.'], 404);
-            }
+            // Obtiene usuario autenticado
+            $oUser = $this->getApiUser();
+            // Obtiene plan
+            $oPlan = $this->getPlan($uuid, $oUser->comercio_uuid);
             // Cancela suscripciones
             $aResultados = [];
             foreach($oPlan->suscripciones as $oSuscripcion) {
@@ -329,7 +301,7 @@ class PlanController extends ApiController
         } catch (\Exception $e) {
             // Registra error
             Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
-            return ejsend_exception($e, 'Error al cancelar los recursos: ' . $e->getMessage());
+            return ejsend_exception($e);
         }
     }
 
@@ -342,24 +314,13 @@ class PlanController extends ApiController
     public function cancelar(string $uuid): JsonResponse
     {
         try {
-            // Obtiene comercio_uuid del usuario de la petición
-            $sComercioUuid = Auth::user()->comercio_uuid;
-            // Valida request
-            $oIdValidator = Validator::make(['uuid' => $uuid], [
-                'uuid' => 'required|uuid|size:36',
-            ]);
-            if ($oIdValidator->fails()) {
-                return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oIdValidator->errors()]);
-            }
-            // Busca plan
-            $oPlan = $this->mPlan->where('comercio_uuid', '=', $sComercioUuid)->find($uuid);
-            if ($oPlan == null) {
-                Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': Plan no encontrado:' . $uuid);
-                return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Plan no encontrado.'], 404);
-            }
+            // Obtiene usuario autenticado
+            $oUser = $this->getApiUser();
+            // Obtiene plan
+            $oPlan = $this->getPlan($uuid, $oUser->comercio_uuid);
             // Valida si existen suscripciones sin cancelar
             $oSuscripcionesActivas = $this->mSuscripcion->where([
-                ['comercio_uuid', '=', $sComercioUuid],
+                ['comercio_uuid', '=', $oUser->comercio_uuid],
                 ['plan_uuid', '=', $uuid],
             ])->whereIn('estado', ['prueba', 'activa', 'pendiente'])->get();
             if ($oSuscripcionesActivas->isNotEmpty()) {
@@ -377,7 +338,36 @@ class PlanController extends ApiController
         } catch (\Exception $e) {
             // Registra error
             Log::error('Error en ' . __METHOD__ . ' línea ' . $e->getLine() . ':' . $e->getMessage());
-            return ejsend_exception($e, 'Error al cancelar el recurso: ' . $e->getMessage());
+            return ejsend_exception($e);
         }
+    }
+
+    /* --------------------------------------------------------------
+     * Métodos privados
+     */
+
+    /**
+     * Obtiene plan validando el uuid
+     *
+     * @param string $uuid
+     * @param string $comercio_uuid
+     * @return \App\Models\Suscripciones\Plan
+     */
+    private function getPlan(string $uuid, string $comercio_uuid): Plan
+    {
+        // Valida request
+        $oIdValidator = Validator::make(['plan_id' => $uuid], [
+            'plan_id' => 'required|uuid|size:36',
+        ]);
+        if ($oIdValidator->fails()) {
+            throw new Exception('El id_plan proporcionado no es válido.', 400);
+        }
+        // Busca plan
+        $oPlan = $this->mPlan->where('comercio_uuid', '=', $comercio_uuid)->find($uuid);
+        if ($oPlan == null) {
+            throw new Exception('El id_plan proporcionado no fue encontrado en el sistema.', 404);
+        }
+        // Regresa Plan
+        return $oPlan;
     }
 }

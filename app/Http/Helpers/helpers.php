@@ -49,7 +49,7 @@ if (!function_exists("ejsend_error")) {
             'datetime' => Carbon\Carbon::now()->toRfc3339String(), // Cambio API 1.2.20180718 de toDateTimeString()
             'timestamp' => time(),
         ];
-        if ($data !== null) {
+        if (!empty($data)) {
             $aResponse['data'] = $data;
         }
         return response()->json($aResponse, $status, $extraHeaders);
@@ -80,7 +80,7 @@ if (!function_exists("ejsend_fail")) {
             'datetime' => Carbon\Carbon::now()->toRfc3339String(), // Cambio API 1.2.20180718 de toDateTimeString()
             'timestamp' => time(),
         ];
-        if ($data !== null) {
+        if (!empty($data)) {
             $aResponse['data'] = $data;
         }
         return response()->json($aResponse, $iHttpCode, $extraHeaders);
@@ -115,11 +115,11 @@ if (!function_exists("ejsend_exception")) {
             $sMensaje = $e->getMessage();
         }
         // Define arreglo de errores
-        if (empty($aErrores)) {
-            $aErrores = [$sErrorType => $e->getMessage()];
+        if (!empty($aErrores)) {
+            $aErrores = ['errors' => $aErrores];
         }
         // Regresa jsend de error
-        return ejsend_error(['code' => $sCode, 'type' => $sErrorType, 'message' => $sMensaje], $sCode, ['errors' => $aErrores]);
+        return ejsend_error(['code' => $sCode, 'type' => $sErrorType, 'message' => $sMensaje], $sCode, $aErrores);
     }
 }
 
@@ -155,21 +155,41 @@ if (!function_exists("array_replace_keys")) {
      * @param  array   $keys
      * @param  boolean $filter
      *
-     * @return $array
+     * @return array
      */
     function array_replace_keys(array $array, array $keys, $filter = false)
     {
-        $aNew = [];
+        $aNewArray = [];
         foreach($array as $key => $value) {
             if(isset($keys[$key])) {
-                $aNew[$keys[$key]] = $value;
+                $aNewArray[$keys[$key]] = $value;
             } elseif(!$filter) {
-                $aNew[$key] = $value;
+                $aNewArray[$key] = $value;
             }
         }
-        return $aNew;
+        return $aNewArray;
     }
 }
+
+// Array undot
+if (!function_exists("array_undot")) {
+    /**
+     * Expands a single level array with dot notation into a multi-dimensional array
+     *
+     * @param  array   $aDotArray
+     *
+     * @return array
+     */
+    function array_undot(array $aDotArray)
+    {
+        $aNewArray = [];
+        foreach ($aDotArray as $key => $value) {
+            array_set($aNewArray, $key, $value);
+        }
+        return $aNewArray;
+    }
+}
+
 
 // Json request structure validation
 if (!function_exists("validate_json")) {

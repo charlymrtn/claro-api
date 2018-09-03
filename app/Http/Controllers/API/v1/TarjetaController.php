@@ -8,7 +8,7 @@ use Validator;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\ApiController;
 use App\Models\Medios\Tarjeta;
 use App\Classes\Pagos\Medios\TarjetaCredito;
 use App\Classes\Pagos\Base\Direccion;
@@ -16,7 +16,7 @@ use App\Classes\Pagos\Base\Telefono;
 use App\Http\Resources\v1\TarjetaResource;
 use App\Http\Resources\v1\TarjetaCollectionResource;
 
-class TarjetaController extends Controller
+class TarjetaController extends ApiController
 {
 
     /**
@@ -59,8 +59,8 @@ class TarjetaController extends Controller
             if ($oValidator->fails()) {
                 return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
             }
-            // Obtiene usuario del request
-            $oUser = Auth::user();
+            // Obtiene usuario autenticado
+            $oUser = $this->getApiUser();
             // Filtro
             $sFiltro = $oRequest->input('filtro', false);
             // Busca tarjeta
@@ -73,7 +73,6 @@ class TarjetaController extends Controller
                                 ->orWhere('uuid', 'like', "%$sFiltro%")
                                 ->orWhere('nombre', 'like', "%$sFiltro%")
                                 ->orWhere('marca', 'like', "%$sFiltro%")
-                                ->orWhere('comercio_uuid', 'like', "%$sFiltro%")
                                 ->orWhere('cliente_uuid', 'like', "%$sFiltro%")
                                 ->orWhere('pan', 'like', "%$sFiltro%");
                         }
@@ -106,8 +105,10 @@ class TarjetaController extends Controller
     {
         // Guarda tarjeta
         try {
-            // Obtiene comercio_uuid del token del usuario de la petición
-            $sComercioUuid = $oRequest->user()->comercio_uuid;
+            // Valida estructura del request
+            $this->validateJson($oRequest->getContent());
+            // Obtiene usuario autenticado
+            $oUser = $this->getApiUser();
             // Crea tarjeta y valida
             $oTarjetaCredito = $this->tarjetaRequest($oRequest);
             // Define campos
@@ -125,7 +126,7 @@ class TarjetaController extends Controller
             // Verifica que la tarjeta no exista con el cliente proporcionado
             if (!empty($oRequest->input('cliente_id'))) {
                 // Busca tarjeta
-                $oTarjeta = $this->mTarjeta->where('comercio_uuid', $sComercioUuid)->where('cliente_uuid', $oRequest->input('cliente_id'))->where('pan_hash', $oTarjetaCredito->pan_hash)->first();
+                $oTarjeta = $this->mTarjeta->where('comercio_uuid', $oUser->comercio_uuid)->where('cliente_uuid', $oRequest->input('cliente_id'))->where('pan_hash', $oTarjetaCredito->pan_hash)->first();
                 if ($oTarjeta != null) {
                     // Regresa error de tarjeta existente
                     return ejsend_fail(['code' => 409, 'type' => 'Tarjeta', 'message' => 'La tarjeta ya existe para el cliente proporcionado'], 409);
@@ -166,8 +167,8 @@ class TarjetaController extends Controller
             if ($oValidator->fails()) {
                 return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
             }
-            // Obtiene usuario del request
-            $oUser = Auth::user();
+            // Obtiene usuario autenticado
+            $oUser = $this->getApiUser();
             // Busca tarjeta
             $oTarjeta = $this->mTarjeta->where('comercio_uuid', $oUser->comercio_uuid)->find($uuid);
             if ($oTarjeta == null) {
@@ -201,15 +202,36 @@ class TarjetaController extends Controller
     {
         // Formatea y encapsula datos
         try {
-            // Obtiene usuario del request
-            $oUser = Auth::user();
+            // Valida estructura del request
+            $this->validateJson($oRequest->getContent());
+            // Obtiene usuario autenticado
+            $oUser = $this->getApiUser();
             // Busca tarjeta
             $oTarjeta = $this->mTarjeta->where('comercio_uuid', $oUser->comercio_uuid)->find($uuid);
             if ($oTarjeta == null) {
                 Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': Tarjeta no encontrada:' . $uuid);
                 return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Tarjeta no encontrada.'], 404);
             }
-            // Define cambios
+            // Define cambios en objetos
+
+
+
+
+
+
+            dump($oTarjeta->toArray());
+            $oTarjeta->direccion->telefono->fill($oRequest->input('direccion'));
+            dd($oTarjeta->toArray());
+
+            $oTelefono = $oTarjeta->direccion->telefono;
+            if(!empty($oRequest->input('direccion.telefono'))) {
+                $oTelefono->fill($oRequest->input('direccion.telefono'));
+                $oTarjeta->direccion->telefono = $oTelefono;
+                #dump($oTelefono);
+                dump($oTarjeta->direccion->telefono);
+            }
+            dd($oTarjeta->toArray());
+
             $aCambios = [];
             $aCambios['direccion'] = new Direccion([
                 'pais' => $oRequest->input('direccion.pais', $oTarjeta->direccion->pais),
@@ -224,14 +246,7 @@ class TarjetaController extends Controller
                 'latitud' => $oRequest->input('direccion.latitud', $oTarjeta->direccion->latitud ?? 0),
                 'referencia_1' => $oRequest->input('direccion.referencia_1', $oTarjeta->direccion->referencia_1 ?? null),
                 'referencia_2' => $oRequest->input('direccion.referencia_2', $oTarjeta->direccion->referencia_2 ?? null),
-                'telefono' => new Telefono([
-                    'tipo' => $oRequest->input('telefono.tipo', $oTarjeta->direccion->telefono->tipo ?? 'desconocido'),
-                    'codigo_pais' => $oRequest->input('telefono.codigo_pais', $oTarjeta->direccion->telefono->codigo_pais ?? 52),
-                    'prefijo' => $oRequest->input('telefono.prefijo', $oTarjeta->direccion->telefono->prefijo ?? null),
-                    'codigo_area' => $oRequest->input('telefono.codigo_area', $oTarjeta->direccion->telefono->codigo_area ?? 55),
-                    'numero' => $oRequest->input('telefono.numero', $oTarjeta->direccion->telefono->numero ?? '0000000000'),
-                    'extension' => $oRequest->input('telefono.extension', $oTarjeta->direccion->telefono->extension ?? null),
-                ]),
+                'telefono' => $oTelefono,
             ]);
             $oRequest->merge($aCambios);
             // Actualiza en base de datos
@@ -270,8 +285,8 @@ class TarjetaController extends Controller
             if ($oValidator->fails()) {
                 return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
             }
-            // Obtiene usuario del request
-            $oUser = Auth::user();
+            // Obtiene usuario autenticado
+            $oUser = $this->getApiUser();
             // Busca tarjeta
             $oTarjeta = $this->mTarjeta->where('comercio_uuid', $oUser->comercio_uuid)->find($uuid);
             if ($oTarjeta == null) {
@@ -303,29 +318,14 @@ class TarjetaController extends Controller
      */
     private function tarjetaRequest(Request $oRequest): TarjetaCredito
     {
-        return $oTarjetaCredito = new TarjetaCredito([
-            'nombre' => $oRequest->input('nombre'),
-            'pan' => $oRequest->input('pan'),
-            'cvv2' => $oRequest->input('cvv2'),
-            'expiracion_mes' => $oRequest->input('expiracion_mes'),
-            'expiracion_anio' => $oRequest->input('expiracion_anio'),
-            'direccion' => new Direccion([
-                'linea1' => $oRequest->input('direccion.linea1', ''),
-                'linea2' => $oRequest->input('direccion.linea2', ''),
-                'linea3' => $oRequest->input('direccion.linea3', ''),
-                'cp' => $oRequest->input('direccion.cp', '0000'),
-                'pais' => $oRequest->input('direccion.pais', 'MEX'),
-                'estado' => $oRequest->input('direccion.estado', 'CMX'),
-                'ciudad' => $oRequest->input('direccion.ciudad', 'CDMX'),
-                'municipio' => $oRequest->input('direccion.municipio', ''),
-                'telefono' => new Telefono([
-                    'tipo' => $oRequest->input('direccion.telefono.tipo', 'desconocido'),
-                    'codigo_pais' => $oRequest->input('direccion.telefono.codigo_pais', '52'),
-                    'codigo_area' => $oRequest->input('direccion.telefono.codigo_area', '55'),
-                    'numero' => $oRequest->input('direccion.telefono.numero', '0000000000'),
-                    'extension' => $oRequest->input('direccion.telefono.extension', null),
-                ]),
-            ]),
-        ]);
+        $aRequest = $oRequest->all();
+        // Transforma objeto dirección
+        if(!empty($aRequest['direccion'])) {
+            if(!empty($aRequest['direccion']['telefono'])) {
+                $aRequest['direccion']['telefono'] = new Telefono($aRequest['direccion']['telefono']);
+            }
+            $aRequest['direccion'] = new Direccion($aRequest['direccion']);
+        }
+        return new TarjetaCredito($aRequest);
     }
 }

@@ -46,6 +46,8 @@ class Cliente extends Model
         // Objetos JSON
         'telefono', // Objeto tipo Teléfono
         'direccion', // Objeto de tipo Dirección
+        'created_at',
+        'updated_at',
     ];
 
     /**
@@ -78,7 +80,7 @@ class Cliente extends Model
      */
     public $rules = [
         'comercio_uuid' => 'required|uuid|size:36',
-        'id_externo' => 'required|min:1|max:30',
+        'id_externo' => 'required|min:1|max:64',
         'creacion_externa' => 'date',
         'nombre' => 'min:2|max:60',
         'apellido_paterno' => 'min:2|max:60',
