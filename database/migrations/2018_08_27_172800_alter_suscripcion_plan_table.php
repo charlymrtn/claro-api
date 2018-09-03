@@ -15,10 +15,11 @@ class AlterSuscripcionPlanTable extends Migration
     public function up()
     {
         // Agrega columna
-        Schema::connection('mysql_sa')->table('suscripcion_plan', function (Blueprint $table) {
-            $table->string('id_externo');
-            $table->unique(['comercio_uuid', 'id_externo'], 'comercio-id');
-        });
+        if (!Schema::hasColumn('suscripcion_plan', 'id_externo')) {
+            Schema::connection('mysql_sa')->table('suscripcion_plan', function (Blueprint $table) {
+                $table->string('id_externo');
+            });
+        }
         // Modifica registros existentes
         $cPlanes = Plan::all();
         foreach ($cPlanes as $oPlan) {
@@ -40,7 +41,7 @@ class AlterSuscripcionPlanTable extends Migration
      */
     public function down()
     {
-        // Agrega columna
+        // Borra columna e índice
         Schema::connection('mysql_sa')->table('suscripcion_plan', function (Blueprint $table) {
             $table->dropIndex('comercio-id');
             $table->dropColumn('id_externo');
