@@ -112,7 +112,7 @@ class ClienteController extends ApiController
                 'uuid' => Uuid::generate(4)->string,
                 'comercio_uuid' => $sComercioUuid,
                 'estado' => $oRequest->input('estado', 'activo'),
-                'id_externo' => $oRequest->input('id_externo', $oRequest->input('email')),
+                'id_externo' => $oRequest->input('id_externo'),
             ]);
             // Parsea fechas
             $oRequest->merge($this->parseArrayDates($oRequest->all(), ['creacion_externa', 'nacimiento']));

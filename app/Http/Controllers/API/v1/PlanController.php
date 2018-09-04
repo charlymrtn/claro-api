@@ -140,6 +140,7 @@ class PlanController extends ApiController
             }
             // Valida cliente creado anteriormente con mismo id_externo
             $oPlanExistenteId = $this->mPlan
+                ->withTrashed()
                 ->where('comercio_uuid', '=', $oUser->comercio_uuid)
                 ->where('id_externo', '=', $oRequest->input('id_externo'))
                 ->first();
@@ -395,7 +396,7 @@ class PlanController extends ApiController
             throw new Exception('El id_plan proporcionado no es válido.', 400);
         }
         // Busca plan
-        $oPlan = $this->mPlan->where('comercio_uuid', '=', $comercio_uuid)->find($uuid);
+        $oPlan = $this->mPlan->withTrashed()->where('comercio_uuid', '=', $comercio_uuid)->find($uuid);
         if ($oPlan == null) {
             throw new Exception('El id_plan proporcionado no fue encontrado en el sistema.', 404);
         }
