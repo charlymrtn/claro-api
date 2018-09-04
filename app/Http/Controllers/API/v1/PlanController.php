@@ -5,6 +5,7 @@ namespace app\Http\Controllers\API\v1;
 use Log;
 use Exception;
 use Validator;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Webpatser\Uuid\Uuid;
@@ -150,7 +151,7 @@ class PlanController extends ApiController
             // Regresa resultados
             return ejsend_success(['plan' => $oPlan]);
         } catch (\Exception $e) {
-            Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
+            Log::error('Error en '.__METHOD__.' línea ' . $e->getLine().':' . $e->getMessage());
             return ejsend_exception($e);
         }
     }
@@ -173,7 +174,7 @@ class PlanController extends ApiController
             return ejsend_success(['plan' => new PlanResource($oPlan)]);
         } catch (\Exception $e) {
             // Registra error
-            Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
+            Log::error('Error en '.__METHOD__.' línea ' . $e->getLine().':' . $e->getMessage());
             return ejsend_exception($e);
         }
     }
@@ -252,6 +253,29 @@ class PlanController extends ApiController
      */
     public function destroy(string $uuid): JsonResponse
     {
+        try {
+            // Obtiene usuario autenticado
+            $oUser = $this->getApiUser();
+            // Obtiene plan
+            $oPlan = $this->getPlan($uuid, $oUser->comercio_uuid);
+            if ($oPlan == null) {
+                Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': Objeto no encontrado');
+                return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Objeto no encontrado.'], 404);
+            }
+            // Valida precondiciones
+            // - El plan debe estar inactivo
+            if ($oPlan->estado == 'inactivo' && $oPlan->puede_suscribir == false) {
+                $oPlan->delete();
+                // Regresa usuario con clientes y tokens
+                return ejsend_success(['plan' => ['id' => $uuid, 'eliminacion' => Carbon::now()->toIso8601String()]]);
+            } else {
+                Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': El plan proporcionado no puede ser cancelado porque sigue estando activo.');
+                return ejsend_fail(['code' => 412, 'type' => 'Plan', 'message' => 'El plan proporcionado no puede ser cancelado porque sigue estando activo.'], 412);
+            }
+        } catch (\Exception $e) {
+            Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
+            return ejsend_exception($e);
+        }
         return ejsend_fail(['code' => 405, 'type' => 'Sistema', 'message' => 'Método no implementado o no permitido para este recurso.'], 405);
     }
 
@@ -273,7 +297,7 @@ class PlanController extends ApiController
             return ejsend_success(['suscripciones' => SuscripcionResource::collection($oPlan->suscripciones)]);
         } catch (\Exception $e) {
             // Registra error
-            Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
+            Log::error('Error en ' . __METHOD__ . ' línea ' . $e->getLine().':' . $e->getMessage());
             return ejsend_exception($e);
         }
     }
@@ -308,7 +332,7 @@ class PlanController extends ApiController
             return ejsend_success(['suscripciones' => $aResultados]);
         } catch (\Exception $e) {
             // Registra error
-            Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
+            Log::error('Error en '.__METHOD__.' línea ' . $e->getLine().':' . $e->getMessage());
             return ejsend_exception($e);
         }
     }
