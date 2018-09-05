@@ -138,8 +138,12 @@ class Tarjeta extends Model
      * @param string $sValue Arreglo
      * @return Direccion
      */
-    public function getDireccionAttribute(string $jDireccion): Direccion
+    public function getDireccionAttribute(?string $jDireccion): Direccion
     {
+        // Valida null
+        if ($jDireccion == null) {
+            return null;
+        }
         // Convierte dato en arreglo
         $aDireccion = json_decode($jDireccion, true);
         // Convierte objeto Telefono
