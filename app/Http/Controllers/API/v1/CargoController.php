@@ -53,7 +53,7 @@ class CargoController extends ApiController
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Http\Request  $oRequest
      * @return \Illuminate\Http\Response
      */
     public function cargo(Request $oRequest)
@@ -148,7 +148,7 @@ class CargoController extends ApiController
             if (in_array(App::environment(), ['local', 'dev', 'sandbox'])) {
                 $bPrueba = true;
             } else {
-                $bPrueba = $oRequest->input('prueba', true);
+                $bPrueba = $oRequest->input('prueba', false);
             }
 
             // Define PeticionCargo
