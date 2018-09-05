@@ -11,11 +11,11 @@ if (!function_exists("ejsend_success")) {
     /**
      * @param $data
      * @param int $status HTTP status code
-     * @param array $extraHeaders
+     * @param array $aExtraHeaders
      *
      * @return \Illuminate\Contracts\Routing\ResponseFactory|\Symfony\Component\HttpFoundation\Response
      */
-    function ejsend_success($data, $status = 200, $extraHeaders = [])
+    function ejsend_success($data, $status = 200, $aExtraHeaders = [])
     {
         $response = [
             'status' => 'success',
@@ -24,7 +24,7 @@ if (!function_exists("ejsend_success")) {
             'datetime' => Carbon\Carbon::now()->toRfc3339String(), // Cambio API 1.2.20180718 de toDateTimeString()
             'timestamp' => time(),
         ];
-        return response()->json($response, $status, $extraHeaders);
+        return response()->json($response, $status, $aExtraHeaders);
     }
 }
 
@@ -36,11 +36,11 @@ if (!function_exists("ejsend_error")) {
      * @param $error
      * @param int $status HTTP status code
      * @param $data
-     * @param array $extraHeaders
+     * @param array $aExtraHeaders
      *
      * @return \Illuminate\Contracts\Routing\ResponseFactory|\Symfony\Component\HttpFoundation\Response
      */
-    function ejsend_error($error, $status = 500, $data = null, $extraHeaders = [])
+    function ejsend_error($error, $status = 500, $data = null, $aExtraHeaders = [])
     {
         $aResponse = [
             'status' => 'error',
@@ -52,7 +52,7 @@ if (!function_exists("ejsend_error")) {
         if (!empty($data)) {
             $aResponse['data'] = $data;
         }
-        return response()->json($aResponse, $status, $extraHeaders);
+        return response()->json($aResponse, $status, $aExtraHeaders);
     }
 }
 
@@ -64,11 +64,11 @@ if (!function_exists("ejsend_fail")) {
      * @param $error
      * @param int $status HTTP status code
      * @param $data
-     * @param array $extraHeaders
+     * @param array $aExtraHeaders
      *
      * @return \Illuminate\Contracts\Routing\ResponseFactory|\Symfony\Component\HttpFoundation\Response
      */
-    function ejsend_fail($error, $status = 400, $data = null, $extraHeaders = [])
+    function ejsend_fail($error, $status = 400, $data = null, $aExtraHeaders = [])
     {
         // Formato de variables
         $iHttpCode = (int) $status;
@@ -83,7 +83,7 @@ if (!function_exists("ejsend_fail")) {
         if (!empty($data)) {
             $aResponse['data'] = $data;
         }
-        return response()->json($aResponse, $iHttpCode, $extraHeaders);
+        return response()->json($aResponse, $iHttpCode, $aExtraHeaders);
     }
 }
 
@@ -96,30 +96,37 @@ if (!function_exists("ejsend_exception")) {
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    function ejsend_exception(\Exception $e, $sMensaje = '', $aErrores = [])
+    function ejsend_exception(\Exception $e, $sMensaje = '', $aErrores = [], $aExtraHeaders = [])
     {
-        // Define error
-        $sCode = (int) $e->getCode();
-        $sErrorType = 'General';
-        if (empty($sCode)) {
-            $sCode = 500; $sErrorType = 'Sistema';
-        } elseif ($sCode >= 300 && $sCode <= 399) {
-            $sErrorType = 'Redirección';
-        } elseif ($sCode >= 400 && $sCode <= 499) {
-            $sErrorType = 'Petición';
-        } elseif ($sCode >= 500 && $sCode <= 599) {
-            $sErrorType = 'Sistema';
-        }
         // Define mensaje de error
         if (empty($sMensaje)) {
             $sMensaje = $e->getMessage();
+        }
+        // Define http status code
+        $iHttpStatusCode = (int) $e->getCode();
+        if (!empty($e->getStatusCode)) {
+            $iHttpStatusCode = $e->getStatusCode();
+        } elseif ($iHttpStatusCode < 100 || $iHttpStatusCode > 600) {
+            $iHttpStatusCode = 500;
+            $sMensaje = 'Error interno de aplicación.';
+        }
+        // Define tipo de error
+        $sErrorType = 'General';
+        if (empty($iHttpStatusCode)) {
+            $sCode = 500; $sErrorType = 'Sistema';
+        } elseif ($iHttpStatusCode >= 300 && $iHttpStatusCode <= 399) {
+            $sErrorType = 'Redirección';
+        } elseif ($iHttpStatusCode >= 400 && $iHttpStatusCode <= 499) {
+            $sErrorType = 'Petición';
+        } elseif ($iHttpStatusCode >= 500 && $iHttpStatusCode <= 599) {
+            $sErrorType = 'Sistema';
         }
         // Define arreglo de errores
         if (!empty($aErrores)) {
             $aErrores = ['errors' => $aErrores];
         }
         // Regresa jsend de error
-        return ejsend_error(['code' => $sCode, 'type' => $sErrorType, 'message' => $sMensaje], $sCode, $aErrores);
+        return ejsend_error(['code' => $e->getCode(), 'type' => $sErrorType, 'message' => $sMensaje], $iHttpStatusCode, $aErrores, $aExtraHeaders);
     }
 }
 

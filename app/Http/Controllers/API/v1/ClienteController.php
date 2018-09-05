@@ -225,7 +225,7 @@ class ClienteController extends ApiController
             // Busca cliente
             $oCliente = $this->mCliente->where('comercio_uuid', '=', $sComercioUuid)->where('id_externo', '=', $id_externo)->first();
             if ($oCliente == null) {
-                Log::error('Error on '.__METHOD__.' line '.__LINE__.': Cliente no encontrado:'.$uuid);
+                Log::error('Error on '.__METHOD__.' line '.__LINE__.': Cliente no encontrado:' . $id_externo);
                 return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Cliente no encontrado.'], 404);
             }
             // Regresa cliente con el mismo formato que el método show()
