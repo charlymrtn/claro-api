@@ -138,7 +138,7 @@ class Tarjeta extends Model
      * @param string $sValue Arreglo
      * @return Direccion
      */
-    public function getDireccionAttribute(?string $jDireccion): Direccion
+    public function getDireccionAttribute(?string $jDireccion): ?Direccion
     {
         // Valida null
         if ($jDireccion == null) {
