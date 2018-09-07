@@ -8,6 +8,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Classes\Pagos\Base\Direccion;
 use App\Classes\Pagos\Base\Telefono;
+use App\Models\Suscripciones\Suscripcion;
 
 class Tarjeta extends Model
 {
@@ -74,6 +75,7 @@ class Tarjeta extends Model
     protected $casts = [
         'default' => 'boolean',
         'cargo_unico' => 'boolean',
+        'direccion' => 'object',
     ];
 
     /* --------------------------------------------------------------
@@ -81,7 +83,7 @@ class Tarjeta extends Model
      * @var array $rules Reglas de validación
      */
     public $rules = [
-        'pan' => 'required',
+        'pan' => 'sometimes|required',
         'nombre' => 'required_without:nombres|min:3|max:60',
         'expiracion_mes' => 'required|numeric',
         'expiracion_anio' => 'required|numeric',
@@ -89,6 +91,14 @@ class Tarjeta extends Model
         'inicio_anio' => 'numeric',
         'default' => 'boolean',
         'cliente_uuid' => 'sometimes|uuid|size:36|exists:cliente,uuid',
+    ];
+
+    /* --------------------------------------------------------------
+     * Campos actualizables
+     * @var array $updatable Campos actualizables
+     */
+    public $updatable = [
+        'nombre', 'expiracion_mes', 'expiracion_anio', 'inicio_mes', 'inicio_anio', 'default', 'cliente_uuid', 'direccion', 'cargo_unico'
     ];
 
     /** --------------------------------------------------------------
@@ -116,6 +126,14 @@ class Tarjeta extends Model
         return $this->belongsTo('App\Models\Cliente', 'cliente_uuid', 'uuid');
     }
 
+    /**
+     * Suscripcines
+     */
+    public function suscripciones()
+    {
+        return $this->hasMany('App\Models\Suscripciones\Suscripcion', 'metodo_pago_uuid', 'uuid');
+    }
+
 
     /* --------------------------------------------------------------
      * Accessor & Mutators
@@ -127,7 +145,7 @@ class Tarjeta extends Model
      * @param Direccion $oDireccion Objeto Direccion
      * @return void
      */
-    public function setDireccionAttribute(Direccion $oDireccion): void
+    public function setDireccionAttribute(?Direccion $oDireccion): void
     {
         $this->attributes['direccion'] = $oDireccion;
     }

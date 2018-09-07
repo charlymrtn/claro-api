@@ -162,7 +162,7 @@ class Direccion extends Model
     }
 
     /*
-     * Mutator telefono
+     * Mutator set telefono
      *
      * @param Direccion $oDireccion Objeto Direccion
      * @return void
@@ -175,13 +175,16 @@ class Direccion extends Model
     }
 
     /*
-     * Mutator telefono
+     * Mutator get telefono
      *
      * @param string $jTelefono String json de teléfono
      * @return Telefono
      */
-    public function getTelefonoAttribute(string $jTelefono): Telefono
+    public function getTelefonoAttribute(?string $jTelefono): ?Telefono
     {
+        if (is_null($jTelefono)) {
+            return null;
+        }
         // Convierte dato en arreglo
         $aTelefono = json_decode($jTelefono, true);
         return new Telefono($aTelefono);

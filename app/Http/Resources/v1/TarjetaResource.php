@@ -6,13 +6,29 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class TarjetaResource extends JsonResource
 {
+
+    /**
+     * Regresa arreglo con mapa de etiquetas.
+     *
+     * @return array
+     */
+    public static function labelMap(): array
+    {
+        return [
+            'uuid' => 'token',
+            'cliente_uuid' => 'cliente_id',
+            'created_at' => 'creacion',
+            'updated_at' => 'actualizacion'
+        ];
+    }
+
     /**
      * Transform the resource into an array.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    public function toArray($request)
+    public function toArray($request): array
     {
         return  array_replace_keys(
             array_replace(
@@ -29,12 +45,7 @@ class TarjetaResource extends JsonResource
                     'updated_at' => $this->updated_at->toRfc3339String(),
                 ]
             ),
-            [
-                'uuid' => 'token',
-                'cliente_uuid' => 'cliente_id',
-                'created_at' => 'creacion',
-                'updated_at' => 'actualizacion'
-            ]
+            $this->labelMap()
         );
     }
 }

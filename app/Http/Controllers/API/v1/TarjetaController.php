@@ -110,7 +110,7 @@ class TarjetaController extends ApiController
             // Obtiene usuario autenticado
             $oUser = $this->getApiUser();
             // Crea tarjeta y valida
-            $oTarjetaCredito = $this->tarjetaRequest($oRequest);
+            $oTarjetaCredito = $this->tarjetaRequestArray($oRequest->all());
             // Define campos
             $aTarjeta = array_filter_null(array_merge([
                     'comercio_uuid' => $oRequest->user()->comercio_uuid,
@@ -134,8 +134,8 @@ class TarjetaController extends ApiController
             }
             // Guarda resultado en base de datos
             $oTarjeta = $this->mTarjeta->create($aTarjeta);
-            // Envía tarjeta a bóveda
-            // Guarda resultado en base de datos
+            // @todo: Envía tarjeta a bóveda
+            // @todo: Guarda resultado en base de datos
             // Formatea respuestay regresa resultado
             return ejsend_success(['tarjeta' => new TarjetaResource($oTarjeta)]);
         } catch (\Exception $e) {
@@ -212,45 +212,37 @@ class TarjetaController extends ApiController
                 Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': Tarjeta no encontrada:' . $uuid);
                 return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Tarjeta no encontrada.'], 404);
             }
-            // Define cambios en objetos
-
-
-
-
-
-
-            dump($oTarjeta->toArray());
-            $oTarjeta->direccion->telefono->fill($oRequest->input('direccion'));
-            dd($oTarjeta->toArray());
-
-            $oTelefono = $oTarjeta->direccion->telefono;
-            if(!empty($oRequest->input('direccion.telefono'))) {
-                $oTelefono->fill($oRequest->input('direccion.telefono'));
-                $oTarjeta->direccion->telefono = $oTelefono;
-                #dump($oTelefono);
-                dump($oTarjeta->direccion->telefono);
+            // Prepara cambios
+            $aRequest = array_replace_keys($oRequest->all(), array_flip(TarjetaResource::labelMap()));
+            // Filtra campos aceptados para actualización
+            $aCambios = array_only($aRequest, $oTarjeta->updatable);
+            // Valida campos
+            $oValidator = Validator::make($aCambios, array_only($oTarjeta->rules, array_keys($aCambios)));
+            if ($oValidator->fails()) {
+                return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
             }
-            dd($oTarjeta->toArray());
-
-            $aCambios = [];
-            $aCambios['direccion'] = new Direccion([
-                'pais' => $oRequest->input('direccion.pais', $oTarjeta->direccion->pais),
-                'estado' => $oRequest->input('direccion.estado', $oTarjeta->direccion->estado),
-                'ciudad' => $oRequest->input('direccion.ciudad', $oTarjeta->direccion->ciudad),
-                'municipio' => $oRequest->input('direccion.municipio', $oTarjeta->direccion->municipio ?? ''),
-                'linea1' => $oRequest->input('direccion.linea1', $oTarjeta->direccion->linea1 ?? ''),
-                'linea2' => $oRequest->input('direccion.linea2', $oTarjeta->direccion->linea2 ?? ''),
-                'linea3' => $oRequest->input('direccion.linea3', $oTarjeta->direccion->linea3 ?? ''),
-                'cp' => $oRequest->input('direccion.cp', $oTarjeta->direccion->cp ?? '0000'),
-                'longitud' => $oRequest->input('direccion.longitud', $oTarjeta->direccion->longitud ?? 0),
-                'latitud' => $oRequest->input('direccion.latitud', $oTarjeta->direccion->latitud ?? 0),
-                'referencia_1' => $oRequest->input('direccion.referencia_1', $oTarjeta->direccion->referencia_1 ?? null),
-                'referencia_2' => $oRequest->input('direccion.referencia_2', $oTarjeta->direccion->referencia_2 ?? null),
-                'telefono' => $oTelefono,
-            ]);
-            $oRequest->merge($aCambios);
-            // Actualiza en base de datos
-            $oTarjeta->update($oRequest->all());
+            // Prepara objetos
+            if (!empty($aCambios['direccion'])) {
+                // Valida y actualiza objeto Telefono
+                if (!empty($aCambios['direccion']['telefono'])) {
+                    if (!empty($oTarjeta->direccion->telefono)) {
+                        $oTelefono = $oTarjeta->direccion->telefono;
+                        $oTelefono->fill($aCambios['direccion']['telefono']);
+                        $aCambios['direccion']['telefono'] = $oTelefono;
+                    } else {
+                        $aCambios['direccion']['telefono'] = new Telefono($aCambios['direccion']['telefono']);
+                    }
+                }
+                // Valida y actualiza objeto Direccion
+                if (!empty($oTarjeta->direccion)) {
+                    $oDireccion = $oTarjeta->direccion;
+                    $oDireccion->fill($aCambios['direccion']);
+                    $aCambios['direccion'] = $oDireccion;
+                } else {
+                    $aCambios['direccion'] = new Direccion($aCambios['direccion']);
+                }
+            }
+            $oTarjeta->update($aCambios);
             // Envía tarjeta a bóveda
             // Guarda resultado en base de datos
             // Formatea respuestay regresa resultado
@@ -292,11 +284,14 @@ class TarjetaController extends ApiController
             if ($oTarjeta == null) {
                 Log::error('Error on ' . __METHOD__ . ' line ' . __LINE__ . ': Objeto no encontrado');
                 return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Objeto no encontrado.'], 404);
-            } else {
-                $oTarjeta->forceDelete();
-                // Regresa usuario con clientes y tokens
-                return ejsend_success(['tarjeta' => ['token' => $uuid, 'eliminacion' => Carbon::now()->toIso8601String()]]);
             }
+            // Verifica que no esté ligada a alguna suscripción
+
+            // Verifica si no hubo cargos
+            // Borrado físico de la tarjeta
+            $oTarjeta->forceDelete();
+            // Regresa usuario con clientes y tokens
+            return ejsend_success(['tarjeta' => ['token' => $uuid, 'eliminacion' => Carbon::now()->toIso8601String()]]);
         } catch (\Exception $e) {
             // Define error
             if (empty($e->getCode())) {
@@ -313,12 +308,11 @@ class TarjetaController extends ApiController
     /**
      * Formato de request de tarjeta
      *
-     * @param  Request $oRequest Request con datos de tarjeta
+     * @param  array $aRequest Arreglo del request con los datos de la tarjeta
      * @return TarjetaCredito
      */
-    private function tarjetaRequest(Request $oRequest): TarjetaCredito
+    private function tarjetaRequestArray(array $aRequest): TarjetaCredito
     {
-        $aRequest = $oRequest->all();
         // Transforma objeto dirección
         if(!empty($aRequest['direccion'])) {
             if(!empty($aRequest['direccion']['telefono'])) {
