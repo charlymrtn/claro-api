@@ -178,7 +178,7 @@ class ProcesadorAmex extends AbstractProcesador
     public function carga(PeticionCargo $oPeticionCargo)
     {
         //
-        dump($oPeticionCargo->tiArray());
+        dump($oPeticionCargo->toArray());
     }
 
     // }}}

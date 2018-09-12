@@ -113,7 +113,7 @@ if (!function_exists("ejsend_exception")) {
         // Define tipo de error
         $sErrorType = 'General';
         if (empty($iHttpStatusCode)) {
-            $sCode = 500; $sErrorType = 'Sistema';
+            $sErrorType = 'Sistema';
         } elseif ($iHttpStatusCode >= 300 && $iHttpStatusCode <= 399) {
             $sErrorType = 'Redirección';
         } elseif ($iHttpStatusCode >= 400 && $iHttpStatusCode <= 499) {

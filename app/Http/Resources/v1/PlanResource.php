@@ -9,6 +9,19 @@ use App\Http\Resources\v1\SuscripcionResource;
 class PlanResource extends JsonResource
 {
     /**
+     * Regresa arreglo con mapa de etiquetas.
+     *
+     * @return array
+     */
+    public static function labelMap(): array
+    {
+        return [
+            'created_at' => 'creacion',
+            'updated_at' => 'actualizacion'
+        ];
+    }
+
+    /**
      * Transform the resource into an array.
      *
      * @param  \Illuminate\Http\Request  $request

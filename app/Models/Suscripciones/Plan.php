@@ -48,7 +48,7 @@ class Plan extends Model
     ];
 
     /**
-     * The attributes that should be hidden for arrays.
+     * Atributos escondidos.
      *
      * @var array
      */
@@ -71,30 +71,6 @@ class Plan extends Model
         'prueba_frecuencia' => 'integer',
         'max_reintentos' => 'integer',
         'puede_suscribir' => 'boolean',
-    ];
-
-    /* --------------------------------------------------------------
-     * Reglas de validación
-     * @var array $rules Reglas de validación
-     */
-    public $rules = [
-        'comercio_uuid' => 'required|string',
-        'id_externo' => 'required|min:1|max:64', // unique:suscripcion_plan,id_externo|
-        'nombre' => 'string|min:1|max:60',
-        'monto' => 'required|numeric',
-        'frecuencia' => 'required|integer',
-        'tipo_periodo' => 'required|in:dia,semana,mes,anio',
-        'max_reintentos' => 'integer|min:0|max:10',
-        'prueba_frecuencia' => 'integer',
-        'prueba_tipo_periodo' => 'in:dia,semana,mes,anio',
-        'estado' => 'in:inactivo,activo',
-        'puede_suscribir' => 'boolean',
-        'moneda_iso_a3' => 'required|string|size:3',
-    ];
-
-
-    public $updatable = [
-        'nombre', 'monto', 'frecuencia', 'tipo_periodo', 'max_reintentos', 'estado', 'puede_suscribir', 'prueba_frecuencia', 'prueba_tipo_periodo'
     ];
 
     /** --------------------------------------------------------------
@@ -126,6 +102,49 @@ class Plan extends Model
      * Accessor & Mutators
      */
 
+
+    /* --------------------------------------------------------------
+     * Reglas de validación y sanitizacion
+     */
+
+    /**
+     * Reglas de validación
+     *
+     * @var array $rules Reglas de validación
+     */
+    public $rules = [
+        'comercio_uuid' => 'required|string',
+        'id_externo' => 'required|min:1|max:64', // unique:suscripcion_plan,id_externo|
+        'nombre' => 'string|min:1|max:60',
+        'monto' => 'required|numeric',
+        'frecuencia' => 'required|integer',
+        'tipo_periodo' => 'required|in:dia,semana,mes,anio',
+        'max_reintentos' => 'integer|min:0|max:10',
+        'prueba_frecuencia' => 'integer',
+        'prueba_tipo_periodo' => 'in:dia,semana,mes,anio',
+        'estado' => 'in:inactivo,activo',
+        'puede_suscribir' => 'boolean',
+        'moneda_iso_a3' => 'required|string|size:3',
+    ];
+
+    /**
+     * Mensajes de error específicos
+     *
+     * @var array $validation_messages Reglas de validación
+     */
+    public $validation_messages = [
+        //'required' => 'El campo :attribute es obligatorio.',
+    ];
+
+    /**
+     * Atributos actualizables
+     *
+     * @var array
+     */
+    public $updatable = [
+        'nombre', 'monto', 'frecuencia', 'tipo_periodo', 'max_reintentos', 'estado', 'puede_suscribir', 'prueba_frecuencia', 'prueba_tipo_periodo'
+    ];
+
     /* --------------------------------------------------------------
      * Otros
      */
@@ -141,4 +160,16 @@ class Plan extends Model
         $this->attributes['puede_suscribir'] = false;
         $this->save();
     }
+
+    /**
+     * Regresa campos de fechas definidos en el modelo
+     *
+     * @return array
+     */
+    public function dates()
+    {
+        return $this->dates;
+    }
+
+
 }

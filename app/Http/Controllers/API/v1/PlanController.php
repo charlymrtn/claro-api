@@ -8,6 +8,7 @@ use Validator;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Validation\ValidationException;
 use Webpatser\Uuid\Uuid;
 use App\Http\Controllers\ApiController;
 use App\Models\Suscripciones\Plan;
@@ -133,24 +134,24 @@ class PlanController extends ApiController
                 'prueba_frecuencia' => $oRequest->input('prueba_frecuencia', 1),
                 'prueba_tipo_periodo' => $oRequest->input('prueba_tipo_periodo', 'mes'),
             ]);
-            // Valida campos
-            $oValidator = Validator::make($oRequest->all(), $this->mPlan->rules);
-            if ($oValidator->fails()) {
-                return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
-            }
+            // Valida request
+            $aRequest = $this->preparaRequest($oRequest, $this->mPlan, PlanResource::labelMap());
             // Valida cliente creado anteriormente con mismo id_externo
             $oPlanExistenteId = $this->mPlan
                 ->withTrashed()
                 ->where('comercio_uuid', '=', $oUser->comercio_uuid)
-                ->where('id_externo', '=', $oRequest->input('id_externo'))
+                ->where('id_externo', '=', $aRequest['id_externo'])
                 ->first();
             if (!empty($oPlanExistenteId)) {
                 return ejsend_fail(['code' => 409, 'type' => 'Parámetros', 'message' => 'Error al crear el recurso: Plan existente con el mismo id_externo (' . $oPlanExistenteId->uuid . ')'], 409);
             }
             // Crea objeto
-            $oPlan = new PlanResource($this->mPlan->create($oRequest->all()));
+            $oPlan = new PlanResource($this->mPlan->create($aRequest));
             // Regresa resultados
             return ejsend_success(['plan' => $oPlan]);
+        } catch (ValidationException $e) {
+            Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
+            return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $e->errors()]);
         } catch (\Exception $e) {
             Log::error('Error en '.__METHOD__.' línea ' . $e->getLine().':' . $e->getMessage());
             return ejsend_exception($e);
@@ -230,16 +231,14 @@ class PlanController extends ApiController
             $oUser = $this->getApiUser();
             // Obtiene plan
             $oPlan = $this->getPlan($uuid, $oUser->comercio_uuid);
-            // Filtra campos aceptados para actualización
-            $aCambios = array_only($oRequest->all(), $this->mPlan->updatable);
-            // Valida campos
-            $oValidator = Validator::make($aCambios, array_only($this->mPlan->rules, array_keys($aCambios)));
-            if ($oValidator->fails()) {
-                return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $oValidator->errors()]);
-            }
+            // Valida request
+            $aCambios = $this->preparaRequest($oRequest, $this->mPlan, PlanResource::labelMap());
             // Actualiza suscripción
             $oPlan->update($aCambios);
             return ejsend_success(['plan' => new PlanResource($oPlan)]);
+        } catch (ValidationException $e) {
+            Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
+            return ejsend_fail(['code' => 400, 'type' => 'Parámetros', 'message' => 'Error en parámetros de entrada.'], 400, ['errors' => $e->errors()]);
         } catch (\Exception $e) {
             Log::error('Error on ' . __METHOD__ . ' line ' . $e->getLine() . ':' . $e->getMessage());
             return ejsend_exception($e);
