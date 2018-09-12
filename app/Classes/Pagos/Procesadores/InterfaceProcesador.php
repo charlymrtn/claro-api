@@ -9,6 +9,20 @@ namespace App\Classes\Pagos\Procesadores;
 interface InterfaceProcesador
 {
     /**
+     * Obtiene el nombre comercial del procesador de pagos.
+     *
+     * @return string Nombre comercial del procesador de pagos.
+     */
+    public function getNombre(): string;
+
+    /**
+     * Obtiene el identificador del procesador de pagos.
+     *
+     * @return string Identificador del procesador de pagos.
+     */
+    public function getId(): string;
+
+    /**
      * Obtiene parámetros del procesador de pagos.
      *
      * @return array Arreglo con parámetros definidos.
