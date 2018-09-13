@@ -18,6 +18,9 @@ use App\Http\Resources\v1\ClienteCollectionResource;
 use App\Http\Resources\v1\TarjetaResource;
 use App\Http\Resources\v1\SuscripcionResource;
 
+use App\Http\Resources\v1\TarjetaCollectionResource;
+use App\Models\Medios\Tarjeta;
+
 class ClienteController extends ApiController
 {
     /**
@@ -340,11 +343,6 @@ class ClienteController extends ApiController
                 return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Objeto no encontrado.'], 404);
             }
 
-
-
-
-
-
             // Campos permitidos para actualización
             $aDatosActualizables = [
                 'creacion_externa', 'nombre', 'apellido_paterno', 'apellido_materno',
@@ -509,11 +507,12 @@ class ClienteController extends ApiController
 
     /**
      * Obtiene las tarjetas del cliente
+     * version anterior, la nueva version esta al final del controlador
      *
      * @param string  $uuid
      * @return \Illuminate\Http\JsonResponse
      */
-    public function tarjetas($uuid): JsonResponse
+    /* public function tarjetas($uuid): JsonResponse
     {
         // Muestra el recurso solicitado
         try {
@@ -545,7 +544,7 @@ class ClienteController extends ApiController
             return ejsend_exception($e, 'Error al obtener los recursos: ' . $e->getMessage());
         }
     }
-
+ */
     /**
      * Obtiene las suscripciones del cliente
      *
@@ -580,4 +579,35 @@ class ClienteController extends ApiController
             return ejsend_exception($e, 'Error al obtener los recursos: ' . $e->getMessage());
         }
     }
+
+
+    /**
+     * Obtiene las tarjetas del cliente
+     *
+     * @param string  $uuid
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function tarjetas($uuid): JsonResponse
+    {
+        // Muestra el recurso solicitado
+        try {
+            // Obtiene comercio_uuid del usuario de la petición
+            $sComercioUuid = Auth::user()->comercio_uuid;
+
+            $oCliente = $this->mCliente->with('tarjetas')->where('comercio_uuid', '=', $sComercioUuid)->find($uuid);
+            if ($oCliente == null) {
+                Log::error('Error on '.__METHOD__.' line '.__LINE__.': Cliente no encontrado:'.$uuid);
+                return ejsend_fail(['code' => 404, 'type' => 'General', 'message' => 'Cliente no encontrado.'], 404);
+            }
+            
+            $cTarjetas = new TarjetaCollectionResource(Tarjeta::where('cliente_uuid',$oCliente->uuid)->paginate(10));
+
+            return ejsend_success(['tarjetas' => $cTarjetas]);
+        } catch (\Exception $e) {
+            // Registra error
+            Log::error('Error en '.__METHOD__.' línea '.$e->getLine().':'.$e->getMessage());
+            return ejsend_exception($e, 'Error al obtener los recursos: ' . $e->getMessage());
+        }
+    }
+
 }
